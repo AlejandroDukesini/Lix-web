@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#120c18" />
+    <title>Un año más contigo · Sin conexión</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px;
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; color: #f6eef3;
+        background: radial-gradient(60% 50% at 50% 35%, #3a1730 0%, #120c18 70%);
+      }
+      main { max-width: 26rem; text-align: center; }
+      .flame { width: 18px; height: 30px; margin: 0 auto 24px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        background: radial-gradient(circle at 50% 70%, #fff6d8, #f5b961 45%, #ef6f8c 80%); box-shadow: 0 0 40px 10px rgba(245, 185, 97, .35); }
+      h1 { font-weight: 500; font-size: 1.6rem; margin: 0 0 12px; }
+      p { line-height: 1.6; color: #d9c8d3; margin: 0 0 20px; }
+      button { font: inherit; font-weight: 600; color: #1b0f17; background: #f5b961; border: 0; border-radius: 999px;
+        padding: 12px 22px; min-height: 44px; cursor: pointer; }
+      button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="flame" aria-hidden="true"></div>
+      <h1>Todavía no puedo abrirme</h1>
+      <p>
+        La aplicación aún no terminó de guardarse en este dispositivo. Ábrela una vez con el servidor local
+        encendido y, desde entonces, funcionará sin Internet.
+      </p>
+      <button type="button" onclick="location.reload()">Intentar de nuevo</button>
+    </main>
+  </body>
+</html>

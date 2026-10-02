@@ -1,0 +1,7 @@
+/* Orden de capas: fuentes → tokens → temas → base → componentes → estructura. */
+@import './fonts.css';
+@import './tokens.css';
+@import './themes.css';
+@import './base.css';
+@import './components.css';
+@import './layout.css';

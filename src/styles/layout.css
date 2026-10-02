@@ -1,0 +1,546 @@
+/* =====================================================================
+ * Estructura: fondo ambiental, barra lateral, barra superior e inferior.
+ * Mobile-first; la barra lateral aparece a partir de 960px.
+ * ===================================================================== */
+
+.app-shell {
+  position: relative;
+  min-height: 100dvh;
+}
+
+.app-main {
+  position: relative;
+  z-index: var(--z-content);
+  min-height: 100dvh;
+  padding: calc(var(--safe-top) + 4.5rem) calc(var(--safe-right) + var(--gutter))
+    calc(var(--bottomnav-h) + var(--safe-bottom) + var(--space-8)) calc(var(--safe-left) + var(--gutter));
+}
+
+.app-main:focus {
+  outline: none;
+}
+
+.page {
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  display: grid;
+  gap: clamp(var(--space-6), 3vw, var(--space-9));
+  grid-template-columns: minmax(0, 1fr);
+  animation: page-in var(--dur-slower) var(--ease-out) both;
+}
+
+/* Los hijos de una rejilla no deben ensancharla por su contenido (filas desplazables, textos largos). */
+.page > * {
+  min-width: 0;
+}
+
+.page-loading {
+  min-height: 40vh;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+@media (min-width: 960px) {
+  .app-main {
+    margin-left: var(--sidebar-w);
+    padding: var(--space-9) var(--gutter) var(--space-10);
+  }
+}
+
+/* ---------- Fondo ambiental ---------- */
+.ambient {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-background);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.ambient__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  will-change: transform;
+  animation: orb-float 28s var(--ease-in-out) infinite alternate;
+}
+
+[data-theme='light'] .ambient__orb {
+  opacity: 0.45;
+}
+
+.ambient__orb--1 {
+  width: 46vmax;
+  height: 46vmax;
+  top: -14vmax;
+  left: -10vmax;
+  background: var(--c-primary);
+}
+.ambient__orb--2 {
+  width: 40vmax;
+  height: 40vmax;
+  top: 10vh;
+  right: -16vmax;
+  background: var(--c-secondary);
+  animation-duration: 34s;
+  animation-direction: alternate-reverse;
+}
+.ambient__orb--3 {
+  width: 34vmax;
+  height: 34vmax;
+  bottom: -14vmax;
+  left: 22vw;
+  background: var(--c-accent);
+  opacity: 0.35;
+  animation-duration: 40s;
+}
+.ambient__orb--4 {
+  width: 28vmax;
+  height: 28vmax;
+  bottom: 8vh;
+  right: 8vw;
+  background: var(--c-primary);
+  opacity: 0.25;
+  animation-duration: 46s;
+  animation-direction: alternate-reverse;
+}
+
+/* Grano sutil para que los degradados no se vean planos (SVG local en data URI). */
+.ambient__grain {
+  position: absolute;
+  inset: 0;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes orb-float {
+  to {
+    transform: translate(6vmax, 4vmax) scale(1.12);
+  }
+}
+
+/* Maximalismo: patrón de puntos + formas geométricas */
+.ambient--maximal {
+  background-image: radial-gradient(var(--pattern-ink) 1.4px, transparent 1.6px);
+  background-size: 22px 22px;
+}
+
+.ambient__shapes {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.shape {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.shape--sun {
+  fill: var(--c-accent);
+  opacity: 0.9;
+}
+.shape--arch {
+  fill: var(--c-secondary);
+  opacity: 0.85;
+}
+.shape--star {
+  fill: var(--c-primary);
+  animation: shape-spin 60s linear infinite;
+}
+.shape--zigzag {
+  fill: none;
+  stroke: var(--c-primary);
+  stroke-width: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.shape--ring {
+  fill: none;
+  stroke: var(--c-accent);
+  stroke-width: 22;
+  stroke-dasharray: 2 34;
+  stroke-linecap: round;
+  animation: shape-spin 90s linear infinite reverse;
+}
+.shape--heart {
+  fill: none;
+  stroke: var(--c-secondary);
+  stroke-width: 8;
+  opacity: 0.8;
+}
+
+[data-theme='dark'] .shape--sun,
+[data-theme='dark'] .shape--arch {
+  opacity: 0.55;
+}
+
+@keyframes shape-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Marca ---------- */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.brand__mark {
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: radial-gradient(circle at 50% 70%, color-mix(in oklab, var(--c-accent) 35%, transparent), transparent 70%),
+    var(--surface-strong);
+  border: var(--surface-border-width) solid var(--surface-border);
+}
+
+.brand__flame {
+  width: 10px;
+  height: 16px;
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: radial-gradient(circle at 50% 72%, var(--paper), var(--c-accent) 48%, var(--c-primary) 92%);
+  box-shadow: 0 0 14px 3px color-mix(in oklab, var(--c-accent) 50%, transparent);
+  animation: brand-flicker 2.4s var(--ease-in-out) infinite;
+  transform-origin: 50% 90%;
+}
+
+@keyframes brand-flicker {
+  50% {
+    transform: scale(0.94, 1.06) skewX(2deg);
+  }
+}
+
+.brand__name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 450;
+  font-variation-settings: 'SOFT' 100, 'opsz' 48;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand__name em {
+  color: var(--primary-text);
+}
+
+[data-style='maximal'] .brand__name {
+  font-family: var(--font-bold);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+[data-style='maximal'] .brand__name em {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* ---------- Barra lateral (escritorio) ---------- */
+.sidebar {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .sidebar {
+    position: fixed;
+    inset: var(--space-4) auto var(--space-4) var(--space-4);
+    z-index: var(--z-nav);
+    width: calc(var(--sidebar-w) - var(--space-6));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--space-4);
+    border-radius: var(--surface-radius);
+    background: var(--nav-surface);
+    border: var(--surface-border-width) solid var(--surface-border);
+    box-shadow: var(--surface-shadow);
+    -webkit-backdrop-filter: var(--surface-blur);
+    backdrop-filter: var(--surface-blur);
+    overflow-y: auto;
+  }
+}
+
+.sidebar__brand {
+  padding-inline: var(--space-2);
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+  gap: var(--space-4);
+}
+
+.sidebar__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2) 0;
+  border-top: 1px solid var(--border);
+}
+
+.privacy-note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.privacy-note svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  color: var(--success);
+}
+
+.nav-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--tap);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--control-radius);
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition:
+    background-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+}
+
+.nav-item__icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+}
+
+.nav-item__text {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.nav-item__teaser {
+  font-weight: 500;
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+  line-height: 1.4;
+}
+
+@media (hover: hover) {
+  a.nav-item:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+}
+
+.nav-item.is-active {
+  color: var(--text);
+  background: var(--selected);
+  box-shadow: inset 3px 0 0 var(--c-primary);
+}
+
+/* Insignia compacta dentro de la navegación para que quepa junto a etiquetas largas. */
+.nav-item .badge {
+  flex: none;
+  padding: 0.12rem 0.45rem;
+  font-size: 0.625rem;
+}
+
+.nav-item.is-soon {
+  cursor: default;
+  color: var(--text-subtle);
+}
+
+.nav-item.is-soon .nav-item__icon {
+  opacity: 0.7;
+}
+
+[data-style='maximal'] .nav-item {
+  font-family: var(--font-bold);
+  font-size: var(--text-sm);
+}
+
+[data-style='maximal'] .nav-item.is-active {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  box-shadow: 3px 3px 0 0 var(--surface-border);
+  border: 2px solid var(--surface-border);
+}
+
+.nav-list--sheet .nav-item {
+  align-items: flex-start;
+  padding-block: var(--space-3);
+}
+
+.nav-list--sheet .nav-item__icon {
+  margin-top: 2px;
+}
+
+/* ---------- Barra superior (móvil) ---------- */
+.topbar {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: var(--z-nav);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: calc(var(--safe-top) + var(--space-2)) calc(var(--safe-right) + var(--gutter)) var(--space-2)
+    calc(var(--safe-left) + var(--gutter));
+  background: linear-gradient(to bottom, var(--bg) 30%, color-mix(in oklab, var(--bg) 0%, transparent));
+}
+
+[data-style='glass'] .topbar {
+  background: var(--nav-surface);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+  border-bottom: 1px solid var(--border);
+}
+
+[data-style='maximal'] .topbar {
+  background: var(--nav-surface);
+  border-bottom: 2px solid var(--surface-border);
+}
+
+@media (min-width: 960px) {
+  .topbar {
+    display: none;
+  }
+}
+
+/* ---------- Barra inferior (móvil) ---------- */
+.bottom-nav {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: var(--z-nav);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: calc(var(--bottomnav-h) + var(--safe-bottom));
+  padding: 0 calc(var(--safe-right) + var(--space-2)) var(--safe-bottom) calc(var(--safe-left) + var(--space-2));
+  background: var(--nav-surface);
+  border-top: var(--surface-border-width) solid var(--surface-border);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+}
+
+.bottom-nav__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--tap);
+  margin: var(--space-1);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-subtle);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  transition: color var(--dur-fast) var(--ease-out);
+}
+
+.bottom-nav__item svg {
+  width: 22px;
+  height: 22px;
+  transition: transform var(--dur-base) var(--ease-spring);
+}
+
+.bottom-nav__item.is-active {
+  color: var(--primary-text);
+}
+
+.bottom-nav__item.is-active svg {
+  transform: translateY(-2px) scale(1.08);
+}
+
+[data-style='maximal'] .bottom-nav__item.is-active {
+  color: var(--c-on-primary);
+  background: var(--c-primary);
+  border: 2px solid var(--surface-border);
+}
+
+@media (min-width: 960px) {
+  .bottom-nav {
+    display: none;
+  }
+}
+
+/* Diálogo "Espacios" como hoja inferior en móvil */
+@media (max-width: 599px) {
+  .dialog--sheet {
+    width: 100%;
+    max-width: none;
+    margin: auto 0 0;
+    max-height: 88dvh;
+  }
+  .dialog--sheet .dialog__panel {
+    border-radius: var(--surface-radius) var(--surface-radius) 0 0;
+    padding-bottom: calc(var(--safe-bottom) + var(--space-6));
+  }
+  .dialog--sheet[open] .dialog__panel {
+    animation: sheet-in var(--dur-slow) var(--ease-out) both;
+  }
+}
+
+@keyframes sheet-in {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+}
+
+/*
+ * Las rejillas de una sola columna usan minmax(0, 1fr): con la columna implícita
+ * por defecto, un contenido ancho (tipografía expresiva, filas desplazables)
+ * ensancharía toda la página y provocaría desplazamiento horizontal en móvil.
+ */
+.settings__sections,
+.settings-section,
+.settings-section__body,
+.settings-group,
+.home__grid,
+.hero,
+.hero__copy,
+.stat-card,
+.dialog__body {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Mientras se consultan las preferencias guardadas (milisegundos), solo el fondo. */
+.boot-splash {
+  min-height: 100dvh;
+  background: var(--bg);
+}

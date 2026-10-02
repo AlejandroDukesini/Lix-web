@@ -1,0 +1,45 @@
+/*
+ * Fuentes locales (subconjunto latino, que incluye á é í ó ú ñ ü ¿ ¡).
+ * Licencia SIL Open Font License 1.1 — ver src/assets/fonts/LICENSE.md.
+ * No se usa ningún servicio externo de fuentes.
+ */
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/fraunces-latin-full-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../assets/fonts/fraunces-latin-full-italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../assets/fonts/manrope-latin-wght-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('../assets/fonts/bricolage-grotesque-latin-wght-normal.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Dancing Script';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('../assets/fonts/dancing-script-latin-wght-normal.woff2') format('woff2');
+}

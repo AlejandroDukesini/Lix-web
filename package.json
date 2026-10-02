@@ -1,0 +1,36 @@
+{
+  "name": "un-ano-mas-contigo",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Un regalo digital privado, offline-first: nuestro espacio.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "vite build && vite preview --open",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node scripts/verify-offline.mjs",
+    "icons": "node scripts/generate-icons.mjs",
+    "check": "npm run test && npm run build && npm run test:e2e"
+  },
+  "dependencies": {
+    "lucide-react": "^1.49.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "react-router": "^7.18.4"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@vitejs/plugin-react": "^6.1.1",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^30.1.1",
+    "playwright-core": "^1.63.0",
+    "sharp": "^0.35.5",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  }
+}

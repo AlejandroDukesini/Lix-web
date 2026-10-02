@@ -1,0 +1,442 @@
+/*
+ * Vela. Todas las medidas están en `em` para escalarla con un solo font-size.
+ * Coordenadas desde la base: plato (0) → cuerpo (0.7em–13.7em) → mecha → llama.
+ */
+
+.candle {
+  --flame-hot: color-mix(in oklab, var(--c-accent) 70%, var(--flame-core));
+  --flame-mid: var(--c-accent);
+  --flame-edge: color-mix(in oklab, var(--c-primary) 85%, transparent);
+  position: relative;
+  width: 10em;
+  height: 20.5em;
+  margin-inline: auto;
+  font-size: 10px;
+  isolation: isolate;
+}
+
+.candle--lg {
+  font-size: clamp(8px, min(1.65vh, 3.1vw), 16px);
+}
+.candle--md {
+  font-size: 7px;
+}
+.candle--sm {
+  font-size: 4.6px;
+}
+
+/* ---------- Halo de luz ---------- */
+.candle__halo {
+  position: absolute;
+  left: 50%;
+  bottom: 7em;
+  width: 22em;
+  height: 22em;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--c-accent) 48%, transparent) 0%,
+    color-mix(in oklab, var(--c-primary) 18%, transparent) 38%,
+    transparent 68%
+  );
+  z-index: -1;
+  animation: halo-breathe 3.4s var(--ease-in-out) infinite;
+  transition: opacity 1.4s var(--ease-out);
+}
+
+/* ---------- Llama ---------- */
+.candle__flame-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 13.9em;
+  width: 3.6em;
+  height: 5.8em;
+  margin-left: -1.8em;
+  transform-origin: 50% 94%;
+  transform: rotate(calc(var(--wind, 0) * -12deg)) skewX(calc(var(--wind, 0) * 16deg))
+    scaleY(calc(1 - var(--wind, 0) * 0.25));
+  transition: transform 140ms linear;
+}
+
+.candle__flame {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform-origin: 50% 92%;
+  filter: drop-shadow(0 0 0.6em color-mix(in oklab, var(--c-accent) 75%, transparent))
+    drop-shadow(0 -0.4em 1.6em color-mix(in oklab, var(--c-primary) 45%, transparent));
+  animation: flame-flicker 2.6s var(--ease-in-out) infinite;
+}
+
+.candle__flame-outer {
+  opacity: 0.95;
+}
+
+.candle__flame-inner {
+  transform-origin: 50% 90%;
+  animation: flame-flicker-inner 1.7s var(--ease-in-out) infinite;
+}
+
+.candle__flame-base {
+  fill: var(--flame-blue);
+  opacity: 0.55;
+  filter: blur(2px);
+}
+
+.stop-flame-hot {
+  stop-color: var(--flame-hot);
+}
+.stop-flame-mid {
+  stop-color: var(--flame-mid);
+}
+.stop-flame-edge {
+  stop-color: var(--flame-edge);
+  stop-opacity: 0.85;
+}
+.stop-core {
+  stop-color: var(--flame-core);
+}
+.stop-core-soft {
+  stop-color: var(--flame-core);
+  stop-opacity: 0.75;
+}
+.stop-core-fade {
+  stop-color: var(--flame-core);
+  stop-opacity: 0;
+}
+
+/* ---------- Mecha y brasa ---------- */
+.candle__wick {
+  position: absolute;
+  left: 50%;
+  bottom: 13.5em;
+  width: 0.34em;
+  height: 1.3em;
+  margin-left: -0.17em;
+  border-radius: 0.2em 0.2em 0 0;
+  background: var(--wick);
+  transform: rotate(4deg);
+}
+
+.candle__ember {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.55em;
+  border-radius: 50%;
+  background: var(--ember);
+  box-shadow: 0 0 0.6em 0.15em var(--ember);
+  opacity: 0;
+}
+
+/* ---------- Humo ---------- */
+.candle__smoke {
+  position: absolute;
+  left: 50%;
+  bottom: 14.4em;
+  width: 4em;
+  height: 10em;
+  margin-left: -2em;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.candle__smoke-trail {
+  stroke: var(--smoke);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-dasharray: 0 1;
+  opacity: 0;
+  filter: blur(1.4px);
+}
+
+/* ---------- Cuerpo de cera ---------- */
+.candle__body {
+  position: absolute;
+  left: 50%;
+  bottom: 0.7em;
+  width: 5.4em;
+  height: 13em;
+  margin-left: -2.7em;
+  border-radius: 0.5em 0.5em 1.1em 1.1em / 0.45em 0.45em 0.9em 0.9em;
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--c-accent) 26%, transparent), transparent 22%),
+    linear-gradient(90deg, var(--wax-shadow) 0%, var(--wax-light) 38%, var(--wax-mid) 72%, var(--wax-shadow) 100%);
+  box-shadow:
+    inset 0 -1.4em 1.6em -1em rgb(0 0 0 / 0.25),
+    0 1.2em 2em -1em rgb(0 0 0 / 0.5);
+  transition: background 1.2s var(--ease-out);
+}
+
+.candle__pool {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -0.45em;
+  height: 0.9em;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    color-mix(in oklab, var(--c-accent) 55%, var(--wax-light)),
+    var(--wax-mid) 70%
+  );
+  box-shadow: inset 0 0.15em 0.3em rgb(0 0 0 / 0.12);
+  transition: background 1.2s var(--ease-out);
+}
+
+.candle__drip {
+  position: absolute;
+  top: 0;
+  width: 0.7em;
+  border-radius: 0 0 0.4em 0.4em;
+  background: linear-gradient(90deg, var(--wax-mid), var(--wax-light));
+}
+.candle__drip--1 {
+  left: 0.6em;
+  height: 2.2em;
+}
+.candle__drip--2 {
+  left: 2.6em;
+  width: 0.55em;
+  height: 1.2em;
+}
+.candle__drip--3 {
+  right: 0.5em;
+  height: 3.1em;
+}
+
+.candle__heart {
+  position: absolute;
+  left: 50%;
+  top: 56%;
+  width: 1.7em;
+  margin-left: -0.85em;
+  fill: var(--c-primary);
+  opacity: 0.85;
+}
+
+.candle__plate {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 10em;
+  height: 1.5em;
+  margin-left: -5em;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 50% 35%, color-mix(in oklab, var(--c-accent) 40%, var(--wax-shadow)), transparent 72%);
+  opacity: 0.55;
+  transition: opacity 1.2s var(--ease-out);
+}
+
+/* ---------- Apagado ---------- */
+.candle--out .candle__flame-wrap {
+  animation: flame-out 760ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+}
+.candle--out .candle__flame,
+.candle--out .candle__flame-inner {
+  animation: none;
+}
+.candle--out .candle__halo {
+  opacity: 0;
+  animation: none;
+}
+.candle--out .candle__plate {
+  opacity: 0.15;
+}
+.candle--out .candle__pool {
+  background: radial-gradient(ellipse at 50% 40%, var(--wax-light), var(--wax-mid) 70%);
+}
+.candle--out .candle__body {
+  background:
+    linear-gradient(180deg, transparent, transparent 22%),
+    linear-gradient(90deg, var(--wax-shadow) 0%, var(--wax-light) 38%, var(--wax-mid) 72%, var(--wax-shadow) 100%);
+  filter: brightness(0.7);
+}
+.candle--out .candle__ember {
+  animation: ember-glow 3s ease-out 0.35s forwards;
+}
+.candle--out .candle__smoke-trail--1 {
+  animation: smoke-rise 3.4s var(--ease-out) 0.4s forwards;
+}
+.candle--out .candle__smoke-trail--2 {
+  animation: smoke-rise 3.8s var(--ease-out) 0.65s forwards;
+}
+.candle--out .candle__smoke-trail--3 {
+  animation: smoke-rise 2.8s var(--ease-out) 0.9s forwards;
+}
+
+@keyframes flame-flicker {
+  0%,
+  100% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  18% {
+    transform: scale(0.97, 1.04) skewX(1.6deg);
+  }
+  37% {
+    transform: scale(1.02, 0.97) skewX(-1.2deg);
+  }
+  55% {
+    transform: scale(0.98, 1.05) skewX(2.2deg);
+  }
+  74% {
+    transform: scale(1.01, 0.98) skewX(-1.8deg);
+  }
+  88% {
+    transform: scale(0.99, 1.02) skewX(0.8deg);
+  }
+}
+
+@keyframes flame-flicker-inner {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  30% {
+    transform: scale(0.94, 1.06);
+  }
+  60% {
+    transform: scale(1.04, 0.95);
+  }
+}
+
+@keyframes halo-breathe {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes flame-out {
+  0% {
+    transform: none;
+    opacity: 1;
+  }
+  35% {
+    transform: rotate(-16deg) skewX(22deg) scale(0.92, 0.72) translateX(-8%);
+    opacity: 0.95;
+  }
+  70% {
+    transform: rotate(-22deg) skewX(30deg) scale(0.45, 0.4) translateX(-14%);
+    opacity: 0.55;
+  }
+  100% {
+    transform: rotate(-24deg) scale(0, 0.1);
+    opacity: 0;
+  }
+}
+
+@keyframes ember-glow {
+  0% {
+    opacity: 1;
+  }
+  30% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes smoke-rise {
+  0% {
+    opacity: 0;
+    stroke-dasharray: 0 1;
+    stroke-dashoffset: 0;
+    transform: translateY(0);
+  }
+  15% {
+    opacity: 0.55;
+  }
+  60% {
+    opacity: 0.35;
+  }
+  100% {
+    opacity: 0;
+    stroke-dasharray: 0.35 1;
+    stroke-dashoffset: -0.75;
+    transform: translateY(-1.5em) scaleX(1.25);
+  }
+}
+
+/* ---------- Vela del viaje astral: tamaño ligado al ocular ---------- */
+.candle--xl {
+  font-size: var(--candle-em, 12px);
+}
+
+/* Textura de cera: vetas verticales muy suaves y un reflejo lateral de la llama. */
+.candle__texture {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.05) 0 0.18em, transparent 0.18em 0.5em),
+    radial-gradient(60% 30% at 50% 0%, color-mix(in oklab, var(--c-accent) 30%, transparent), transparent 70%);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+
+.candle__sheen {
+  position: absolute;
+  top: 6%;
+  bottom: 10%;
+  left: 18%;
+  width: 0.5em;
+  border-radius: 1em;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.6), transparent);
+  filter: blur(0.12em);
+  opacity: 0.55;
+}
+
+/* ---------- Monograma grabado en oro ---------- */
+.candle__monogram {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  display: grid;
+  place-items: center;
+  width: 4.3em;
+  height: 4.3em;
+  margin-left: -2.15em;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 0.09em var(--gold-mid),
+    inset 0 0 0 0.2em color-mix(in oklab, var(--gold-light) 25%, transparent),
+    0 0 calc(var(--letter-glow, 0) * 1.6em) color-mix(in oklab, var(--c-accent) 70%, transparent);
+}
+
+.candle__monogram-letter {
+  font-family: var(--font-display);
+  font-weight: 640;
+  font-size: 3.05em;
+  line-height: 1;
+  font-variation-settings: 'SOFT' 30, 'WONK' 1, 'opsz' 144;
+  background: linear-gradient(160deg, var(--gold-dark) 8%, var(--gold-light) 38%, var(--gold-mid) 55%, var(--gold-dark) 92%);
+  background-size: 100% 220%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Relieve: sombra inferior oscura y luz superior, como grabado sobre cera. */
+  filter: drop-shadow(0 0.03em 0 rgb(90 50 10 / 0.55)) drop-shadow(0 -0.02em 0 rgb(255 255 255 / 0.5));
+  animation: gold-shimmer 6s var(--ease-in-out) infinite;
+}
+
+.candle--sm .candle__monogram-letter,
+.candle--md .candle__monogram-letter {
+  animation: none;
+}
+
+@keyframes gold-shimmer {
+  0%,
+  100% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 0 100%;
+  }
+}

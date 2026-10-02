@@ -1,0 +1,1597 @@
+/*
+ * Bitácora de observación — dirección de arte del viaje astral.
+ *
+ * Paleta del cosmos por tema:
+ *   oscuro → espacio profundo: azul noche, índigo, violeta y destellos rosados.
+ *   claro  → «universo luminoso»: un cielo de amanecer con estrellas en tinta.
+ * Variantes por estilo:
+ *   glass   → cristal: textos en paneles esmerilados, lente con reflejos.
+ *   maximal → carta estelar impresa: tinta gruesa, color plano, sombras duras.
+ */
+
+.astral {
+  --void-0: #03020a;
+  --void-1: #070a26;
+  --void-2: #1d1046;
+  --astral-text: #f5f0ff;
+  --astral-muted: rgb(245 240 255 / 0.74);
+  --astral-faint: rgb(245 240 255 / 0.45);
+  --cosmos-star: #ffffff;
+  --cosmos-star-warm: #ffe2b8;
+  --cosmos-star-cool: #c9dcff;
+  --cosmos-dust: #b6a6ff;
+  --galaxy-core: #fff1d8;
+  --galaxy-arm-a: color-mix(in oklab, var(--c-primary) 65%, white);
+  --galaxy-arm-b: #8288ff;
+  --galaxy-arm-c: #c6f1ff;
+  --cosmos-blend: lighter;
+  --cosmos-sparkle: 0;
+  --nebula-violet: color-mix(in oklab, var(--c-secondary) 65%, #5b3df5);
+  --nebula-rose: var(--c-primary);
+  --nebula-indigo: #2639c4;
+  --nebula-gold: var(--c-accent);
+  --nebula-blend: screen;
+  --nebula-alpha: 0.55;
+  --iris-color: rgb(2 1 8 / 0.96);
+  --line-color: rgb(255 244 228 / 0.85);
+  --hud-surface: rgb(12 10 34 / 0.4);
+  --hud-border: rgb(255 255 255 / 0.16);
+
+  /* Telescopio */
+  --ts-enamel: #262a66;
+  --ts-enamel-dark: #0b0d2c;
+  --ts-enamel-light: #4f55a8;
+  --ts-enamel-shine: #d6d9ff;
+  --ts-steel: #8b90a8;
+  --ts-steel-dark: #2b2e40;
+  --ts-steel-light: #dfe2ee;
+  --ts-outline: transparent;
+  --ts-planet-light: color-mix(in oklab, var(--c-ambient) 35%, #6c5bb0);
+  --ts-planet-mid: color-mix(in oklab, var(--c-ambient) 45%, #2a2058);
+  --ts-planet-dark: #0c0920;
+  --ts-building: #191536;
+  --ts-dome: #34305f;
+
+  position: relative;
+  min-height: 100dvh;
+  color: var(--astral-text);
+  background: var(--void-0);
+}
+
+[data-theme='light'] .astral {
+  --void-0: #fff6f1;
+  --void-1: #f3e8ff;
+  --void-2: #ffe0dc;
+  --astral-text: #1c1336;
+  --astral-muted: rgb(28 19 54 / 0.76);
+  --astral-faint: rgb(28 19 54 / 0.5);
+  --cosmos-star: #3b2c7a;
+  --cosmos-star-warm: #b4641a;
+  --cosmos-star-cool: #2b4ea8;
+  --cosmos-dust: #8a6fd6;
+  --galaxy-core: #ffae5e;
+  --galaxy-arm-a: color-mix(in oklab, var(--c-primary) 85%, black);
+  --galaxy-arm-b: #5446d1;
+  --galaxy-arm-c: #2b84ba;
+  --cosmos-blend: source-over;
+  --nebula-blend: multiply;
+  --nebula-alpha: 0.32;
+  --iris-color: rgb(18 11 38 / 0.92);
+  --line-color: rgb(40 26 90 / 0.8);
+  --hud-surface: rgb(255 255 255 / 0.5);
+  --hud-border: rgb(28 19 54 / 0.12);
+  --ts-planet-light: #d9c6ff;
+  --ts-planet-mid: #a48ad8;
+  --ts-planet-dark: #4b3a86;
+  --ts-building: #3a2f6e;
+  --ts-dome: #6a5cb0;
+}
+
+[data-style='maximal'] .astral {
+  --cosmos-sparkle: 1;
+  --nebula-alpha: 0.75;
+  --galaxy-arm-a: var(--c-primary);
+  --galaxy-arm-b: var(--c-secondary);
+  --galaxy-arm-c: var(--c-accent);
+  --ts-enamel: var(--c-primary);
+  --ts-enamel-dark: color-mix(in oklab, var(--c-primary) 55%, black);
+  --ts-enamel-light: color-mix(in oklab, var(--c-primary) 70%, white);
+  --ts-enamel-shine: white;
+  --ts-outline: var(--ink);
+  --line-color: var(--c-accent);
+}
+
+
+/* =====================================================================
+ * Arte del viaje: cielo, cosmos, constelación, telescopio, iris y ocular
+ * ===================================================================== */
+.sky span {
+  position: absolute;
+  inset: 0;
+}
+
+.sky__base {
+  background:
+    radial-gradient(110% 75% at 75% 15%, color-mix(in oklab, var(--void-2) 90%, transparent), transparent 62%),
+    radial-gradient(90% 70% at 8% 92%, color-mix(in oklab, var(--c-ambient) 55%, var(--void-1)), transparent 70%),
+    linear-gradient(180deg, var(--void-1), var(--void-0) 85%);
+}
+
+/* El universo «despierta» en el último capítulo. */
+.sky__dawn {
+  opacity: 0;
+  background:
+    radial-gradient(85% 55% at 50% 105%, color-mix(in oklab, var(--c-accent) 50%, transparent), transparent 72%),
+    radial-gradient(60% 45% at 18% 25%, color-mix(in oklab, var(--c-primary) 32%, transparent), transparent 70%),
+    radial-gradient(55% 45% at 85% 30%, color-mix(in oklab, var(--c-secondary) 34%, transparent), transparent 70%);
+}
+
+.nebula {
+  inset: -18% !important;
+  opacity: 0.6;
+  mix-blend-mode: var(--nebula-blend);
+  will-change: transform, opacity;
+}
+
+.nebula__cloud {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(64px);
+  opacity: var(--nebula-alpha);
+  animation: nebula-drift 38s var(--ease-in-out) infinite alternate;
+}
+
+.nebula__cloud--violet {
+  width: 62%;
+  height: 46%;
+  left: 2%;
+  top: 14%;
+  background: radial-gradient(closest-side, var(--nebula-violet), transparent);
+}
+.nebula__cloud--rose {
+  width: 44%;
+  height: 36%;
+  right: 4%;
+  top: 34%;
+  background: radial-gradient(closest-side, var(--nebula-rose), transparent);
+  animation-duration: 46s;
+  animation-direction: alternate-reverse;
+}
+.nebula__cloud--indigo {
+  width: 70%;
+  height: 40%;
+  left: 18%;
+  bottom: 6%;
+  background: radial-gradient(closest-side, var(--nebula-indigo), transparent);
+  animation-duration: 52s;
+}
+.nebula__cloud--gold {
+  width: 26%;
+  height: 22%;
+  left: 52%;
+  top: 22%;
+  background: radial-gradient(closest-side, var(--nebula-gold), transparent);
+  opacity: calc(var(--nebula-alpha) * 0.5);
+  animation-duration: 30s;
+}
+
+/* Filamentos: una veladura de polvo que da textura a las nubes. */
+.nebula__veil {
+  position: absolute;
+  inset: 20%;
+  background:
+    repeating-radial-gradient(circle at 40% 45%, transparent 0 14px, rgb(255 255 255 / 0.025) 15px 16px),
+    conic-gradient(from 210deg at 45% 50%, transparent, color-mix(in oklab, var(--nebula-violet) 30%, transparent), transparent 40%);
+  filter: blur(18px);
+  opacity: 0.8;
+  mix-blend-mode: soft-light;
+}
+
+@keyframes nebula-drift {
+  to {
+    transform: translate(6%, -4%) scale(1.12) rotate(4deg);
+  }
+}
+
+.cosmos {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Planetas lejanos ---------- */
+.planets {
+  will-change: transform, opacity;
+}
+
+.planet {
+  position: absolute;
+}
+
+.planet--giant {
+  left: 4vw;
+  top: 12vh;
+  width: clamp(150px, 24vw, 340px);
+  transform: rotate(-12deg);
+  filter: drop-shadow(0 0 24px color-mix(in oklab, var(--c-secondary) 35%, transparent));
+}
+
+.planet-band-1 {
+  stop-color: color-mix(in oklab, var(--c-accent) 55%, #c98d6a);
+}
+.planet-band-2 {
+  stop-color: color-mix(in oklab, var(--c-primary) 45%, #a8607a);
+}
+.planet-band-3 {
+  stop-color: color-mix(in oklab, var(--c-accent) 35%, #f3d6b0);
+}
+.planet-band-shadow {
+  stop-color: #3a2240;
+}
+.planet-shade {
+  stop-color: #050210;
+}
+
+.planet__ring {
+  fill: none;
+  stroke: color-mix(in oklab, var(--c-accent) 60%, white);
+  stroke-width: 5;
+  opacity: 0.8;
+}
+
+.planet__ring--back {
+  opacity: 0.35;
+}
+
+.planet--moon {
+  right: 9vw;
+  top: 40vh;
+  width: clamp(52px, 6vw, 84px);
+}
+
+.moon__body {
+  fill: color-mix(in oklab, var(--c-secondary) 30%, #d8d2e8);
+}
+.moon__crater {
+  fill: rgb(0 0 0 / 0.14);
+}
+.moon__shadow {
+  fill: rgb(5 2 16 / 0.55);
+}
+
+.planet--dot {
+  right: 32vw;
+  top: 17vh;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--c-primary);
+  box-shadow: 0 0 14px 3px color-mix(in oklab, var(--c-primary) 55%, transparent);
+}
+
+[data-style='maximal'] .planet--giant {
+  filter: none;
+}
+[data-style='maximal'] .planet--giant circle,
+[data-style='maximal'] .moon__body {
+  stroke: var(--ink);
+  stroke-width: 4;
+}
+[data-style='maximal'] .planet__ring {
+  stroke: var(--c-accent);
+  stroke-width: 9;
+  opacity: 1;
+}
+
+/* ---------- Constelación ---------- */
+.astral__constellation {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.constellation {
+  position: absolute;
+  inset: 7% 4%;
+  width: 92%;
+  height: 86%;
+  overflow: visible;
+}
+
+.constellation__line {
+  stroke: var(--line-color);
+  stroke-width: calc(1.6px + var(--complete, 0) * 1px);
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  filter: drop-shadow(0 0 calc(var(--complete, 0) * 8px) color-mix(in oklab, var(--c-accent) 80%, transparent));
+}
+
+.constellation__glow-core {
+  stop-color: color-mix(in oklab, var(--c-accent) 65%, white);
+  stop-opacity: 0.85;
+}
+.constellation__glow-edge {
+  stop-color: var(--c-primary);
+  stop-opacity: 0;
+}
+
+.constellation__star-core {
+  fill: var(--cosmos-star);
+}
+
+.constellation__star {
+  animation: star-breathe 3.6s var(--ease-in-out) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.constellation__star--leftMid {
+  animation-delay: -0.8s;
+}
+.constellation__star--apex {
+  animation-delay: -1.6s;
+}
+.constellation__star--rightMid {
+  animation-delay: -2.4s;
+}
+
+.constellation__decoy {
+  fill: var(--cosmos-star);
+  opacity: 0.5;
+  animation: decoy-twinkle 4s var(--ease-in-out) infinite;
+  animation-delay: calc(var(--i) * -0.7s);
+}
+
+.constellation__label,
+.constellation__counter {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 30px;
+  fill: var(--astral-text);
+  letter-spacing: 0.02em;
+}
+
+.constellation__label-note {
+  font-family: var(--font-script);
+  font-size: 34px;
+  fill: var(--c-accent);
+}
+
+.constellation__counter {
+  fill: color-mix(in oklab, var(--c-accent) 70%, var(--astral-text));
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+}
+
+[data-style='maximal'] .constellation__line {
+  stroke-width: calc(3px + var(--complete, 0) * 2px);
+  filter: none;
+}
+[data-style='maximal'] .constellation__star-core {
+  fill: var(--c-accent);
+  stroke: var(--ink);
+  stroke-width: 3;
+}
+
+@keyframes star-breathe {
+  50% {
+    transform: scale(1.18);
+  }
+}
+
+@keyframes decoy-twinkle {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+/* ---------- Destello al atravesar la galaxia ---------- */
+.astral__flash {
+  opacity: 0;
+  background: radial-gradient(circle at 50% 48%, var(--galaxy-core) 0, color-mix(in oklab, var(--c-accent) 40%, transparent) 30%, transparent 72%);
+}
+
+/* =====================================================================
+ * Telescopio
+ * ===================================================================== */
+.astral__telescope {
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.astral__telescope-zoom {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+}
+
+.telescope {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.ts-planet-light {
+  stop-color: var(--ts-planet-light);
+}
+.ts-planet-mid {
+  stop-color: var(--ts-planet-mid);
+}
+.ts-planet-dark {
+  stop-color: var(--ts-planet-dark);
+}
+.ts-atmo-edge {
+  stop-color: color-mix(in oklab, var(--c-primary) 55%, #8fb4ff);
+  stop-opacity: 0.55;
+}
+.ts-atmo-fade {
+  stop-color: var(--c-secondary);
+  stop-opacity: 0;
+}
+.ts-atmosphere {
+  filter: blur(6px);
+}
+.ts-rim {
+  stroke: color-mix(in oklab, var(--c-accent) 60%, white);
+  stroke-width: 3;
+  opacity: 0.75;
+}
+.ts-crater {
+  fill: rgb(0 0 0 / 0.16);
+}
+
+.ts-building {
+  fill: var(--ts-building);
+}
+.ts-dome {
+  fill: var(--ts-dome);
+}
+.ts-dome-ring {
+  stroke: color-mix(in oklab, var(--c-accent) 50%, transparent);
+  stroke-width: 2;
+}
+.ts-door {
+  fill: color-mix(in oklab, var(--c-accent) 70%, #ffd9a0);
+}
+.ts-door-glow {
+  opacity: 0.6;
+}
+.ts-slit {
+  opacity: 0.95;
+}
+.ts-warm-core {
+  stop-color: color-mix(in oklab, var(--c-accent) 60%, #fff3d6);
+  stop-opacity: 0.95;
+}
+.ts-warm-edge {
+  stop-color: var(--c-accent);
+  stop-opacity: 0;
+}
+
+.ts-leg {
+  stroke: var(--ts-steel);
+  stroke-width: 9;
+  stroke-linecap: round;
+}
+.ts-leg--back {
+  stroke: var(--ts-steel-dark);
+}
+.ts-tray {
+  fill: var(--ts-steel-dark);
+}
+.ts-eyepiece-spare {
+  fill: var(--gold-mid);
+}
+.ts-steel-dark {
+  stop-color: var(--ts-steel-dark);
+}
+.ts-steel-light {
+  stop-color: var(--ts-steel-light);
+}
+.ts-shaft {
+  stroke: var(--ts-steel);
+  stroke-width: 7;
+  stroke-linecap: round;
+}
+.ts-setting-circle {
+  fill: none;
+  stroke: var(--gold-mid);
+  stroke-width: 3;
+}
+.ts-saddle,
+.ts-bracket {
+  fill: var(--ts-steel-dark);
+}
+
+.ts-enamel {
+  stop-color: var(--ts-enamel);
+}
+.ts-enamel-dark {
+  stop-color: var(--ts-enamel-dark);
+}
+.ts-enamel-light {
+  stop-color: var(--ts-enamel-light);
+}
+.ts-enamel-shine {
+  stop-color: var(--ts-enamel-shine);
+}
+.ts-brass {
+  stop-color: var(--gold-mid);
+}
+.ts-brass-dark {
+  stop-color: var(--gold-dark);
+}
+.ts-brass-light {
+  stop-color: var(--gold-light);
+}
+.ts-lens-glint {
+  stop-color: #ffffff;
+}
+.ts-lens-violet {
+  stop-color: color-mix(in oklab, var(--c-secondary) 70%, #5a6cff);
+}
+.ts-lens-deep {
+  stop-color: #0a0624;
+}
+.ts-lens-reflection {
+  stroke: rgb(255 255 255 / 0.65);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+.ts-lens-spark {
+  fill: white;
+}
+.ts-eyecup {
+  fill: #0b0a14;
+}
+
+.ts-red-core {
+  stop-color: #ff3b3b;
+  stop-opacity: 0.55;
+}
+.ts-red-edge {
+  stop-color: #ff3b3b;
+  stop-opacity: 0;
+}
+.ts-lamp-body {
+  fill: #2a1a20;
+}
+.ts-lamp-light {
+  fill: #ff4a4a;
+}
+.ts-lamp-glow {
+  animation: lamp-breathe 3.2s var(--ease-in-out) infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.ts-eyepiece-glow {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: lamp-breathe 2.4s var(--ease-in-out) infinite;
+}
+
+.ts-notes {
+  opacity: 0;
+}
+.ts-note {
+  font-family: var(--font-script);
+  font-size: 30px;
+  fill: var(--c-accent);
+}
+.ts-note-line {
+  fill: none;
+  stroke: color-mix(in oklab, var(--c-accent) 70%, transparent);
+  stroke-width: 1.6;
+  stroke-dasharray: 4 6;
+}
+
+/* Maximalismo: piezas con contorno de tinta, como una ilustración impresa. */
+[data-style='maximal'] .ts-tube > rect,
+[data-style='maximal'] .ts-mount > *,
+[data-style='maximal'] .ts-building,
+[data-style='maximal'] .ts-dome,
+[data-style='maximal'] .ts-head {
+  stroke: var(--ts-outline);
+  stroke-width: 3.5;
+}
+[data-style='maximal'] .ts-leg {
+  stroke: var(--ink);
+  stroke-width: 11;
+}
+
+@keyframes lamp-breathe {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+/* =====================================================================
+ * Iris y ocular
+ * ===================================================================== */
+.astral__iris {
+  opacity: 0;
+  background:
+    radial-gradient(
+      circle at var(--iris-x, 50%) var(--iris-y, 50%),
+      transparent calc(var(--iris-r, 2000px) - 6px),
+      color-mix(in oklab, var(--c-primary) 55%, transparent) calc(var(--iris-r, 2000px) - 4px),
+      color-mix(in oklab, #6fd3ff 45%, transparent) calc(var(--iris-r, 2000px) - 2px),
+      var(--iris-color) var(--iris-r, 2000px)
+    );
+}
+
+.eyepiece {
+  opacity: 0;
+  clip-path: circle(var(--iris-r, 2000px) at var(--iris-x, 50%) var(--iris-y, 50%));
+}
+
+.eyepiece__lens {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at var(--iris-x, 50%) var(--iris-y, 50%), #120a2e 0, #05030f 65%);
+}
+
+[data-theme='light'] .eyepiece__lens {
+  background: radial-gradient(circle at var(--iris-x, 50%) var(--iris-y, 50%), #1d1240 0, #0b0620 65%);
+}
+
+.eyepiece__nebula {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(46px);
+  opacity: 0.55;
+}
+.eyepiece__nebula--a {
+  width: 50vmin;
+  height: 40vmin;
+  left: 22%;
+  top: calc(var(--iris-y, 50%) - 30vmin);
+  background: radial-gradient(closest-side, var(--nebula-violet), transparent);
+}
+.eyepiece__nebula--b {
+  width: 46vmin;
+  height: 36vmin;
+  right: 20%;
+  top: var(--iris-y, 50%);
+  background: radial-gradient(closest-side, var(--nebula-rose), transparent);
+}
+
+.eyepiece__bokeh {
+  position: absolute;
+  width: calc(var(--s) * 18px);
+  height: calc(var(--s) * 18px);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.5), transparent 70%);
+  filter: blur(2px);
+}
+
+.eyepiece__candle {
+  position: absolute;
+  left: var(--iris-x, 50%);
+  top: var(--iris-y, 50%);
+  translate: -50% -52%;
+  will-change: transform, filter;
+}
+
+/* Calor de la vela contra el frío del universo. */
+.eyepiece__warmth {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  width: 34em;
+  height: 34em;
+  font-size: var(--candle-em, 12px);
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in oklab, var(--c-accent) 38%, transparent), transparent 62%);
+  opacity: calc(0.35 + var(--warmth, 0) * 0.65);
+}
+
+.eyepiece__candle .candle {
+  --letter-glow: inherit;
+}
+
+.eyepiece__reticle {
+  position: absolute;
+  left: var(--iris-x, 50%);
+  top: var(--iris-y, 50%);
+  width: calc(var(--iris-r, 300px) * 2);
+  height: calc(var(--iris-r, 300px) * 2);
+  translate: -50% -50%;
+  opacity: 0;
+  overflow: visible;
+}
+
+.reticle__ring {
+  fill: none;
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 0.6;
+}
+.reticle__ring--thin {
+  stroke-width: 0.3;
+  stroke-dasharray: 1 2;
+}
+.reticle__tick {
+  stroke: rgb(255 255 255 / 0.35);
+  stroke-width: 0.4;
+}
+.reticle__tick--major {
+  stroke: color-mix(in oklab, var(--c-accent) 70%, white);
+  stroke-width: 0.7;
+}
+.reticle__cross {
+  stroke: rgb(255 255 255 / 0.22);
+  stroke-width: 0.35;
+  stroke-dasharray: 2 2;
+}
+.reticle__label {
+  font-family: var(--font-body);
+  font-size: 4.2px;
+  font-weight: 700;
+  fill: rgb(255 255 255 / 0.55);
+  letter-spacing: 0.1em;
+}
+
+/* Reflejo de cristal sobre la lente (estilo Glass). */
+.eyepiece__glare {
+  position: absolute;
+  left: var(--iris-x, 50%);
+  top: var(--iris-y, 50%);
+  width: calc(var(--iris-r, 300px) * 2);
+  height: calc(var(--iris-r, 300px) * 2);
+  translate: -50% -50%;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 38% 22% at 32% 18%, rgb(255 255 255 / 0.16), transparent 70%),
+    radial-gradient(ellipse 18% 10% at 70% 84%, rgb(255 255 255 / 0.06), transparent 70%);
+  box-shadow: inset 0 0 calc(var(--iris-r, 300px) * 0.25) rgb(0 0 0 / 0.7);
+}
+
+[data-style='maximal'] .eyepiece__glare {
+  background: none;
+  box-shadow:
+    inset 0 0 0 6px var(--c-accent),
+    inset 0 0 0 10px var(--ink),
+    inset 0 0 calc(var(--iris-r, 300px) * 0.2) rgb(0 0 0 / 0.6);
+}
+
+.eyepiece__focus {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--iris-y, 50%) + var(--iris-r, 300px) * 0.8);
+  translate: -50% -50%;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-accent);
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  white-space: nowrap;
+}
+
+.eyepiece__catalog {
+  position: absolute;
+  inset: auto;
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.9rem;
+  opacity: 0;
+}
+
+/* A la izquierda del círculo, alineada a su centro (escritorio con espacio). */
+.eyepiece__catalog[data-place='outside'] {
+  right: calc(100% - var(--iris-x, 50%) + var(--iris-r, 300px) + 1.5rem);
+  top: var(--iris-y, 50%);
+  translate: 0 -50%;
+  text-align: right;
+}
+
+/* Encima del círculo, en una sola línea (móvil vertical). */
+.eyepiece__catalog[data-place='above'] {
+  left: var(--iris-x, 50%);
+  top: calc(var(--iris-y, 50%) - var(--iris-r, 300px) - 0.4rem);
+  translate: -50% -100%;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.7rem;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/*
+ * Sin sitio fuera: una línea dentro de la lente, bajo la vela (el hueco que deja
+ * «Enfocando…», que ya se desvaneció al aparecer la letra).
+ */
+.eyepiece__catalog[data-place='inside'] {
+  left: var(--iris-x, 50%);
+  top: calc(var(--iris-y, 50%) + var(--iris-r, 300px) * 0.8);
+  translate: -50% -50%;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  font-size: clamp(0.55rem, calc(var(--iris-r, 300px) * 0.045), 0.75rem);
+  white-space: nowrap;
+}
+
+.eyepiece__catalog[data-place='inside'] > div {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3em;
+}
+
+.eyepiece__catalog[data-place='inside'] dd {
+  font-size: 1.25em;
+}
+
+.eyepiece__catalog dt {
+  font-size: 0.72em;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--astral-faint);
+}
+
+.eyepiece__catalog dd {
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.45em;
+  line-height: 1.1;
+  color: color-mix(in oklab, var(--gold-light) 70%, var(--astral-text));
+}
+
+
+.eyepiece__catalog dt {
+  color: rgb(245 240 255 / 0.55);
+}
+
+.eyepiece__catalog[data-place='outside'] dt {
+  color: var(--astral-faint);
+}
+
+
+/* =====================================================================
+ * Arquitectura de scroll: contenedor alto + escenario sticky
+ *
+ *   .astral__track  mide (duración del viaje + 1) pantallas. Su altura es la
+ *                   "pista" que recorre el scroll nativo.
+ *   .astral__stage  sticky, top 0, alto de la pantalla visible (dvh). Queda fijo
+ *                   en pantalla durante todo el recorrido y se organiza en una
+ *                   rejilla: cabecera / zona visual / narrativa / progreso.
+ *
+ * Requisitos para que sticky funcione: ningún ancestro con overflow distinto de
+ * visible (el overflow-x de <body> se propaga al viewport y no lo afecta) y el
+ * contenedor más alto que el escenario. Nada aquí usa position: fixed.
+ * ===================================================================== */
+.astral__track {
+  position: relative;
+  height: calc((var(--story-length) + 1) * 100vh);
+  height: calc((var(--story-length) + 1) * 100svh);
+}
+
+.astral__stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  isolation: isolate;
+  contain: layout paint;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'top'
+    'area'
+    'narrative'
+    'progress';
+}
+
+.astral__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.astral__backdrop > * {
+  position: absolute;
+  inset: 0;
+}
+
+.astral__area {
+  grid-area: area;
+  min-height: 0;
+}
+
+/* Las capas que se componen en la zona visual reciben su caja desde JS. */
+.astral__constellation {
+  inset: auto !important;
+  transform-origin: center;
+}
+
+.constellation {
+  position: absolute;
+  inset: 4%;
+  width: 92%;
+  height: 92%;
+}
+
+.telescope {
+  position: absolute;
+  overflow: visible;
+}
+
+/* ---------- Cabecera ---------- */
+.astral__top {
+  grid-area: top;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'brand skip'
+    'distance skip';
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: calc(var(--safe-top) + var(--space-3)) calc(var(--safe-right) + var(--gutter)) var(--space-2)
+    calc(var(--safe-left) + var(--gutter));
+}
+
+.astral__brand {
+  grid-area: brand;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--astral-muted);
+}
+
+.astral__brand svg {
+  width: 16px;
+  height: 16px;
+  color: var(--c-accent);
+}
+
+.astral__skip {
+  grid-area: skip;
+  --btn-fg: var(--astral-muted);
+}
+
+.astral__distance {
+  grid-area: distance;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--space-2);
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--astral-muted);
+  transition: opacity 0.8s var(--ease-out);
+}
+
+.astral__distance-label {
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--astral-faint);
+}
+
+/* El prólogo es una portada limpia: sin distancia ni barra de progreso. */
+.astral[data-scene='opening'] :is(.astral__distance, .astral__progress) {
+  opacity: 0;
+}
+
+/* ---------- Narrativa: todos los textos comparten la misma celda ---------- */
+.astral__narrative {
+  grid-area: narrative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: end;
+  justify-items: center;
+  padding: var(--space-2) calc(var(--safe-right) + var(--gutter)) var(--space-2) calc(var(--safe-left) + var(--gutter));
+}
+
+/*
+ * Apilados en una sola celda: la fila mide lo que el texto más largo, así la
+ * zona visual no cambia de tamaño entre capítulos (composición estable) y
+ * ningún texto puede quedar fuera de pantalla.
+ */
+.astral__narrative > * {
+  grid-area: 1 / 1;
+  width: 100%;
+  max-width: 34rem;
+  opacity: 0;
+  will-change: opacity, transform;
+}
+
+/* ---------- Prólogo: portada sobre la zona visual y la narrativa ---------- */
+.opening {
+  grid-row: 2 / 4;
+  grid-column: 1 / -1;
+  z-index: 3;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: clamp(var(--space-3), 2.4vh, var(--space-5));
+  padding: var(--space-4) calc(var(--safe-right) + var(--gutter)) var(--space-4) calc(var(--safe-left) + var(--gutter));
+  text-align: center;
+  will-change: opacity, transform;
+}
+
+.opening > * {
+  max-width: 44rem;
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(12px);
+  transition:
+    opacity 2s var(--ease-out),
+    filter 2s var(--ease-out),
+    transform 2s var(--ease-out);
+}
+
+.astral:not([data-intro='0']) .opening__line,
+.astral[data-intro='2'] .opening__reveal,
+.astral[data-intro='3'] .opening__reveal,
+.astral[data-intro='3'] .opening__dedication,
+.astral[data-intro='3'] .opening__actions {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+.opening__line {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: clamp(1.8rem, min(1.2rem + 3.6vw, 0.6rem + 5.4vh), 3.9rem);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'SOFT' 100, 'opsz' 144;
+}
+
+.opening__reveal {
+  max-width: 30ch;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.1rem, min(1rem + 1.2vw, 0.5rem + 2.6vh), 1.85rem);
+  line-height: 1.4;
+  color: var(--astral-muted);
+}
+
+.opening__dedication {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--astral-faint);
+}
+
+.opening__dedication .nickname {
+  margin-left: 0.4em;
+  font-size: 1.9rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.opening__actions {
+  display: grid;
+  justify-items: center;
+  gap: clamp(var(--space-3), 3vh, var(--space-6));
+  margin-top: var(--space-2);
+}
+
+.opening__cue {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--astral-faint);
+}
+
+.opening__cue-line {
+  width: 1px;
+  height: clamp(20px, 5vh, 46px);
+  background: linear-gradient(180deg, transparent, var(--astral-muted));
+  transform-origin: top;
+  animation: cue-fall 2.6s var(--ease-in-out) infinite;
+}
+
+@keyframes cue-fall {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1) translateY(16px);
+    opacity: 0;
+  }
+}
+
+/* ---------- Textos de capítulo ---------- */
+.caption {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.caption__chapter {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--astral-faint);
+}
+
+.caption__numeral {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.5rem;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--c-accent);
+}
+
+/* El tamaño depende también del alto disponible: en pantallas bajas el texto cabe. */
+.caption__text {
+  font-family: var(--font-display);
+  font-weight: 330;
+  font-size: clamp(1.15rem, min(1rem + 1.4vw, 0.45rem + 2.6vh), 2.1rem);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  font-variation-settings: 'SOFT' 100, 'opsz' 72;
+  text-wrap: balance;
+  color: var(--astral-text);
+}
+
+.caption__note {
+  margin: 0;
+  font-family: var(--font-script);
+  font-size: clamp(1rem, 0.6rem + 1.4vh, 1.2rem);
+  color: var(--c-accent);
+}
+
+.caption__note::before {
+  content: '— ';
+}
+
+/* Glass: paneles esmerilados que mantienen la lectura sobre cualquier capa. */
+[data-style='glass'] .caption,
+[data-style='glass'] .finale {
+  padding: clamp(var(--space-3), 2.2vh, var(--space-5)) clamp(var(--space-4), 2vw, var(--space-6));
+  border-radius: var(--radius-xl);
+  background: linear-gradient(150deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0.02)), var(--hud-surface);
+  border: 1px solid var(--hud-border);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.18),
+    0 30px 60px -30px rgb(0 0 0 / 0.6);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+/* Maximal: fichas de carta estelar impresas, con numeral gigante. */
+[data-style='maximal'] .caption,
+[data-style='maximal'] .finale {
+  padding: clamp(var(--space-3), 2.2vh, var(--space-5)) clamp(var(--space-4), 2vw, var(--space-6));
+  border-radius: var(--radius-sm) var(--radius-2xl) var(--radius-sm) var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  border: 2.5px solid var(--ink);
+  box-shadow: 7px 7px 0 var(--c-accent);
+  --astral-text: var(--text);
+  --astral-faint: var(--text-muted);
+  rotate: -1deg;
+}
+
+[data-style='maximal'] .caption__numeral {
+  font-family: var(--font-bold);
+  font-style: normal;
+  font-weight: 800;
+  font-size: 2.6rem;
+  line-height: 0.9;
+  color: var(--c-primary);
+  -webkit-text-stroke: 1.5px var(--ink);
+}
+
+[data-style='maximal'] .caption__text {
+  font-family: var(--font-bold);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+[data-style='maximal'] .caption--constellation,
+[data-style='maximal'] .caption--telescope {
+  rotate: 1.2deg;
+  box-shadow: 7px 7px 0 var(--c-secondary);
+}
+
+/* ---------- Revelación: «Otro año juntos» ---------- */
+.together {
+  align-self: center;
+  margin: 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(2rem, min(1.4rem + 3.4vw, 0.6rem + 6vh), 4.6rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'SOFT' 100, 'opsz' 144;
+  text-align: center;
+  color: color-mix(in oklab, var(--gold-light) 55%, var(--astral-text));
+  text-shadow:
+    0 0 0.45em color-mix(in oklab, var(--c-accent) 55%, transparent),
+    0 0 1.4em color-mix(in oklab, var(--c-primary) 35%, transparent);
+}
+
+[data-style='maximal'] .together {
+  font-family: var(--font-bold);
+  font-style: normal;
+  font-weight: 800;
+  color: var(--c-accent);
+  -webkit-text-stroke: 2px var(--ink);
+  text-shadow: 5px 5px 0 var(--c-primary);
+}
+
+/* ---------- Final ---------- */
+.finale {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: clamp(var(--space-2), 1.6vh, var(--space-4));
+  text-align: center;
+}
+
+.finale__message {
+  font-family: var(--font-display);
+  font-weight: 330;
+  font-size: clamp(1.05rem, min(0.95rem + 1vw, 0.4rem + 2.4vh), 1.85rem);
+  line-height: 1.4;
+  text-wrap: balance;
+}
+
+.finale__signature {
+  font-family: var(--font-script);
+  font-size: clamp(1.25rem, min(1.1rem + 1vw, 0.6rem + 2.6vh), 2.1rem);
+  line-height: 1.2;
+  color: color-mix(in oklab, var(--c-primary) 60%, var(--astral-text));
+}
+
+.finale__actions {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+}
+
+.finale__actions .btn {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+/*
+ * Pantallas muy bajas (móvil en horizontal): el capítulo ya se lee en la barra
+ * de progreso, así que la tarjeta final se compacta para caber entera.
+ */
+@media (max-height: 460px) {
+  .finale > .caption__chapter {
+    display: none;
+  }
+  .finale {
+    gap: var(--space-2);
+  }
+  .finale__signature {
+    font-size: 1.15rem;
+  }
+  .finale__actions .btn--lg {
+    min-height: 44px;
+    padding-inline: var(--space-5);
+    font-size: var(--text-sm);
+  }
+}
+
+[data-style='maximal'] .finale__message {
+  font-family: var(--font-bold);
+  font-weight: 700;
+}
+
+/* ---------- Progreso narrativo ---------- */
+.astral__progress {
+  grid-area: progress;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'current current'
+    'rail next';
+  align-items: center;
+  column-gap: var(--space-3);
+  padding: 0 calc(var(--safe-right) + var(--gutter)) calc(var(--safe-bottom) + var(--space-3))
+    calc(var(--safe-left) + var(--gutter));
+  transition: opacity 0.8s var(--ease-out);
+}
+
+.astral__current {
+  grid-area: current;
+  margin: 0;
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--astral-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.astral__current-numeral {
+  margin-right: var(--space-1);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1rem;
+  letter-spacing: 0;
+  color: var(--c-accent);
+}
+
+.astral__rail {
+  grid-area: rail;
+  position: relative;
+  height: 40px;
+  margin-inline: 14px;
+}
+
+.astral__rail-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  margin-top: -1px;
+  border-radius: 2px;
+  background: var(--hud-border);
+  overflow: hidden;
+}
+
+.astral__rail-fill {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  transform: scaleX(0);
+  background: linear-gradient(90deg, var(--c-primary), var(--c-accent));
+}
+
+.astral__rail-points {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.astral__rail-points li {
+  position: absolute;
+  top: 50%;
+  left: calc(var(--at) * 100%);
+  translate: -50% -50%;
+}
+
+.astral__point {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--astral-faint);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.astral__point span {
+  display: grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 3px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--hud-border);
+  background: var(--void-0);
+  transition:
+    background-color var(--dur-base) var(--ease-out),
+    color var(--dur-base) var(--ease-out),
+    border-color var(--dur-base) var(--ease-out);
+}
+
+.astral__point.is-past span {
+  color: var(--astral-muted);
+  border-color: color-mix(in oklab, var(--c-accent) 50%, transparent);
+}
+
+.astral__point.is-active span {
+  color: var(--c-on-accent);
+  background: var(--c-accent);
+  border-color: var(--c-accent);
+  box-shadow: 0 0 14px color-mix(in oklab, var(--c-accent) 60%, transparent);
+}
+
+@media (hover: hover) {
+  .astral__point:hover span {
+    color: var(--astral-text);
+    border-color: var(--astral-muted);
+  }
+}
+
+.astral__next {
+  grid-area: next;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--hud-border);
+  background: var(--hud-surface);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--astral-text);
+}
+
+.astral__next:disabled {
+  opacity: 0.35;
+}
+
+.astral__next svg {
+  width: 20px;
+  height: 20px;
+  animation: nudge 2.4s var(--ease-in-out) infinite;
+}
+
+.astral__next:disabled svg {
+  animation: none;
+}
+
+[data-style='maximal'] .astral__next {
+  border: 2px solid var(--ink);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  box-shadow: 3px 3px 0 var(--ink);
+}
+
+@keyframes nudge {
+  50% {
+    transform: translateY(3px);
+  }
+}
+
+/* ---------- Escritorio / apaisado: ilustración a la izquierda, narrativa a la derecha ---------- */
+@media (orientation: landscape) and (min-width: 600px) {
+  .astral__stage {
+    grid-template-columns: minmax(0, 1fr) clamp(19rem, 34vw, 32rem);
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      'top top'
+      'area narrative'
+      'progress progress';
+  }
+
+  .astral__top {
+    grid-template-columns: 1fr auto 1fr;
+    grid-template-areas: 'brand distance skip';
+  }
+
+  .astral__skip {
+    justify-self: end;
+  }
+
+  .astral__distance {
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .astral__narrative {
+    align-items: center;
+    justify-items: start;
+    padding: var(--space-4) calc(var(--safe-right) + 4vw) var(--space-4) var(--space-2);
+  }
+
+  .together {
+    text-align: left;
+  }
+
+  .opening {
+    grid-row: 2 / 3;
+  }
+
+  .astral__progress {
+    grid-template-columns: minmax(10rem, 16rem) minmax(0, 1fr) auto;
+    grid-template-areas: 'current rail next';
+    padding-top: var(--space-2);
+  }
+}
+
+@media (orientation: landscape) and (min-width: 600px) and (min-height: 760px) {
+  .astral__progress {
+    padding-bottom: calc(var(--safe-bottom) + var(--space-5));
+  }
+}
+
+/* ---------- Pantallas estrechas ---------- */
+@media (max-width: 480px) {
+  .astral__brand-long {
+    display: none;
+  }
+  .astral__brand {
+    letter-spacing: 0.14em;
+  }
+}
+
+/* ---------- Movimiento reducido: solo fundidos ---------- */
+.astral.is-reduced .opening > * {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+/* ---------- Tema claro: contraste ---------- */
+
+/*
+ * Al mirar por el ocular el fondo se vuelve oscuro en cualquier tema, así que
+ * la cabecera y el progreso pasan a texto claro mientras dura (data-dark).
+ * «Otro año juntos» siempre aparece sobre el iris oscuro.
+ */
+[data-theme='light'] .astral[data-dark] {
+  --hud-surface: rgb(12 10 34 / 0.45);
+  --hud-border: rgb(255 255 255 / 0.22);
+}
+
+[data-theme='light'] .astral[data-dark] :is(.astral__top, .astral__progress),
+[data-theme='light'] .astral .together {
+  --astral-text: #f5f0ff;
+  --astral-muted: rgb(245 240 255 / 0.78);
+  --astral-faint: rgb(245 240 255 / 0.55);
+  --void-0: #120b26;
+}
+
+/* Acentos legibles sobre fondos claros: se usa la variante oscura del acento. */
+[data-theme='light'] .astral :is(.caption__note, .caption__numeral, .opening__dedication .nickname) {
+  color: var(--accent-text);
+}
+
+[data-theme='light'] .astral .constellation__label-note,
+[data-theme='light'] .astral .ts-note,
+[data-theme='light'] .astral .constellation__counter {
+  fill: var(--accent-text);
+}
+
+[data-theme='light'] .astral .ts-note-line {
+  stroke: var(--accent-text);
+}
+
+[data-theme='light'][data-style='maximal'] .astral .caption__numeral {
+  color: var(--c-primary);
+}

@@ -1,0 +1,395 @@
+/* ---------- Bienvenida ---------- */
+.hero {
+  display: grid;
+  gap: var(--space-6);
+  overflow: hidden;
+  padding: clamp(var(--space-6), 2rem + 3vw, var(--space-11));
+}
+
+.hero__copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-5);
+  max-width: 44rem;
+}
+
+.hero__title {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-hero);
+}
+
+.hero__greeting {
+  font-size: 0.5em;
+  color: var(--text-muted);
+  letter-spacing: -0.01em;
+}
+
+.hero__nickname {
+  min-height: 1.2em;
+}
+
+.hero__lead {
+  max-width: 46ch;
+  font-size: var(--text-lg);
+  color: var(--text-muted);
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.hero__ornament {
+  position: absolute;
+  right: clamp(-3rem, -2rem - 2vw, -1rem);
+  bottom: clamp(-4rem, -3rem - 2vw, -2rem);
+  width: clamp(12rem, 8rem + 16vw, 22rem);
+  aspect-ratio: 1;
+  pointer-events: none;
+  color: var(--c-primary);
+}
+
+@media (max-width: 599px) {
+  .hero__ornament {
+    width: 9rem;
+    right: -2.5rem;
+    bottom: -2.5rem;
+  }
+}
+
+.hero__heart {
+  width: 100%;
+  height: 100%;
+  opacity: 0.12;
+  stroke-width: 0.6;
+  animation: heart-beat 5s var(--ease-in-out) infinite;
+}
+
+.hero__sparkles {
+  position: absolute;
+  top: 8%;
+  left: 4%;
+  width: 22%;
+  height: 22%;
+  color: var(--c-accent);
+  opacity: 0.6;
+  animation: sparkle-turn 9s var(--ease-in-out) infinite;
+}
+
+@keyframes heart-beat {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  12% {
+    transform: scale(1.04);
+  }
+  24% {
+    transform: scale(1);
+  }
+  36% {
+    transform: scale(1.03);
+  }
+}
+
+@keyframes sparkle-turn {
+  50% {
+    transform: rotate(20deg) scale(0.85);
+    opacity: 0.3;
+  }
+}
+
+/* Maximalismo: bienvenida tipo cartel, con borde grueso y sello. */
+[data-style='maximal'] .hero {
+  background:
+    radial-gradient(circle at 100% 100%, color-mix(in oklab, var(--c-primary) 35%, transparent) 0 22%, transparent 22.2%),
+    repeating-linear-gradient(-45deg, transparent 0 14px, var(--pattern-ink) 14px 16px),
+    var(--surface);
+  border-radius: var(--radius-2xl) var(--radius-sm) var(--radius-2xl) var(--radius-sm);
+  box-shadow: 10px 10px 0 0 var(--c-secondary);
+}
+
+[data-style='maximal'] .hero__greeting {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 500;
+}
+
+[data-style='maximal'] .hero__heart {
+  opacity: 1;
+  fill: var(--c-primary);
+  stroke: var(--surface-border);
+  stroke-width: 1.2;
+}
+
+/* ---------- Rejilla de tarjetas ---------- */
+.home__grid {
+  display: grid;
+  gap: var(--space-5);
+}
+
+@media (min-width: 680px) {
+  .home__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .replay-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1180px) {
+  .home__grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .replay-card {
+    grid-column: auto;
+  }
+}
+
+[data-style='maximal'] .home__grid > :nth-child(1) {
+  border-radius: var(--radius-sm) var(--radius-2xl) var(--radius-sm) var(--radius-sm);
+}
+[data-style='maximal'] .home__grid > :nth-child(2) {
+  border-radius: 999px 999px var(--radius-lg) var(--radius-lg) / 160px 160px var(--radius-lg) var(--radius-lg);
+  padding-top: var(--space-9);
+  text-align: center;
+  justify-items: center;
+}
+@media (min-width: 680px) {
+  [data-style='maximal'] .home__grid > :nth-child(2) {
+    transform: rotate(1.2deg) translateY(var(--space-3));
+  }
+}
+
+.stat-card {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+
+.stat-card__icon {
+  width: 28px;
+  height: 28px;
+  color: var(--primary-text);
+}
+
+.stat-card__title {
+  font-size: var(--text-xl);
+}
+
+.stat-card__value {
+  font-size: var(--text-4xl);
+  font-variant-numeric: lining-nums;
+}
+
+.stat-card__value span {
+  font-size: 0.42em;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.stat-card__text {
+  color: var(--text-muted);
+}
+
+.stat-card__foot {
+  margin-top: auto;
+  padding-top: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--primary-text);
+}
+
+.stat-card .btn {
+  justify-self: start;
+}
+
+/* ---------- Cuenta regresiva ---------- */
+.countdown {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.countdown__unit {
+  display: grid;
+  justify-items: center;
+  min-width: 3.4rem;
+  padding: var(--space-2) var(--space-1);
+  border-radius: var(--radius-md);
+  background: var(--hover);
+  border: 1px solid var(--border);
+}
+
+.countdown__value {
+  font-family: var(--heading-font);
+  font-weight: 600;
+  font-size: var(--text-2xl);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+
+.countdown__label {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+[data-style='maximal'] .countdown__unit {
+  border: 2px solid currentColor;
+  background: transparent;
+}
+
+/* ---------- Revivir la presentación ---------- */
+.replay-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  overflow: hidden;
+}
+
+.replay-card__candle {
+  flex: none;
+  display: grid;
+  place-items: end center;
+  width: 64px;
+  padding-top: var(--space-4);
+}
+
+.replay-card__copy {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.replay-card__copy .btn {
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
+[data-style='glass'][data-theme='light'] .replay-card {
+  background:
+    radial-gradient(circle at 12% 60%, color-mix(in oklab, var(--c-accent) 18%, transparent), transparent 45%),
+    var(--surface);
+}
+
+/* ---------- Próximos espacios ---------- */
+.upcoming__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upcoming__card {
+  display: grid;
+  gap: var(--space-3);
+  height: 100%;
+  padding: var(--space-5);
+}
+
+[data-style='glass'] .upcoming__card {
+  background: color-mix(in oklab, var(--surface) 70%, transparent);
+  border-style: dashed;
+}
+
+.upcoming__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.upcoming__icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: color-mix(in oklab, var(--c-primary) 16%, transparent);
+  color: var(--primary-text);
+}
+
+.upcoming__icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.upcoming__title {
+  font-size: var(--text-lg);
+}
+
+/* En móvil, filas compactas: icono a la izquierda y texto a la derecha. */
+@media (max-width: 599px) {
+  .upcoming__card {
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--space-4);
+    row-gap: var(--space-1);
+    padding: var(--space-4);
+  }
+  .upcoming__head {
+    display: contents;
+  }
+  .upcoming__icon {
+    grid-row: 1 / span 3;
+  }
+  .upcoming__head .badge {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: start;
+  }
+  .upcoming__title,
+  .upcoming__teaser {
+    grid-column: 2;
+  }
+}
+
+.upcoming__teaser {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* Maximalismo: cada tarjeta con su color y una forma distinta. */
+[data-style='maximal'] .upcoming__item:nth-child(5n + 1) .upcoming__card {
+  border-radius: var(--radius-2xl) var(--radius-sm) var(--radius-sm) var(--radius-sm);
+}
+[data-style='maximal'] .upcoming__item:nth-child(5n + 2) .upcoming__card {
+  box-shadow: 6px 6px 0 0 var(--c-primary);
+  transform: rotate(-0.8deg);
+}
+[data-style='maximal'] .upcoming__item:nth-child(5n + 3) .upcoming__card {
+  border-radius: var(--radius-sm) var(--radius-sm) var(--radius-2xl) var(--radius-sm);
+  box-shadow: 6px 6px 0 0 var(--c-secondary);
+}
+[data-style='maximal'] .upcoming__item:nth-child(5n + 4) .upcoming__card {
+  transform: rotate(0.8deg);
+}
+[data-style='maximal'] .upcoming__icon {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  border: 2px solid var(--surface-border);
+  border-radius: 50%;
+}
+
+/* ---------- Privacidad ---------- */
+.home__privacy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.home__privacy svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--success);
+}

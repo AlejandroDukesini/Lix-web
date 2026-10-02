@@ -1,0 +1,148 @@
+.nickname {
+  display: inline-grid;
+  vertical-align: baseline;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 460;
+  font-variation-settings: 'SOFT' 100, 'WONK' 1, 'opsz' 144;
+  letter-spacing: -0.01em;
+  color: var(--primary-text);
+  line-height: 1.15;
+}
+
+.nickname__stage {
+  display: inline-block;
+  padding-bottom: 0.18em;
+}
+
+.nickname__word {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  text-shadow: 0 0 0.6em color-mix(in oklab, var(--c-primary) 45%, transparent);
+}
+
+.nickname__char {
+  display: inline-block;
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(0.32em) rotate(5deg);
+  animation: nickname-char-in 1100ms var(--ease-out) forwards;
+  animation-delay: calc(var(--i) * 80ms);
+}
+
+/* Trazo a mano alzada que se dibuja bajo el apodo. */
+.nickname__flourish {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: -0.16em;
+  width: 96%;
+  height: 0.28em;
+  overflow: visible;
+  fill: none;
+  stroke: var(--c-accent);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0.85;
+  animation: nickname-draw 1600ms var(--ease-in-out) 700ms forwards;
+}
+
+.nickname__sparkle {
+  position: absolute;
+  top: -0.12em;
+  right: -0.5em;
+  width: 0.34em;
+  fill: var(--c-accent);
+  opacity: 0;
+  animation: nickname-sparkle 2600ms var(--ease-in-out) 1200ms infinite;
+}
+
+.nickname.is-out .nickname__word {
+  animation: nickname-out 1100ms var(--ease-in-out) forwards;
+}
+
+/* Movimiento reducido: un fundido simple y lento, sin desenfoques ni desplazamientos. */
+.nickname.is-reduced .nickname__char {
+  opacity: 1;
+  filter: none;
+  transform: none;
+  animation: none;
+}
+.nickname.is-reduced .nickname__flourish {
+  stroke-dashoffset: 0;
+  animation: none;
+}
+.nickname.is-reduced .nickname__sparkle {
+  animation: none;
+  opacity: 0.8;
+}
+.nickname.is-reduced .nickname__word {
+  animation: nickname-fade-in 400ms linear both;
+}
+.nickname.is-reduced.is-out .nickname__word {
+  animation: nickname-fade-out 600ms linear forwards;
+}
+
+[data-style='maximal'] .nickname {
+  font-weight: 700;
+  font-variation-settings: 'SOFT' 0, 'WONK' 1, 'opsz' 144;
+}
+[data-style='maximal'] .nickname__word {
+  text-shadow: 0.06em 0.06em 0 color-mix(in oklab, var(--c-accent) 70%, transparent);
+}
+[data-style='maximal'] .nickname__flourish {
+  stroke-width: 5;
+  stroke: var(--c-secondary);
+}
+
+@keyframes nickname-char-in {
+  55% {
+    filter: blur(0);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: none;
+  }
+}
+
+@keyframes nickname-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes nickname-sparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4) rotate(0deg);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1) rotate(45deg);
+  }
+}
+
+@keyframes nickname-out {
+  to {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(-0.22em);
+  }
+}
+
+@keyframes nickname-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes nickname-fade-out {
+  to {
+    opacity: 0;
+  }
+}

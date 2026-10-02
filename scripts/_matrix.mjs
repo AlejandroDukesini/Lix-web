@@ -1,0 +1,64 @@
+import { preview } from 'vite';
+import { chromium } from 'playwright-core';
+const OUT = process.env.OUT;
+const server = await preview({ preview: { port: 4370 }, logLevel: 'silent' });
+const base = server.resolvedUrls.local[0];
+const browser = await chromium.launch({ executablePath: 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe' });
+const viewports = (process.env.VPS || '1366x657,1280x600,1920x1080,1024x768,375x812,390x664,360x740,812x375').split(',');
+const poses = [['stars', 0.5], ['constellation', 0.85], ['galaxy', 0.5], ['telescope', 0.7], ['eyepiece', 0.85], ['candle', 0.4], ['candle', 0.8], ['final', 1]];
+let failures = 0;
+for (const vp of viewports) {
+  const [w, h] = vp.split('x').map(Number);
+  const mobile = w < h && w < 600;
+  const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: mobile || (w > h && h < 500), hasTouch: mobile });
+  const page = await ctx.newPage();
+  const errors = [];
+  page.on('pageerror', (e) => errors.push(e.message));
+  page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
+  await page.goto(base);
+  await page.waitForTimeout(5200);
+  await page.screenshot({ path: `${OUT}/${vp}-0-prologo.png` });
+  const notes = [];
+  for (const [i, [id, pose]] of poses.entries()) {
+    const r = await page.evaluate(async ([id, pose]) => {
+      const ids = ['opening', 'stars', 'constellation', 'galaxy', 'telescope', 'eyepiece', 'candle', 'final'];
+      const lens = [0.8, 1.1, 1.6, 1.4, 1.3, 1.3, 1.6, 1];
+      const total = lens.reduce((a, b) => a + b);
+      const idx = ids.indexOf(id);
+      const start = lens.slice(0, idx).reduce((a, b) => a + b, 0) / total;
+      const end = start + lens[idx] / total;
+      const track = document.querySelector('.astral__track').getBoundingClientRect();
+      const stage = document.querySelector('.astral__stage');
+      const range = track.height - stage.offsetHeight;
+      window.scrollTo(0, track.top + scrollY + (start + (end - start) * pose) * range);
+      await new Promise((r) => setTimeout(r, 700));
+      const sr = stage.getBoundingClientRect();
+      const visible = [...document.querySelectorAll('.astral__narrative > *')].filter((el) => Number(getComputedStyle(el).opacity) > 0.6);
+      const boxes = visible.map((el) => { const b = el.getBoundingClientRect(); return { name: el.dataset.caption || el.className.split(' ')[0], top: Math.round(b.top), bottom: Math.round(b.bottom), left: Math.round(b.left), right: Math.round(b.right) }; });
+      const letter = document.querySelector('.candle__monogram').getBoundingClientRect();
+      const eyeOpacity = Number(getComputedStyle(document.querySelector('[data-eyepiece]')).opacity);
+      const overlapsLetter = eyeOpacity > 0.9 && boxes.some((b) => !(b.right < letter.left || b.left > letter.right || b.bottom < letter.top || b.top > letter.bottom));
+      const cat = document.querySelector('[data-eyepiece-catalog]');
+      const cb = cat.getBoundingClientRect();
+      const candleBox = document.querySelector('.eyepiece__candle .candle__body').getBoundingClientRect();
+      const catalogOverlap = Number(getComputedStyle(cat).opacity) > 0.9 && !(cb.right < candleBox.left || cb.left > candleBox.right || cb.bottom < candleBox.top || cb.top > candleBox.bottom);
+      const catalogOut = Number(getComputedStyle(cat).opacity) > 0.9 && (cb.left < 0 || cb.top < 0);
+      return { catalogOverlap, catalogOut, place: cat.dataset.place, stageTop: Math.round(sr.top), stageH: Math.round(sr.height), vh: innerHeight, boxes, overlapsLetter, scene: document.querySelector('.astral').dataset.scene };
+    }, [id, pose]);
+    const out = r.boxes.filter((b) => b.top < 0 || b.bottom > r.vh || b.left < 0 || b.right > w);
+    const problems = [];
+    if (r.stageTop !== 0) problems.push(`escenario no sticky (top ${r.stageTop})`);
+    if (!r.boxes.length && id !== 'galaxy') problems.push('sin texto visible');
+    if (out.length) problems.push('fuera: ' + out.map((b) => `${b.name} ${b.top}-${b.bottom}`).join(','));
+    if (r.overlapsLetter) problems.push('texto sobre la letra');
+    if (r.catalogOverlap) problems.push('ficha sobre la vela (' + r.place + ')');
+    if (r.catalogOut) problems.push('ficha fuera (' + r.place + ')');
+    if (problems.length) failures += 1;
+    notes.push(`${id}@${pose}${problems.length ? ' ✘ ' + problems.join('; ') : ' ✔'}`);
+    await page.screenshot({ path: `${OUT}/${vp}-${i + 1}-${id}-${pose}.png` });
+  }
+  console.log(`${vp}: ${notes.join(' | ')}${errors.length ? ' | ERRORES: ' + errors.join(' / ') : ''}`);
+  await ctx.close();
+}
+console.log('fallos:', failures);
+await browser.close(); server.httpServer.close();

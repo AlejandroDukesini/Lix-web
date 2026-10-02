@@ -1,0 +1,167 @@
+/*
+ * Temas y estilos.
+ *
+ * Dos ejes independientes, ambos en <html>:
+ *   data-theme = dark | light     → colores semánticos (fondo, texto, bordes, estados)
+ *   data-style = glass | maximal  → lenguaje visual (superficies, tipografía, sombras, formas)
+ *
+ * Los componentes solo consumen los tokens semánticos de este archivo. Los
+ * colores de la paleta personal (--c-*) se mezclan con neutros mediante
+ * color-mix() para que cualquier color elegido conserve un contraste legible.
+ */
+
+/* ---------- Tema oscuro ---------- */
+:root,
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: color-mix(in oklab, var(--c-ambient) 32%, var(--night));
+  --bg-deep: color-mix(in oklab, var(--c-ambient) 16%, #050307);
+  --text: #f8eff4;
+  --text-muted: #dccbd5;
+  --text-subtle: #b29daa;
+  --border: rgb(255 255 255 / 0.12);
+  --border-strong: rgb(255 255 255 / 0.26);
+  --primary-text: color-mix(in oklab, var(--c-primary) 62%, white);
+  --accent-text: color-mix(in oklab, var(--c-accent) 72%, white);
+  --secondary-text: color-mix(in oklab, var(--c-secondary) 55%, white);
+  --hover: rgb(255 255 255 / 0.07);
+  --pressed: rgb(255 255 255 / 0.12);
+  --selected: color-mix(in oklab, var(--c-primary) 24%, transparent);
+  --focus: color-mix(in oklab, var(--c-accent) 75%, white);
+  --overlay: rgb(5 3 8 / 0.62);
+  --danger: #ff9b9b;
+  --danger-bg: rgb(255 120 120 / 0.14);
+  --danger-solid: #e5484d;
+  --on-danger: #fff;
+  --success: #8be3b8;
+  --success-bg: rgb(110 220 170 / 0.14);
+  --warning: #ffd38a;
+  --warning-bg: rgb(255 200 110 / 0.12);
+  --shadow-sm: 0 2px 8px rgb(0 0 0 / 0.3);
+  --shadow-md: 0 14px 40px -16px rgb(0 0 0 / 0.65);
+  --shadow-lg: 0 30px 80px -30px rgb(0 0 0 / 0.75);
+  --input-bg: rgb(255 255 255 / 0.06);
+  --track: rgb(255 255 255 / 0.16);
+  --pattern-ink: rgb(255 255 255 / 0.07);
+}
+
+/* ---------- Tema claro ---------- */
+[data-theme='light'] {
+  color-scheme: light;
+  --bg: color-mix(in oklab, var(--c-ambient) 7%, var(--cream));
+  --bg-deep: color-mix(in oklab, var(--c-ambient) 14%, var(--cream));
+  --text: #24131e;
+  --text-muted: #57404e;
+  --text-subtle: #765e6c;
+  --border: rgb(36 19 30 / 0.12);
+  --border-strong: rgb(36 19 30 / 0.28);
+  --primary-text: color-mix(in oklab, var(--c-primary) 66%, black);
+  --accent-text: color-mix(in oklab, var(--c-accent) 48%, black);
+  --secondary-text: color-mix(in oklab, var(--c-secondary) 70%, black);
+  --hover: rgb(36 19 30 / 0.05);
+  --pressed: rgb(36 19 30 / 0.1);
+  --selected: color-mix(in oklab, var(--c-primary) 16%, transparent);
+  --focus: color-mix(in oklab, var(--c-primary) 70%, black);
+  --overlay: rgb(36 19 30 / 0.38);
+  --danger: #b4232a;
+  --danger-bg: rgb(220 50 60 / 0.09);
+  --danger-solid: #c8323a;
+  --on-danger: #fff;
+  --success: #17724a;
+  --success-bg: rgb(30 160 100 / 0.1);
+  --warning: #8a5a00;
+  --warning-bg: rgb(230 160 30 / 0.12);
+  --shadow-sm: 0 2px 8px rgb(80 30 60 / 0.08);
+  --shadow-md: 0 16px 40px -18px rgb(80 30 60 / 0.3);
+  --shadow-lg: 0 30px 70px -30px rgb(80 30 60 / 0.35);
+  --input-bg: rgb(255 255 255 / 0.7);
+  --track: rgb(36 19 30 / 0.16);
+  --pattern-ink: rgb(36 19 30 / 0.07);
+}
+
+/* =====================================================================
+ * Estilo Glassmorphism
+ * ===================================================================== */
+:root,
+[data-style='glass'] {
+  --heading-font: var(--font-display);
+  --heading-weight: 420;
+  --heading-tracking: -0.015em;
+  --heading-variation: 'SOFT' 100, 'WONK' 0, 'opsz' 96;
+  --heading-transform: none;
+  --surface-radius: var(--radius-xl);
+  --surface-border-width: 1px;
+  --control-radius: var(--radius-pill);
+  --field-radius: var(--radius-md);
+  --surface-blur: blur(22px) saturate(160%);
+}
+
+[data-style='glass'][data-theme='dark'] {
+  --surface: rgb(255 255 255 / 0.065);
+  --surface-strong: rgb(255 255 255 / 0.1);
+  --surface-solid: color-mix(in oklab, var(--c-ambient) 30%, #17101c);
+  --surface-border: rgb(255 255 255 / 0.14);
+  --surface-shadow: 0 24px 60px -28px rgb(0 0 0 / 0.7), inset 0 1px 0 rgb(255 255 255 / 0.1);
+  --nav-surface: rgb(18 11 22 / 0.55);
+}
+
+[data-style='glass'][data-theme='light'] {
+  --surface: rgb(255 255 255 / 0.52);
+  --surface-strong: rgb(255 255 255 / 0.72);
+  --surface-solid: #fffaf8;
+  --surface-border: rgb(255 255 255 / 0.85);
+  --surface-shadow: 0 22px 50px -26px rgb(90 35 70 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.9);
+  --nav-surface: rgb(255 250 248 / 0.6);
+}
+
+/* Sin backdrop-filter el cristal sería ilegible sobre el fondo: se vuelve casi opaco. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [data-style='glass'][data-theme='dark'] {
+    --surface: rgb(30 19 36 / 0.92);
+    --surface-strong: rgb(42 27 50 / 0.95);
+    --nav-surface: rgb(18 11 22 / 0.96);
+  }
+  [data-style='glass'][data-theme='light'] {
+    --surface: rgb(255 250 248 / 0.94);
+    --surface-strong: rgb(255 255 255 / 0.97);
+    --nav-surface: rgb(255 250 248 / 0.97);
+  }
+}
+
+/* =====================================================================
+ * Estilo Maximalismo
+ * ===================================================================== */
+[data-style='maximal'] {
+  --heading-font: var(--font-bold);
+  --heading-weight: 800;
+  --heading-tracking: -0.035em;
+  --heading-variation: normal;
+  --heading-transform: none;
+  --surface-radius: var(--radius-lg);
+  --surface-border-width: 2px;
+  --control-radius: var(--radius-md);
+  --field-radius: var(--radius-sm);
+  --surface-blur: none;
+}
+
+[data-style='maximal'][data-theme='dark'] {
+  --bg: color-mix(in oklab, var(--c-ambient) 45%, #0d0810);
+  --surface: color-mix(in oklab, var(--c-ambient) 38%, #160e1a);
+  --surface-strong: color-mix(in oklab, var(--c-ambient) 50%, #22152a);
+  --surface-solid: var(--surface);
+  --surface-border: #f8eff4;
+  --surface-shadow: 6px 6px 0 0 var(--c-accent);
+  --nav-surface: color-mix(in oklab, var(--c-ambient) 40%, #120b16);
+  --pattern-ink: rgb(255 255 255 / 0.09);
+}
+
+[data-style='maximal'][data-theme='light'] {
+  --bg: color-mix(in oklab, var(--c-accent) 14%, #fff6ea);
+  --surface: #fffbf4;
+  --surface-strong: #fff;
+  --surface-solid: var(--surface);
+  --surface-border: #24131e;
+  --surface-shadow: 6px 6px 0 0 var(--c-primary);
+  --nav-surface: #fffbf4;
+  --pattern-ink: rgb(36 19 30 / 0.1);
+}
