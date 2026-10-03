@@ -1,0 +1,309 @@
+/*
+ * Despejar el estacionamiento — vista de pájaro de un aparcamiento lleno.
+ * El borde es un muro; las salidas son huecos con una flecha. Los coches son
+ * botones: se arrastran solo en su eje (touch-action: none sobre ellos, nunca
+ * en toda la página).
+ */
+
+/* ---------- Niveles ---------- */
+.jm-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.jm-select__title {
+  font-size: var(--text-3xl);
+}
+
+.jm-select__text {
+  color: var(--text-muted);
+}
+
+.jm-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.jm-level {
+  width: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.jm-level:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.jm-level.is-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.jm-level.is-done {
+  border-color: color-mix(in oklab, #f2b417 55%, var(--surface-border));
+}
+
+.jm-level__number {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+}
+
+.jm-level__meta {
+  font-size: 0.66rem;
+  color: var(--text-subtle);
+}
+
+.jm-level__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.jm-stars {
+  display: inline-flex;
+}
+
+.jm-stars svg {
+  width: 12px;
+  height: 12px;
+  color: var(--text-subtle);
+}
+
+.jm-stars svg.is-on {
+  color: #f2b417;
+  fill: #f2b417;
+}
+
+/* ---------- Partida ---------- */
+.jm-play {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+}
+
+.jm-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+/* El tablero cabe en el ancho y en el alto disponibles. */
+.jm-board-wrap {
+  width: min(100%, calc(100dvh - 280px), 560px);
+  min-width: min(100%, 280px);
+  padding: 14px;
+  border-radius: var(--gc-radius-lg);
+  background: #9da3ad;
+  box-shadow: var(--surface-shadow);
+}
+
+.jm-board {
+  position: relative;
+  width: 100%;
+  border-radius: var(--gc-radius-sm);
+  background:
+    linear-gradient(90deg, rgb(255 255 255 / 0.12) 1px, transparent 1px) 0 0 / calc(100% / var(--cols)) 100%,
+    linear-gradient(rgb(255 255 255 / 0.06) 1px, transparent 1px) 0 0 / 100% calc(100% / var(--rows)),
+    #4a4e5c;
+}
+
+.jm-wall {
+  position: absolute;
+  padding: 6%;
+  background:
+    repeating-linear-gradient(45deg, rgb(0 0 0 / 0.12) 0 4px, transparent 4px 8px),
+    #b6bbc4;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px rgb(0 0 0 / 0.15);
+}
+
+/* Salidas: el hueco en el muro con su flecha, por fuera del tablero. */
+.jm-exit {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  color: #ffffff;
+  background: #4a4e5c;
+  pointer-events: none;
+}
+
+.jm-exit svg {
+  width: 14px;
+  height: 14px;
+  color: #5ce39a;
+}
+
+.jm-exit--right {
+  width: 14px;
+  translate: 14px 0;
+}
+.jm-exit--left {
+  width: 14px;
+  translate: -14px 0;
+}
+.jm-exit--top {
+  height: 14px;
+  translate: 0 -14px;
+}
+.jm-exit--bottom {
+  height: 14px;
+  translate: 0 14px;
+}
+
+.jm-car {
+  position: absolute;
+  /* Margen fijo (no en %: el % se mide siempre sobre el ancho y estrechaba los coches largos). */
+  padding: 3px;
+  border: 0;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: transform 0.18s var(--ease-out);
+}
+
+.jm-car.is-dragging {
+  transition: none;
+  z-index: 2;
+  cursor: grabbing;
+}
+
+.jm-car.is-leaving {
+  transition: transform 0.4s var(--ease-in, ease-in), opacity 0.4s;
+  opacity: 0;
+  z-index: 3;
+}
+
+.jm-car__body {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(160deg, hsl(var(--hue) 75% 64%), hsl(var(--hue) 65% 48%));
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.3),
+    0 4px 10px -4px rgb(0 0 0 / 0.6);
+}
+
+.jm-car.is-dragging .jm-car__body {
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.3),
+    0 10px 18px -6px rgb(0 0 0 / 0.7);
+}
+
+.jm-car.is-invalid .jm-car__body {
+  outline: 3px solid #ff5a6e;
+  outline-offset: -3px;
+  animation: jm-shake 0.25s;
+}
+
+/* Los bloqueados se ven un poco apagados: ayuda a leer el tablero. */
+.jm-car.is-blocked .jm-car__body {
+  filter: saturate(0.75);
+}
+
+.jm-car__arrow {
+  width: min(70%, 26px);
+  height: auto;
+  aspect-ratio: 1;
+  padding: 3px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.9);
+  color: #23202b;
+  stroke-width: 3;
+}
+
+.jm-car:focus-visible {
+  outline: none;
+}
+
+.jm-car:focus-visible .jm-car__body {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.jm-car:disabled {
+  cursor: default;
+}
+
+@keyframes jm-shake {
+  25% {
+    translate: -3px 0;
+  }
+  75% {
+    translate: 3px 0;
+  }
+}
+
+[data-motion='reduced'] .jm-car {
+  transition: none;
+}
+
+.jm-notice {
+  min-height: 1.5em;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.jm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+[data-style='maximal'] .jm-board-wrap {
+  box-shadow: 6px 6px 0 var(--game-a);
+}
+
+@media (max-width: 480px) {
+  .jm-play .game-hud__item:first-child {
+    display: none;
+  }
+}
+
+/* Teléfono en horizontal: tablero a la izquierda (todo el alto) y acciones a la derecha. */
+@media (orientation: landscape) and (max-height: 500px) {
+  .jm-play {
+    padding-top: calc(var(--space-3) + 74px);
+    grid-template-columns: auto minmax(0, 15rem);
+    justify-content: center;
+    align-items: center;
+    column-gap: var(--space-5);
+  }
+  .jm-board-wrap {
+    grid-row: span 2;
+    width: calc(100dvh - 150px);
+    min-width: 0;
+    padding: 10px;
+  }
+  .jm-notice,
+  .jm-actions {
+    justify-self: start;
+    text-align: left;
+    justify-content: flex-start;
+  }
+}

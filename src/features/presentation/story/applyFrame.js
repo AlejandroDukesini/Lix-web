@@ -1,5 +1,6 @@
 import { captionFade, constellationTip, distanceRemaining, formatDistance, revealsFor, SCENE_IDS } from './timeline.js';
 import { EYEPIECE, projectToArea } from './Telescope.jsx';
+import { EARTH_STRIP } from './Earth.jsx';
 
 /**
  * Busca una sola vez los nodos que se animan (marcados con data-*).
@@ -20,6 +21,9 @@ export function collectNodes(stage, root) {
     todayLabel: one('[data-today-label]'),
     labels: one('[data-constellation-labels]'),
     flash: one('[data-flash]'),
+    earth: one('[data-earth]'),
+    earthLand: one('[data-earth-land]'),
+    earthClouds: one('[data-earth-clouds]'),
     telescope: one('[data-telescope]'),
     telescopeZoom: one('[data-telescope-zoom]'),
     rig: one('[data-telescope-rig]'),
@@ -77,8 +81,8 @@ export function applyFrame(nodes, frame, { layout, raw, progress, reduced, total
     nodes.eyepiece?.style.setProperty('--candle-em', px(frame.iris.targetRadius / 14.5));
     // La ficha del objeto va donde quepa: a la izquierda del círculo, encima o, si no hay sitio, dentro de la lente.
     const r = frame.iris.targetRadius;
-    const spaceLeft = frame.iris.x - r;
-    const spaceAbove = frame.iris.y - r - area.y;
+    const spaceLeft = frame.center.x - r;
+    const spaceAbove = frame.center.y - r - area.y;
     const placement = spaceLeft >= 190 ? 'outside' : spaceAbove >= 34 ? 'above' : 'inside';
     if (nodes.catalog) nodes.catalog.dataset.place = placement;
   }
@@ -120,6 +124,20 @@ export function applyFrame(nodes, frame, { layout, raw, progress, reduced, total
   }
 
   write(nodes, 'flash', nodes.flash, 'opacity', n3(frame.flash));
+
+  // ---- La Tierra: caja base de 200 px (radio 96) llevada a su posición y tamaño ----
+  const earth = frame.earth;
+  write(nodes, 'earth', nodes.earth, 'opacity', n3(earth.opacity));
+  if (earth.opacity > 0.001) {
+    write(nodes, 'earth', nodes.earth, 'transform', `translate3d(${n3(earth.x - 100)}px, ${n3(earth.y - 100)}px, 0) scale(${n3(earth.radius / 96)})`);
+    // Arranca mostrando África (≈15° E) y gira hasta las Américas (≈75° O): los continentes van a la derecha.
+    const shift = (spin) => n3((((276 + spin * EARTH_STRIP) % EARTH_STRIP) + EARTH_STRIP) % EARTH_STRIP);
+    // Inclinación: el mapa sube hasta que la latitud ≈ 5° N queda en el borde superior del disco.
+    const tilt = n3(earth.tilt * -88);
+    write(nodes, 'earthLand', nodes.earthLand, 'transform', `translate(${shift(earth.spin)}px, ${tilt}px)`);
+    write(nodes, 'earthClouds', nodes.earthClouds, 'transform', `translate(${shift(earth.spin * 1.35 + 0.1)}px, ${tilt}px)`);
+    write(nodes, 'earth', nodes.earth, '--ice', n3(1 - Math.min(1, earth.tilt * 3)));
+  }
 
   // ---- Telescopio: entra desde el horizonte y la cámara viaja hasta el ocular ----
   const tel = frame.telescope;

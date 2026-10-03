@@ -1,4 +1,4 @@
-import { CalendarHeart, Heart, Play, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
+import { CalendarHeart, Gamepad2, Heart, Play, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
 import { usePreferences } from '../../app/providers/PreferencesProvider.jsx';
 import { UPCOMING_MODULES } from '../../app/modules.js';
 import { Button } from '../../components/common/Button.jsx';
@@ -154,6 +154,21 @@ function ReplayCard() {
   );
 }
 
+function GamesCard() {
+  return (
+    <Card as="section" className="stat-card games-card" aria-labelledby="games-title">
+      <Gamepad2 className="stat-card__icon" aria-hidden="true" />
+      <h2 id="games-title" className="stat-card__title">
+        Nuestra sala de juegos
+      </h2>
+      <p className="stat-card__text">Toboganes, ajedrez, lógica, arcade y un túnel a toda velocidad. Todo sin conexión.</p>
+      <Button to="/juegos" icon={Play} size="sm">
+        Entrar al Game Center
+      </Button>
+    </Card>
+  );
+}
+
 function Upcoming() {
   return (
     <section className="upcoming" aria-labelledby="upcoming-title">
@@ -194,6 +209,7 @@ export function HomePage() {
         <TogetherCard />
         <NewYearCard />
         <ReplayCard />
+        <GamesCard />
       </div>
       <Upcoming />
       <p className="home__privacy">

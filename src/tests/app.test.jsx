@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { App } from '../app/App.jsx';
 import { createDefaultPreferences } from '../services/preferences/defaults.js';
 import { backupPreferences, PREFERENCES_KEY } from '../services/preferences/preferencesService.js';
+import { SCENE_IDS, scrollForScene, STORY_LENGTH } from '../features/presentation/story/timeline.js';
 
 function storePreferences(mutate = () => {}) {
   const prefs = createDefaultPreferences();
@@ -17,47 +18,44 @@ const stored = () => JSON.parse(localStorage.getItem(PREFERENCES_KEY));
 const root = document.documentElement;
 
 /**
- * jsdom no calcula el diseño: se simula la altura de cada capítulo (--len × alto
- * de pantalla) y el desplazamiento de la ventana para recorrer el viaje.
+ * jsdom no calcula el diseño: se simula la arquitectura del viaje (contenedor
+ * alto + escenario sticky del alto de la pantalla + zona visual) y el
+ * desplazamiento de la ventana para recorrerlo.
  */
-const VIEWPORT = 800;
+const VIEWPORT = { width: 375, height: 800 };
 function simulateStoryLayout() {
   const original = Element.prototype.getBoundingClientRect;
-  Object.defineProperty(window, 'innerHeight', { configurable: true, value: VIEWPORT });
+  Object.defineProperty(window, 'innerHeight', { configurable: true, value: VIEWPORT.height });
   Object.defineProperty(window, 'scrollY', { configurable: true, writable: true, value: 0 });
-  const chapters = () => [...document.querySelectorAll('.chapter')];
-  const heights = () => chapters().map((el) => Number(el.style.getPropertyValue('--len')) * VIEWPORT);
-  Object.defineProperty(document.documentElement, 'scrollHeight', {
-    configurable: true,
-    get: () => heights().reduce((a, b) => a + b, 0),
-  });
-  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function rect() {
-    const index = chapters().indexOf(this);
-    if (index === -1) return original.call(this);
-    const h = heights();
-    const top = h.slice(0, index).reduce((a, b) => a + b, 0) - window.scrollY;
-    return { top, height: h[index], bottom: top + h[index], left: 0, right: 375, width: 375, x: 0, y: top };
+  const trackHeight = () => (STORY_LENGTH + 1) * VIEWPORT.height;
+  const rect = (left, top, width, height) => ({ left, top, width, height, right: left + width, bottom: top + height, x: left, y: top });
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function measure() {
+    if (this.classList.contains('astral__track')) return rect(0, -window.scrollY, VIEWPORT.width, trackHeight());
+    // Sticky: el escenario queda pegado arriba mientras dura el viaje.
+    if (this.classList.contains('astral__stage')) return rect(0, 0, VIEWPORT.width, VIEWPORT.height);
+    if (this.classList.contains('astral__area')) return rect(16, 72, VIEWPORT.width - 32, 420);
+    return original.call(this);
   });
 
-  /** Desplaza hasta el punto `pose` (0–1) del capítulo con ese id. */
-  return async function scrollToChapter(id, pose = 0.5) {
-    const index = chapters().findIndex((el) => el.classList.contains(`chapter--${id}`));
-    const h = heights();
-    const top = h.slice(0, index).reduce((a, b) => a + b, 0);
-    const max = h.reduce((a, b) => a + b, 0) - VIEWPORT;
-    const reach = Math.min(h[index], max - top);
+  const scrollTo = async (y) => {
     act(() => {
-      window.scrollY = Math.round(top + reach * pose);
+      window.scrollY = Math.round(y);
       window.dispatchEvent(new Event('scroll'));
     });
     await act(() => new Promise((resolve) => requestAnimationFrame(() => resolve())));
   };
+  /** Desplaza hasta el punto `pose` (0–1) del capítulo con ese id. */
+  scrollTo.chapter = (id, pose = 0.5) =>
+    scrollTo(scrollForScene(SCENE_IDS.indexOf(id), pose, 0, trackHeight(), VIEWPORT.height));
+  return scrollTo;
 }
+
+const opacityOf = (element) => Number(element.style.opacity);
 
 describe('primer inicio: el viaje astral', () => {
   it('recorre todos los capítulos, permite volver atrás y termina en el inicio', async () => {
     const user = userEvent.setup();
-    const scrollToChapter = simulateStoryLayout();
+    const scrollTo = simulateStoryLayout();
     render(<App />);
 
     expect(
@@ -80,21 +78,38 @@ describe('primer inicio: el viaje astral', () => {
     expect(document.querySelector('.candle__monogram-letter')).toHaveTextContent('A');
     expect(screen.getByText(/vela encendida con la letra A grabada en oro/)).toBeInTheDocument();
 
-    // Avanzar: el capítulo activo cambia en el índice.
-    await scrollToChapter('constellation');
+    // Avanzar: el capítulo activo cambia en el índice y su texto es el único visible.
+    const caption = (id) => document.querySelector(`[data-caption="${id}"]`);
+    await scrollTo.chapter('constellation');
     expect(screen.getByRole('button', { name: 'Capítulo II: Las constelaciones' })).toHaveAttribute('aria-current', 'step');
-    await scrollToChapter('telescope');
+    expect(opacityOf(caption('constellation'))).toBe(1);
+    expect(opacityOf(caption('galaxy'))).toBe(0);
+    await scrollTo.chapter('telescope');
     expect(screen.getByRole('button', { name: 'Capítulo IV: El telescopio' })).toHaveAttribute('aria-current', 'step');
+    expect(document.querySelector('.astral')).toHaveAttribute('data-scene', 'telescope');
 
     // Retroceder también funciona.
-    await scrollToChapter('constellation');
+    await scrollTo.chapter('constellation');
     expect(screen.getByRole('button', { name: 'Capítulo II: Las constelaciones' })).toHaveAttribute('aria-current', 'step');
+    expect(opacityOf(caption('constellation'))).toBe(1);
+    expect(opacityOf(caption('telescope'))).toBe(0);
 
-    // La revelación y el final dependen del recorrido.
-    await scrollToChapter('candle', 0.8);
-    expect(document.querySelector('.together')).toHaveClass('is-revealed');
-    await scrollToChapter('final', 1);
-    expect(document.querySelector('.finale')).toHaveClass('is-visible');
+    // Un salto brusco hasta el final y de vuelta al inicio no deja estados intermedios.
+    await scrollTo(1e6);
+    expect(document.querySelector('.astral')).toHaveAttribute('data-scene', 'final');
+    await scrollTo(0);
+    expect(document.querySelector('.astral')).toHaveAttribute('data-scene', 'opening');
+    expect(opacityOf(document.querySelector('[data-opening]'))).toBe(1);
+    expect(opacityOf(document.querySelector('[data-finale]'))).toBe(0);
+
+    // La revelación y el final dependen del recorrido; el botón final solo es operable cuando se ve.
+    const finale = document.querySelector('[data-finale]');
+    expect(finale.inert).toBe(true);
+    await scrollTo.chapter('candle', 0.75);
+    expect(opacityOf(document.querySelector('[data-together]'))).toBe(1);
+    await scrollTo.chapter('final', 1);
+    expect(opacityOf(finale)).toBe(1);
+    expect(finale.inert).toBe(false);
 
     await user.click(screen.getByRole('button', { name: 'Entrar a nuestro universo' }));
     expect(await screen.findByRole('heading', { level: 1, name: /Mi niña/ })).toBeInTheDocument();
@@ -139,10 +154,13 @@ describe('inicio y navegación', () => {
     expect(screen.getByRole('heading', { name: /Rumbo a|Feliz/ })).toBeInTheDocument();
 
     const soon = screen.getAllByText('Próximamente');
-    expect(soon).toHaveLength(5);
-    for (const label of ['Juegos', 'Finanzas', 'Calendario']) {
+    expect(soon).toHaveLength(4);
+    for (const label of ['Finanzas', 'Calendario']) {
       expect(screen.queryByRole('link', { name: new RegExp(label) })).toBeNull();
     }
+    // Juegos ya está disponible: navegación lateral, barra inferior y tarjeta del inicio.
+    expect(screen.getAllByRole('link', { name: /Juegos/ }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole('link', { name: 'Entrar al Game Center' })).toHaveAttribute('href', '#/juegos');
   });
 
   it('sin fecha configurada no muestra contador de días', async () => {

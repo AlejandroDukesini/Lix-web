@@ -1,0 +1,70 @@
+/* Pollo pasando la calle — granja arcade: verdes, asfalto y río, con marcador legible. */
+
+.chicken {
+  background: #5fb24f;
+}
+
+.chicken .game-hud__item {
+  background: rgb(255 255 255 / 0.82);
+  border-color: rgb(45 42 58 / 0.18);
+  color: #2d2a3a;
+}
+
+.chicken .game-hud__item dt {
+  color: rgb(45 42 58 / 0.65);
+}
+
+.chicken .game-hud__item.is-good dd {
+  color: #d1495b;
+}
+
+.chicken .game-hud__pause {
+  background: rgb(255 255 255 / 0.82);
+  border-color: rgb(45 42 58 / 0.25);
+  color: #2d2a3a;
+}
+
+.chicken__banner {
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  z-index: 3;
+  translate: -50% 0;
+  padding: var(--space-2) var(--space-5);
+  border-radius: 999px;
+  background: #fff6e2;
+  color: #2d2a3a;
+  font-family: var(--font-bold);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  white-space: nowrap;
+  box-shadow: 0 10px 30px -12px rgb(0 0 0 / 0.5);
+  animation: chicken-banner 1.6s var(--ease-out) both;
+  pointer-events: none;
+}
+
+@keyframes chicken-banner {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.92);
+  }
+  15%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+[data-motion='reduced'] .chicken__banner {
+  animation: none;
+}
+
+/* La cruceta queda abajo a la derecha, lejos del centro donde está la gallina. */
+.chicken .dpad__btn {
+  background: rgb(255 255 255 / 0.55);
+  color: #2d2a3a;
+  border-color: rgb(45 42 58 / 0.2);
+}

@@ -41,6 +41,11 @@ h4 {
   text-wrap: balance;
 }
 
+/* Sin la sangría de 40 px del navegador: los valores de las fichas (HUD, resultados, ayuda) se alinean con su etiqueta. */
+dd {
+  margin: 0;
+}
+
 p {
   margin: 0;
   text-wrap: pretty;

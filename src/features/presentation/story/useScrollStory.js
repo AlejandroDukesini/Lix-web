@@ -11,6 +11,24 @@ import {
 /** Debe coincidir con la media query del layout apaisado en astral.css. */
 export const LANDSCAPE_QUERY = '(orientation: landscape) and (min-width: 600px)';
 
+// Respiro entre la vela y la tarjeta final.
+const FINALE_GAP = 12;
+
+/**
+ * En vertical la tarjeta final se ancla abajo y sube sobre la zona visual
+ * (ver .finale en astral.css): devuelve el hueco que queda libre encima.
+ * Se usa offsetTop (no getBoundingClientRect) porque ignora el desplazamiento
+ * de la animación de entrada del texto.
+ */
+function spaceAboveFinale(stage, area) {
+  const finale = stage.querySelector('[data-finale]');
+  if (!finale?.offsetParent) return area;
+  let top = 0;
+  for (let node = finale; node && node !== stage; node = node.offsetParent) top += node.offsetTop;
+  const height = Math.min(area.height, Math.max(0, top - FINALE_GAP - area.y));
+  return { ...area, height };
+}
+
 /**
  * Controla la historia a partir del desplazamiento de la ventana.
  *
@@ -42,19 +60,22 @@ export function useScrollStory({ trackRef, stageRef, areaRef, reduced, onFrame }
       const trackRect = track.getBoundingClientRect();
       const stageRect = stage.getBoundingClientRect();
       const areaRect = area.getBoundingClientRect();
+      const portrait = !window.matchMedia?.(LANDSCAPE_QUERY).matches;
+      const areaBox = {
+        x: areaRect.left - stageRect.left,
+        y: areaRect.top - stageRect.top,
+        width: areaRect.width,
+        height: areaRect.height,
+      };
       measuresRef.current = {
         trackTop: trackRect.top + window.scrollY,
         trackHeight: trackRect.height,
         stageHeight: stageRect.height,
         layout: {
           stage: { width: stageRect.width, height: stageRect.height },
-          area: {
-            x: areaRect.left - stageRect.left,
-            y: areaRect.top - stageRect.top,
-            width: areaRect.width,
-            height: areaRect.height,
-          },
-          portrait: !window.matchMedia?.(LANDSCAPE_QUERY).matches,
+          area: areaBox,
+          finalArea: portrait ? spaceAboveFinale(stage, areaBox) : areaBox,
+          portrait,
         },
       };
     };
@@ -89,7 +110,8 @@ export function useScrollStory({ trackRef, stageRef, areaRef, reduced, onFrame }
     window.addEventListener('resize', remeasure);
     // Cambios de tamaño del escenario o de la zona visual (barras del navegador móvil, fuentes, textos).
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(remeasure) : null;
-    [trackRef.current, stageRef.current, areaRef.current].forEach((element) => element && observer?.observe(element));
+    const finale = stageRef.current?.querySelector('[data-finale]');
+    [trackRef.current, stageRef.current, areaRef.current, finale].forEach((element) => element && observer?.observe(element));
 
     return () => {
       cancelAnimationFrame(raf);

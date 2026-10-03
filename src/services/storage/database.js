@@ -15,6 +15,7 @@ export const DB_NAME = 'un-ano-mas-contigo';
 export const STORES = Object.freeze({
   meta: 'meta',
   backups: 'backups',
+  games: 'games',
 });
 
 export const DB_MIGRATIONS = [
@@ -23,7 +24,11 @@ export const DB_MIGRATIONS = [
     db.createObjectStore(STORES.meta);
     db.createObjectStore(STORES.backups);
   },
-  // v2 (fase futura), por ejemplo:
+  // v2 — Game Center: un registro por juego (clave = id del juego) con estadísticas y progreso.
+  (db) => {
+    db.createObjectStore(STORES.games);
+  },
+  // v3 (fase futura), por ejemplo:
   // (db) => {
   //   const journal = db.createObjectStore('journal', { keyPath: 'id' });
   //   journal.createIndex('byDate', 'date');
@@ -106,6 +111,15 @@ export function dbPut(storeName, key, value) {
 
 export function dbDelete(storeName, key) {
   return run(storeName, 'readwrite', (store) => store.delete(key));
+}
+
+/** Todas las entradas de un store como pares [clave, valor]. */
+export async function dbEntries(storeName) {
+  const db = await openDatabase();
+  const tx = db.transaction(storeName, 'readonly');
+  const store = tx.objectStore(storeName);
+  const [keys, values] = await Promise.all([promisify(store.getAllKeys()), promisify(store.getAll())]);
+  return keys.map((key, index) => [key, values[index]]);
 }
 
 /** Borra la base de datos completa. Se usa solo en "Borrar todos los datos". */

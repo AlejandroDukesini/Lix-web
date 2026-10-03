@@ -1,0 +1,124 @@
+/* Traffic Rider — carretera abierta: marcador compacto que no compite con la vía. */
+
+.tr-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.tr-select__title {
+  font-size: var(--text-3xl);
+}
+
+.tr-select__text {
+  color: var(--text-muted);
+}
+
+.tr-select__subtitle {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xl);
+}
+
+.tr-free,
+.tr-mission {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.tr-free {
+  border-color: color-mix(in oklab, var(--game-a) 50%, var(--surface-border));
+}
+
+.tr-free > svg {
+  width: 28px;
+  height: 28px;
+  color: var(--accent-text);
+}
+
+.tr-free span,
+.tr-mission__body {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.tr-free small,
+.tr-mission__body small {
+  color: var(--text-subtle);
+}
+
+.tr-missions {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.tr-mission__n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--gc-radius-sm);
+  background: color-mix(in oklab, var(--game-a) 22%, transparent);
+  color: var(--accent-text);
+  font-weight: 800;
+}
+
+.tr-mission > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text-subtle);
+}
+
+.tr-mission.is-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tr-mission.is-done {
+  border-color: color-mix(in oklab, #5fd6a0 60%, var(--surface-border));
+}
+
+.tr-free:focus-visible,
+.tr-mission:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Carrera ---------- */
+.rider {
+  background: #5fb4ff;
+}
+
+.rider .game-hud__item {
+  background: rgb(20 22 34 / 0.62);
+  border-color: rgb(255 255 255 / 0.2);
+  color: #fff;
+}
+
+.rider .game-hud__item dt {
+  color: rgb(255 255 255 / 0.7);
+}
+
+.rider .game-hud__pause {
+  background: rgb(20 22 34 / 0.62);
+  border-color: rgb(255 255 255 / 0.3);
+  color: #fff;
+}

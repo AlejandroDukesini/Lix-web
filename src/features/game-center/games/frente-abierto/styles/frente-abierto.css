@@ -1,0 +1,456 @@
+/*
+ * Frente Abierto — mapa de territorios sobre la superficie del tema.
+ * Cada bando tiene color + símbolo; los neutrales van rayados; los destinos
+ * posibles se marcan con contorno (verde continuo = mover, rojo discontinuo = atacar).
+ */
+
+.fa-setup {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.fa-setup__title {
+  font-size: var(--text-3xl);
+}
+
+.fa-setup__text,
+.fa-levels__text {
+  color: var(--text-muted);
+}
+
+.fa-levels__text {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+}
+
+.fa-setup__subtitle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xl);
+}
+
+.fa-setup__subtitle svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-text);
+}
+
+.fa-quick {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  padding: var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+}
+
+.fa-quick .fa-setup__subtitle {
+  margin: 0;
+}
+
+.fa-card {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.fa-card > span:not(.fa-card__n) {
+  display: grid;
+  flex: 1;
+}
+
+.fa-card small {
+  color: var(--text-subtle);
+}
+
+.fa-card > svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+.fa-card--tutorial {
+  border-color: color-mix(in oklab, var(--game-a) 50%, var(--surface-border));
+}
+
+.fa-card--tutorial > svg {
+  width: 28px;
+  height: 28px;
+  color: var(--accent-text);
+}
+
+.fa-card.is-done {
+  border-color: color-mix(in oklab, #5fd6a0 60%, var(--surface-border));
+}
+
+.fa-card.is-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.fa-card__n {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--game-a) 30%, transparent);
+  font-weight: 800;
+}
+
+.fa-scenarios {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.fa-card:focus-visible,
+.fa-stepper button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Partida ---------- */
+.fa-play {
+  container: fa-play / inline-size;
+  position: relative;
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+}
+
+.fa-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+.fa-layout {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+}
+
+.fa-map-wrap {
+  width: min(100%, 720px);
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  touch-action: manipulation;
+}
+
+/* En mapas grandes y pantallas estrechas el mapa no encoge más: se desplaza dentro (la leyenda no). */
+.fa-map-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.fa-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  /*
+   * El alto manda en pantallas bajas (el SVG se encoge manteniendo la proporción),
+   * pero nunca por debajo de ~36 px por casilla, un tamaño que se puede tocar.
+   */
+  --fa-min-w: calc(var(--fa-cols, 8) * 36px);
+  min-width: var(--fa-min-w);
+  max-height: max(calc(var(--fa-min-w) * var(--fa-ratio, 1)), 280px, calc(100dvh - 300px));
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fa-hex {
+  cursor: pointer;
+  outline: none;
+}
+
+.fa-hex__shape {
+  stroke: color-mix(in oklab, var(--bg) 70%, transparent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  transition: opacity 0.2s;
+}
+
+.fa-neutral-bg {
+  fill: color-mix(in oklab, var(--text) 12%, var(--surface));
+}
+
+.fa-neutral-line {
+  stroke: color-mix(in oklab, var(--text) 22%, transparent);
+  stroke-width: 2;
+}
+
+.fa-hex.is-acted .fa-hex__shape {
+  opacity: 0.62;
+}
+
+.fa-hex.is-selected .fa-hex__shape {
+  stroke: var(--text);
+  stroke-width: 4;
+}
+
+.fa-hex.is-move .fa-hex__shape {
+  stroke: #3fbf7f;
+  stroke-width: 4;
+}
+
+.fa-hex.is-attack .fa-hex__shape {
+  stroke: #e0404a;
+  stroke-width: 4;
+  stroke-dasharray: 6 4;
+}
+
+.fa-hex:focus-visible .fa-hex__shape {
+  stroke: var(--focus);
+  stroke-width: 4;
+}
+
+.fa-hex.is-flash {
+  animation: fa-flash 0.5s ease-out;
+}
+
+@keyframes fa-flash {
+  from {
+    filter: brightness(1.6);
+  }
+}
+
+.fa-glyph {
+  font-size: 11px;
+  fill: rgba(20, 20, 30, 0.75);
+  pointer-events: none;
+}
+
+.fa-troops {
+  font-size: 15px;
+  font-weight: 800;
+  fill: #14141e;
+  paint-order: stroke;
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 3;
+  pointer-events: none;
+}
+
+.fa-icon {
+  fill: rgba(20, 20, 30, 0.7);
+  pointer-events: none;
+}
+
+.fa-capital {
+  fill: #fff;
+  stroke: #14141e;
+  stroke-width: 1.5;
+  pointer-events: none;
+}
+
+.fa-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1) var(--space-3);
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.fa-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fa-legend li.is-out {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.fa-legend span {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  color: #14141e;
+  font-size: 11px;
+}
+
+.fa-legend__neutral {
+  background: repeating-linear-gradient(
+    45deg,
+    color-mix(in oklab, var(--text) 12%, var(--surface)) 0 3px,
+    color-mix(in oklab, var(--text) 26%, var(--surface)) 3px 5px
+  );
+}
+
+.fa-panel {
+  width: min(100%, 720px);
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+}
+
+.fa-hint {
+  color: var(--text-muted);
+}
+
+.fa-hint.is-tutorial {
+  padding: var(--space-3);
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--game-a) 18%, transparent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.fa-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fa-order {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.fa-order__title {
+  font-weight: 800;
+}
+
+.fa-stepper {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.fa-stepper button {
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 var(--space-3);
+  border-radius: 12px;
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fa-stepper button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.fa-stepper svg {
+  width: 18px;
+  height: 18px;
+}
+
+.fa-stepper output {
+  min-width: 2.5ch;
+  text-align: center;
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+
+.fa-preview {
+  padding: var(--space-2) var(--space-3);
+  border-radius: 10px;
+  border-left: 4px solid #3fbf7f;
+  background: color-mix(in oklab, #3fbf7f 12%, transparent);
+}
+
+.fa-preview.is-bad {
+  border-left-color: #e0404a;
+  background: color-mix(in oklab, #e0404a 12%, transparent);
+}
+
+.fa-rules {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+/* Pantallas anchas: mapa a la izquierda y panel a la derecha. */
+@container fa-play (min-width: 860px) {
+  .fa-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+    align-items: start;
+  }
+
+  .fa-map-wrap {
+    width: min(100%, 860px);
+  }
+
+  .fa-map {
+    max-height: max(calc(var(--fa-min-w) * var(--fa-ratio, 1)), calc(100dvh - 190px));
+  }
+
+  .fa-panel {
+    position: sticky;
+    top: var(--space-3);
+  }
+}
+
+/* Teléfono en horizontal: mapa y panel lado a lado para no perder el mapa de vista. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .fa-play {
+    padding-top: calc(var(--space-2) + 60px);
+  }
+
+  .fa-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, 300px);
+    align-items: start;
+  }
+
+  .fa-map {
+    max-height: max(calc(var(--fa-min-w) * var(--fa-ratio, 1)), calc(100dvh - 120px));
+  }
+
+  .fa-panel {
+    position: sticky;
+    top: var(--space-2);
+    padding: var(--space-3);
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fa-hex.is-flash {
+    animation: none;
+  }
+
+  .fa-hex__shape {
+    transition: none;
+  }
+}

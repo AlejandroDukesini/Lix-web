@@ -131,12 +131,10 @@
   gap: var(--space-5);
 }
 
+/* Cuatro tarjetas: 2 × 2 en tableta; en escritorio tres arriba y la sala de juegos a lo ancho. */
 @media (min-width: 680px) {
   .home__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .replay-card {
-    grid-column: 1 / -1;
   }
 }
 
@@ -144,8 +142,25 @@
   .home__grid {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);
   }
-  .replay-card {
-    grid-column: auto;
+  .games-card {
+    grid-column: 1 / -1;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--space-5);
+  }
+  .games-card .stat-card__text {
+    grid-column: 2;
+  }
+  .games-card .stat-card__title {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .games-card .stat-card__icon {
+    grid-row: 1 / span 2;
+  }
+  .games-card .btn {
+    grid-column: 3;
+    grid-row: 1 / span 2;
   }
 }
 

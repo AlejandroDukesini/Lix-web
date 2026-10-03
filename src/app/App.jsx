@@ -8,8 +8,11 @@ import { AppShell } from '../components/layout/AppShell.jsx';
 import { PresentationExperience } from '../features/presentation/PresentationExperience.jsx';
 import { HomePage } from '../features/home/HomePage.jsx';
 
-// Configuración se carga bajo demanda; el Service Worker la precachea igualmente para uso offline.
+// Configuración y el Game Center se cargan bajo demanda; el Service Worker los precachea igualmente para uso offline.
 const SettingsPage = lazy(() => import('../features/settings/SettingsPage.jsx'));
+const GameCenter = lazy(() => import('../features/game-center/GameCenter.jsx'));
+// Cada juego ocupa toda la pantalla: va fuera del marco general (sin barras de navegación).
+const GamePage = lazy(() => import('../features/game-center/GamePage.jsx'));
 
 function PageFallback() {
   return (
@@ -56,8 +59,24 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/presentacion" element={<ReplayPresentation />} />
+      <Route
+        path="/juegos/:gameId"
+        element={
+          <Suspense fallback={<div className="boot-splash" role="status" aria-label="Cargando" />}>
+            <GamePage />
+          </Suspense>
+        }
+      />
       <Route element={<AppShell />}>
         <Route index element={<HomePage />} />
+        <Route
+          path="juegos"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <GameCenter />
+            </Suspense>
+          }
+        />
         <Route
           path="ajustes"
           element={

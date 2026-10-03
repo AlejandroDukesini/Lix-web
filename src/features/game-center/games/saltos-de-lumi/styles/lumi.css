@@ -1,0 +1,167 @@
+/* Saltos de Lumi — cálido y nocturno: la luz de Lumi es el centro de cada pantalla. */
+
+.lumi-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.lumi-select__title {
+  font-size: var(--text-3xl);
+}
+
+.lumi-select__text {
+  color: var(--text-muted);
+}
+
+.lumi-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.lumi-level {
+  --swatch: #f0a27a;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lumi-level.is-bosque {
+  --swatch: #4f8a6e;
+}
+
+.lumi-level.is-cueva {
+  --swatch: #7b6fa3;
+}
+
+.lumi-level.is-nubes {
+  --swatch: #a9b8f0;
+}
+
+.lumi-level.is-noche {
+  --swatch: #2d2a63;
+}
+
+.lumi-level__n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff3c4, #ffc35a 55%, var(--swatch) 56%);
+  color: #3a2440;
+  font-weight: 800;
+}
+
+.lumi-level__body {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.lumi-level__body small {
+  color: var(--text-subtle);
+}
+
+.lumi-level > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--text-subtle);
+}
+
+.lumi-level.is-done {
+  border-color: color-mix(in oklab, #ffc35a 60%, var(--surface-border));
+}
+
+.lumi-level.is-done > svg {
+  color: #ffc35a;
+}
+
+.lumi-level.is-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lumi-level:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* ---------- Partida ---------- */
+.lumi {
+  background: #2b2350;
+}
+
+.lumi .game-hud__item {
+  background: rgb(20 16 34 / 0.6);
+  border-color: rgb(255 255 255 / 0.18);
+  color: #fff;
+}
+
+.lumi .game-hud__item dt {
+  color: rgb(255 255 255 / 0.7);
+}
+
+.lumi .game-hud__pause {
+  background: rgb(20 16 34 / 0.6);
+  border-color: rgb(255 255 255 / 0.3);
+  color: #fff;
+}
+
+.lumi-intro {
+  position: absolute;
+  left: 50%;
+  top: 92px;
+  translate: -50% 0;
+  z-index: 2;
+  display: grid;
+  gap: 4px;
+  width: min(90%, 30rem);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  background: rgb(20 16 34 / 0.6);
+  color: #fff;
+  text-align: center;
+  pointer-events: none;
+}
+
+.lumi-intro strong {
+  font-family: var(--font-display, inherit);
+  font-size: var(--text-xl);
+}
+
+.lumi-intro span {
+  font-size: var(--text-sm);
+  color: rgb(255 255 255 / 0.85);
+}
+
+/* Teléfono en horizontal: solo el nombre, abajo entre los controles (sin tapar la cuenta atrás). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .lumi-intro {
+    top: auto;
+    bottom: calc(var(--safe-bottom) + var(--space-3));
+    width: auto;
+    padding: var(--space-1) var(--space-4);
+  }
+
+  .lumi-intro span {
+    display: none;
+  }
+}

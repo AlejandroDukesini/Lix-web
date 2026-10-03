@@ -2,7 +2,9 @@ import { useEffect, useRef } from 'react';
 
 /**
  * Lienzo del cosmos (Canvas 2D): estrellas en tres profundidades con paralaje,
- * polvo cósmico, estrellas fugaces y una galaxia espiral de partículas.
+ * polvo cósmico, estrellas fugaces y una galaxia espiral de partículas. Cada
+ * partícula de la galaxia tiene además un punto disperso por el cielo: con
+ * `galaxy.form` (0 → 1) los puntos se reúnen y forman la espiral.
  *
  * Lee en cada fotograma el estado calculado por la línea de tiempo (`frameRef`)
  * y los colores del tema desde variables CSS del propio lienzo, así que cambiar
@@ -56,7 +58,7 @@ function createGalaxy(count) {
     const bulge = i < count * 0.22;
     if (bulge) {
       const r = Math.random() ** 2 * 0.22;
-      particles.push({ r, angle: Math.random() * TAU, tone: 'core', size: 0.6 + Math.random() * 1.1, alpha: 0.5 + Math.random() * 0.5 });
+      particles.push({ r, angle: Math.random() * TAU, tone: 'core', size: 0.6 + Math.random() * 1.1, alpha: 0.5 + Math.random() * 0.5, ...scatter() });
       continue;
     }
     const r = 0.06 + Math.random() ** 0.85 * 0.94;
@@ -71,9 +73,15 @@ function createGalaxy(count) {
       tone,
       size: tone === 'armC' ? 1.4 + Math.random() * 1.2 : 0.5 + Math.random() * 1.2,
       alpha: 0.25 + Math.random() * 0.6,
+      ...scatter(),
     });
   }
   return particles;
+}
+
+/** Posición dispersa (fracción del lienzo) y retardo propio para que no lleguen todos a la vez. */
+function scatter() {
+  return { sx: -0.05 + Math.random() * 1.1, sy: -0.05 + Math.random() * 1.1, lag: Math.random() * 0.35 };
 }
 
 function createStars(count, depth) {
@@ -192,16 +200,18 @@ export function CosmosCanvas({ frameRef, apiRef, reduced, themeKey }) {
     };
 
     const drawGalaxy = (time, state, palette) => {
-      const { x: gx, y: gy, radius, opacity } = state.galaxy;
+      const { x: gx, y: gy, radius, opacity, form = 1 } = state.galaxy;
       if (opacity <= 0.01) return;
+      const gathering = form < 0.999;
       const spin = reduced ? 0 : time * 0.000035;
       const tiltCos = Math.cos(-0.45);
       const tiltSin = Math.sin(-0.45);
 
-      const glow = ctx.createRadialGradient(gx, gy, 0, gx, gy, radius * 0.45);
+      // Núcleo compacto: la espiral debe leerse como puntos, no como una mancha.
+      const glow = ctx.createRadialGradient(gx, gy, 0, gx, gy, radius * 0.24);
       glow.addColorStop(0, palette.core);
       glow.addColorStop(1, clearOf(palette.core));
-      ctx.globalAlpha = opacity * 0.85;
+      ctx.globalAlpha = opacity * 0.7 * form ** 2;
       ctx.fillStyle = glow;
       ctx.fillRect(gx - radius, gy - radius, radius * 2, radius * 2);
 
@@ -212,8 +222,15 @@ export function CosmosCanvas({ frameRef, apiRef, reduced, themeKey }) {
         const angle = p.angle + spin * (1.4 - p.r);
         const px = Math.cos(angle) * p.r * radius;
         const py = Math.sin(angle) * p.r * radius * 0.46;
-        const sx = gx + px * tiltCos - py * tiltSin;
-        const sy = gy + px * tiltSin + py * tiltCos;
+        let sx = gx + px * tiltCos - py * tiltSin;
+        let sy = gy + px * tiltSin + py * tiltCos;
+        if (gathering) {
+          // Cada punto viaja desde su lugar en el cielo con su propio retardo (curva suave).
+          const local = Math.min(1, Math.max(0, (form - p.lag) / (1 - p.lag)));
+          const k = local * local * (3 - 2 * local);
+          sx = p.sx * width + (sx - p.sx * width) * k;
+          sy = p.sy * height + (sy - p.sy * height) * k;
+        }
         if (sx < -4 || sx > width + 4 || sy < -4 || sy > height + 4) continue;
         ctx.globalAlpha = opacity * p.alpha;
         ctx.fillStyle = palette[p.tone];

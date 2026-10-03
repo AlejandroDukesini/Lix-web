@@ -105,6 +105,7 @@ export function MobileTopBar() {
 
 export function BottomNav({ onOpenSpaces, spacesOpen }) {
   const home = MODULES.find((m) => m.id === 'home');
+  const games = MODULES.find((m) => m.id === 'games');
   const settings = MODULES.find((m) => m.id === 'settings');
   const link = (module, label) => {
     const Icon = module.icon;
@@ -119,6 +120,7 @@ export function BottomNav({ onOpenSpaces, spacesOpen }) {
   return (
     <nav className="bottom-nav" aria-label="Principal">
       {link(home, 'Inicio')}
+      {games.status === 'available' && link(games, 'Juegos')}
       <button
         type="button"
         className={cx('bottom-nav__item', spacesOpen && 'is-active')}

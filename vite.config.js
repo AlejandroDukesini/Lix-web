@@ -27,5 +27,7 @@ export default defineConfig({
     include: ['src/**/*.test.{js,jsx}'],
     css: false,
     restoreMocks: true,
+    // Las pruebas de los motores de juego (perft, simulaciones largas) cargan la CPU en paralelo.
+    testTimeout: 30000,
   },
 });

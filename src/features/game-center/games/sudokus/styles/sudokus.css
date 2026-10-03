@@ -1,0 +1,420 @@
+/*
+ * Sudokus — limpio y legible: tablero cuadrado con bloques marcados, teclado
+ * numérico siempre a mano. Colores propios del tablero (contraste garantizado)
+ * y superficies del tema alrededor.
+ */
+
+.sd-pick,
+.sd-play {
+  --sd-line: #2d2a3a;
+  --sd-thin: rgb(45 42 58 / 0.22);
+  --sd-paper: #fffdf7;
+  --sd-given: #23202b;
+  --sd-answer: #4b46d1;
+  --sd-related: #eef0ff;
+  --sd-same: #d9dcff;
+  --sd-selected: #b9beff;
+  --sd-conflict: #d1495b;
+}
+
+/* ---------- Elegir dificultad ---------- */
+.sd-pick {
+  width: min(100%, 820px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.sd-pick__title {
+  font-size: var(--text-3xl);
+}
+
+.sd-pick__text {
+  color: var(--text-muted);
+}
+
+.sd-resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid color-mix(in oklab, var(--game-a) 50%, var(--surface-border));
+  background: var(--surface);
+}
+
+.sd-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.sd-level {
+  width: 100%;
+  display: grid;
+  gap: 2px;
+  padding: var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  border-left: 5px solid var(--sd-accent, var(--game-a));
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.sd-level--facil {
+  --sd-accent: #3fae73;
+}
+.sd-level--medio {
+  --sd-accent: #e0a526;
+}
+.sd-level--dificil {
+  --sd-accent: #e0702c;
+}
+.sd-level--experto {
+  --sd-accent: #d1495b;
+}
+
+.sd-level:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sd-level__name {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+}
+
+.sd-level__technique {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.sd-level__stats {
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+/* ---------- Partida ---------- */
+.sd-play {
+  container: sd-play / inline-size;
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+  position: relative;
+}
+
+.sd-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+.sd-layout {
+  --board: min(100%, calc(100dvh - 330px), 560px);
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.sd-board {
+  width: var(--board);
+  min-width: min(100%, 288px);
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-rows: repeat(9, 1fr);
+  border: 3px solid var(--sd-line);
+  border-radius: var(--gc-radius-sm);
+  overflow: hidden;
+  background: var(--sd-paper);
+  box-shadow: var(--surface-shadow);
+}
+
+.sd-row {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+}
+
+.sd-cell-wrap {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  border-right: 1px solid var(--sd-thin);
+  border-bottom: 1px solid var(--sd-thin);
+}
+
+/* Bordes gruesos de los bloques 3×3. */
+.sd-row .sd-cell-wrap:nth-child(3n):not(:last-child) {
+  border-right: 2px solid var(--sd-line);
+}
+.sd-row:nth-child(3n):not(:last-child) .sd-cell-wrap {
+  border-bottom: 2px solid var(--sd-line);
+}
+.sd-row .sd-cell-wrap:last-child {
+  border-right: 0;
+}
+.sd-row:last-child .sd-cell-wrap {
+  border-bottom: 0;
+}
+
+.sd-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--sd-answer);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: clamp(1rem, calc(var(--board) / 16), 1.7rem);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.sd-cell.is-given {
+  color: var(--sd-given);
+  font-weight: 800;
+}
+
+.sd-cell.is-related {
+  background: var(--sd-related);
+}
+.sd-cell.is-same {
+  background: var(--sd-same);
+}
+.sd-cell.is-selected {
+  background: var(--sd-selected);
+}
+
+/* Conflicto: el número sigue visible; se marca en rojo con un subrayado. */
+.sd-cell.is-conflict .sd-cell__value {
+  color: var(--sd-conflict);
+  text-decoration: underline wavy;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+
+.sd-cell.is-wrong::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 2px dashed var(--sd-conflict);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.sd-cell:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+  z-index: 1;
+}
+
+.sd-notes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  width: 100%;
+  height: 100%;
+  padding: 2px;
+  font-size: clamp(0.5rem, calc(var(--board) / 44), 0.72rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #6f6b80;
+}
+
+.sd-notes span {
+  display: grid;
+  place-items: center;
+}
+
+/* En pausa no se ve el tablero (sin pistas para pensar con el reloj parado). */
+.sd-board.is-paused .sd-cell {
+  color: transparent;
+}
+.sd-board.is-paused .sd-notes {
+  visibility: hidden;
+}
+
+.sd-controls {
+  width: min(100%, 560px);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.sd-pad {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.sd-key {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 52px;
+  padding: 0;
+  border-radius: var(--gc-radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--text-xl);
+  font-weight: 800;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.sd-key small {
+  position: absolute;
+  right: 4px;
+  bottom: 2px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: var(--text-subtle);
+}
+
+.sd-key.is-note {
+  color: var(--accent-text);
+  border-style: dashed;
+}
+
+.sd-key:active:not(:disabled) {
+  transform: scale(0.94);
+}
+
+.sd-key:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sd-key:focus-visible,
+.sd-tool:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.sd-tools {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.sd-tool {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 52px;
+  padding: var(--space-1) 2px;
+  border-radius: var(--gc-radius-sm);
+  border: 1px solid transparent;
+  background: var(--hover);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sd-tool svg {
+  width: 20px;
+  height: 20px;
+}
+
+.sd-tool.is-on {
+  border-color: var(--game-a);
+  background: color-mix(in oklab, var(--game-a) 20%, transparent);
+}
+
+.sd-tool:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sd-notice {
+  min-height: 1.5em;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.sd-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+[data-style='maximal'] .sd-board {
+  box-shadow: 6px 6px 0 var(--game-a);
+}
+
+/* Con espacio (tableta, escritorio o móvil en horizontal): controles al lado del tablero. */
+@container sd-play (min-width: 700px) {
+  .sd-layout {
+    --board: min(calc(100cqw - 300px), calc(100dvh - 150px), 600px);
+    grid-template-columns: auto minmax(240px, 300px);
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-6);
+  }
+  .sd-controls {
+    width: 100%;
+  }
+  .sd-pad {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .sd-key {
+    min-height: 58px;
+  }
+  .sd-tools {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Teléfono en horizontal: muy poca altura, todo más compacto. */
+@media (orientation: landscape) and (max-height: 500px) {
+  /* El marcador (tiempo y pausa) sigue visible; el tablero cede altura. */
+  .sd-play {
+    padding-top: calc(var(--space-2) + 60px);
+  }
+  .sd-play > .game-hud {
+    top: var(--space-1);
+  }
+  .sd-layout {
+    --board: min(calc(100dvh - 130px), 60cqw);
+    align-items: start;
+    gap: var(--space-4);
+  }
+  .sd-pad {
+    gap: 4px;
+  }
+  .sd-key {
+    min-height: 38px;
+    font-size: var(--text-lg);
+  }
+  .sd-tools {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .sd-tool {
+    min-height: 40px;
+    font-size: 0.6rem;
+  }
+  .sd-tool svg {
+    width: 16px;
+    height: 16px;
+  }
+  .sd-notice {
+    min-height: 0;
+    font-size: var(--text-xs);
+  }
+}

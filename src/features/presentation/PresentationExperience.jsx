@@ -11,6 +11,7 @@ import { CosmosCanvas } from './story/CosmosCanvas.jsx';
 import { Constellation } from './story/Constellation.jsx';
 import { Telescope } from './story/Telescope.jsx';
 import { EyepieceView } from './story/EyepieceView.jsx';
+import { Earth } from './story/Earth.jsx';
 import { useScrollStory } from './story/useScrollStory.js';
 import { applyFrame, collectNodes } from './story/applyFrame.js';
 import { computeFrame, LOG_NOTES, SCENE_BOUNDS, SCENES, STORY_LENGTH } from './story/timeline.js';
@@ -131,6 +132,7 @@ export function PresentationExperience({ mode = 'first', onFinish }) {
           <div className="astral__backdrop" aria-hidden="true">
             <SkyLayers />
             <CosmosCanvas frameRef={frameRef} apiRef={cosmosApi} reduced={reduced} themeKey={`${style}-${theme}`} />
+            <Earth />
             <div className="astral__flash" data-flash="" />
             <div className="astral__telescope" data-telescope="">
               <div className="astral__telescope-zoom" data-telescope-zoom="">
@@ -184,7 +186,7 @@ export function PresentationExperience({ mode = 'first', onFinish }) {
 
           {/* ---------- Narrativa: todos los textos en la misma celda, en orden de lectura ---------- */}
           <div className="astral__narrative">
-            {['stars', 'constellation', 'galaxy', 'telescope', 'eyepiece'].map((id) => {
+            {['galaxy', 'constellation', 'earth', 'telescope', 'eyepiece'].map((id) => {
               const scene = scenesById[id];
               const note = id === 'constellation' ? constellationNote : LOG_NOTES[id];
               return (

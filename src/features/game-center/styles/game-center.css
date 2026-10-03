@@ -1,0 +1,1167 @@
+/* =====================================================================
+ * Game Center — biblioteca.
+ * Concepto: la marquesina iluminada de un salón recreativo, sobre el mismo
+ * cielo de la app. Las superficies usan los tokens del estilo activo
+ * (cristal o maximalismo) y del tema; cada juego aporta su propio par de
+ * colores de identidad (--game-a / --game-b).
+ * ===================================================================== */
+
+/* ---------- Tokens del Game Center ----------
+ * Una sola escala para toda la sección: los elementos que cumplen la misma
+ * función comparten radio, relleno, altura e icono. En móvil todo se compacta
+ * (no es la versión de escritorio reducida: cambian las distribuciones). */
+.game-center,
+.game-screen {
+  --gc-radius-lg: 22px; /* tarjetas y paneles */
+  --gc-radius-md: 14px; /* bloques internos, fichas, celdas */
+  --gc-radius-sm: 10px; /* etiquetas y elementos pequeños */
+  --gc-gap: clamp(0.75rem, 0.5rem + 1vw, 1.25rem);
+  --gc-section-gap: clamp(1.75rem, 1rem + 2.5vw, 3rem);
+  --gc-pad: clamp(0.875rem, 0.6rem + 1vw, 1.5rem);
+  --gc-control: 44px;
+  --gc-control-sm: 36px;
+  --gc-touch: 60px; /* botones táctiles dentro de los juegos */
+  --gc-icon: 18px;
+  --gc-shadow: var(--surface-shadow);
+  --gc-ease: var(--ease-out);
+}
+
+[data-style='maximal'] .game-center,
+[data-style='maximal'] .game-screen {
+  --gc-radius-lg: 16px;
+  --gc-radius-md: 12px;
+  --gc-radius-sm: 8px;
+}
+
+@media (max-width: 599px) {
+  .game-center,
+  .game-screen {
+    --gc-radius-lg: 18px;
+    --gc-control: 40px;
+    --gc-touch: 56px;
+    --gc-icon: 16px;
+  }
+}
+
+.game-center {
+  gap: var(--gc-section-gap);
+}
+
+.game-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---------- Marquesina ---------- */
+.gc-marquee {
+  --bulb: color-mix(in oklab, var(--c-accent) 85%, white);
+  --bulb-alt: color-mix(in oklab, var(--c-primary) 80%, white);
+  position: relative;
+  overflow: hidden;
+  padding: clamp(var(--space-8), 4vw + 1rem, var(--space-11)) clamp(var(--space-6), 5vw, var(--space-10));
+  border-radius: var(--gc-radius-lg);
+  border: var(--surface-border-width) solid var(--surface-border);
+  box-shadow: var(--surface-shadow);
+  background:
+    radial-gradient(120% 90% at 0% 0%, color-mix(in oklab, var(--c-primary) 32%, transparent), transparent 60%),
+    radial-gradient(90% 120% at 100% 100%, color-mix(in oklab, var(--c-secondary) 34%, transparent), transparent 60%),
+    var(--surface);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+  text-align: center;
+  isolation: isolate;
+}
+
+/* Fila de bombillas alrededor del borde: dos capas desfasadas que se alternan. */
+.gc-marquee__bulbs,
+.gc-marquee__bulbs::after {
+  position: absolute;
+  inset: 12px;
+  border-radius: calc(var(--gc-radius-lg) - 8px);
+  pointer-events: none;
+  z-index: -1;
+  --dot: radial-gradient(circle, var(--bulb) 0 3px, transparent 3.6px);
+  background:
+    var(--dot) top left / 26px 14px repeat-x,
+    var(--dot) bottom left / 26px 14px repeat-x,
+    var(--dot) top left / 14px 26px repeat-y,
+    var(--dot) top right / 14px 26px repeat-y;
+}
+
+.gc-marquee__bulbs::after {
+  content: '';
+  inset: 0;
+  --dot: radial-gradient(circle, var(--bulb-alt) 0 3px, transparent 3.6px);
+  background-position:
+    13px 0,
+    13px 100%,
+    0 13px,
+    100% 13px;
+  animation: gc-bulbs 1.6s steps(1) infinite;
+}
+
+/* La segunda fila de bombillas se enciende y apaga: efecto de marquesina en movimiento. */
+@keyframes gc-bulbs {
+  50% {
+    opacity: 0.12;
+  }
+}
+
+.gc-marquee__inner {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.gc-marquee__title {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.35em;
+  font-family: var(--font-bold);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 1.2rem + 7vw, 6.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.gc-marquee__title span {
+  background: linear-gradient(100deg, var(--c-primary), var(--c-accent) 55%, var(--c-secondary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 6px 24px color-mix(in oklab, var(--c-primary) 45%, transparent));
+}
+
+.gc-marquee__lead {
+  font-family: var(--heading-font);
+  font-size: var(--text-xl);
+  font-variation-settings: var(--heading-variation);
+}
+
+.gc-marquee__greeting {
+  font-family: var(--font-script);
+  font-size: var(--text-2xl);
+  color: var(--primary-text);
+}
+
+.gc-marquee__ticket {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px dashed var(--border-strong);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+[data-style='maximal'] .gc-marquee {
+  background:
+    repeating-linear-gradient(-45deg, transparent 0 22px, var(--pattern-ink) 22px 24px),
+    var(--surface);
+}
+[data-style='maximal'] .gc-marquee__title span {
+  background: none;
+  color: var(--c-primary);
+  filter: none;
+  text-shadow:
+    4px 4px 0 var(--surface-border),
+    8px 8px 0 var(--c-accent);
+}
+[data-style='maximal'] .gc-marquee__title span + span {
+  color: var(--c-secondary);
+}
+[data-style='maximal'] .gc-marquee__ticket {
+  border: 2px solid var(--surface-border);
+  border-radius: var(--radius-xs);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  transform: rotate(-1.5deg);
+}
+
+/* ---------- Destacado ---------- */
+.gc-featured {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: var(--gc-radius-lg);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background:
+    linear-gradient(130deg, color-mix(in oklab, var(--game-a) 20%, transparent), transparent 55%),
+    var(--surface);
+  box-shadow: var(--surface-shadow);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+}
+
+.gc-featured__art {
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.gc-featured__copy {
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  gap: var(--space-3);
+  padding: clamp(var(--space-5), 3vw, var(--space-8));
+}
+
+.gc-featured__title {
+  font-size: var(--text-3xl);
+}
+
+.gc-featured__text {
+  color: var(--text-muted);
+  max-width: 52ch;
+}
+
+.gc-featured__highlight {
+  font-weight: 700;
+  color: var(--accent-text);
+}
+
+@media (min-width: 760px) {
+  .gc-featured {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  }
+  .gc-featured__art {
+    aspect-ratio: auto;
+    min-height: 300px;
+  }
+}
+
+/* ---------- Recientes ---------- */
+.gc-recent {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.gc-recent__title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.gc-recent__title svg {
+  width: 20px;
+  height: 20px;
+  color: var(--accent-text);
+}
+
+.gc-recent__list {
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding: 2px 2px var(--space-2);
+  list-style: none;
+  scroll-snap-type: x mandatory;
+}
+
+.gc-recent__list > li {
+  scroll-snap-align: start;
+  flex: none;
+}
+
+.gc-recent__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-2);
+  border-radius: var(--radius-pill);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.gc-recent__thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+  box-shadow: 0 0 0 2px var(--game-a);
+}
+
+.gc-recent__text {
+  display: grid;
+}
+
+.gc-recent__name {
+  font-weight: 700;
+}
+
+.gc-recent__when {
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+@media (hover: hover) {
+  .gc-recent__item:hover {
+    transform: translateY(-2px);
+  }
+}
+.gc-recent__item:active {
+  transform: scale(0.98);
+}
+
+[data-style='maximal'] .gc-recent__item {
+  border-radius: var(--radius-md);
+  box-shadow: 3px 3px 0 var(--surface-border);
+}
+
+/* ---------- Filtros ---------- */
+.game-filters {
+  display: grid;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.game-search {
+  position: relative;
+  max-width: 520px;
+}
+
+.game-search__icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  translate: 0 -50%;
+  color: var(--text-subtle);
+  pointer-events: none;
+}
+
+.game-search__input {
+  width: 100%;
+  min-height: var(--tap);
+  padding: 0 var(--space-10) 0 calc(var(--space-4) + 26px);
+  border-radius: var(--control-radius);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--input-bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.game-search__input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.game-search__input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.game-search__clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  translate: 0 -50%;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted);
+}
+
+.game-search__clear svg {
+  width: 18px;
+  height: 18px;
+}
+
+.game-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.game-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  transition:
+    background-color var(--dur-fast),
+    color var(--dur-fast),
+    transform var(--dur-fast);
+}
+
+.game-chip svg {
+  width: 16px;
+  height: 16px;
+}
+
+@media (hover: hover) {
+  .game-chip:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+}
+
+.game-chip:active {
+  transform: scale(0.96);
+}
+
+.game-chip.is-active {
+  background: var(--selected);
+  border-color: color-mix(in oklab, var(--c-primary) 60%, transparent);
+  color: var(--text);
+}
+
+[data-style='maximal'] .game-chip {
+  border: 2px solid var(--surface-border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+}
+[data-style='maximal'] .game-chip.is-active {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  box-shadow: 3px 3px 0 var(--surface-border);
+}
+
+/* ---------- Rejilla y tarjetas ---------- */
+.game-grid,
+.gc-roadmap__games {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: clamp(var(--space-4), 2vw, var(--space-6));
+  list-style: none;
+  padding: 0;
+}
+
+.game-grid > li,
+.gc-roadmap__games > li {
+  display: grid;
+}
+
+.game-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  border-radius: var(--gc-radius-lg);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    border-color var(--dur-base);
+}
+
+.game-card__art {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: color-mix(in oklab, var(--game-a, var(--c-primary)) 30%, var(--bg-deep));
+}
+
+.game-card__art .game-art {
+  transition: transform var(--dur-slower) var(--ease-out);
+}
+
+.game-card__status {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  background: color-mix(in oklab, var(--surface-solid) 80%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.game-card__body {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-5);
+}
+
+.game-card__categories {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+.game-card__title {
+  font-size: var(--text-xl);
+}
+
+.game-card__tagline {
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.game-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  padding: 0;
+  list-style: none;
+  margin-top: var(--space-1);
+}
+
+.game-card__facts li {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-xs);
+  background: var(--hover);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.game-card__footer {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.game-card__last {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.game-card__last svg {
+  width: 14px;
+  height: 14px;
+}
+
+.game-card__highlight {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--accent-text);
+}
+
+.game-card__meter,
+.mini-meter,
+.meter {
+  position: relative;
+  display: block;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.game-card__meter > span,
+.mini-meter > span,
+.meter > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--game-a, var(--c-primary)), var(--game-b, var(--c-secondary)));
+  transition: width var(--dur-slower) var(--ease-out);
+}
+
+.meter {
+  height: 10px;
+}
+
+.game-card__play {
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
+/* El enlace cubre toda la tarjeta para que cualquier punto sea pulsable. */
+.game-card__play::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+}
+
+@media (hover: hover) {
+  .game-card:not(.game-card--planned):hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in oklab, var(--game-a) 55%, var(--surface-border));
+    box-shadow:
+      0 28px 60px -30px color-mix(in oklab, var(--game-a) 70%, transparent),
+      var(--surface-shadow);
+  }
+  .game-card:not(.game-card--planned):hover .game-art {
+    transform: scale(1.05);
+  }
+}
+
+.game-card:has(.game-card__play:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.game-card__play:focus-visible {
+  outline: none;
+}
+
+.game-card:not(.game-card--planned):active {
+  transform: translateY(0) scale(0.99);
+}
+
+[data-style='maximal'] .game-card {
+  box-shadow: 6px 6px 0 var(--game-a);
+}
+@media (hover: hover) {
+  [data-style='maximal'] .game-card:not(.game-card--planned):hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 9px 9px 0 var(--game-a);
+    border-color: var(--surface-border);
+  }
+}
+[data-style='maximal'] .game-card:not(.game-card--planned):active {
+  transform: translate(3px, 3px);
+  box-shadow: 2px 2px 0 var(--game-a);
+}
+[data-style='maximal'] .game-card__art {
+  border-bottom: 2px solid var(--surface-border);
+}
+
+/* Tarjeta de un juego futuro: estado deshabilitado, plano de diseño en lugar de ilustración. */
+.game-card--planned {
+  opacity: 0.78;
+  border-style: dashed;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.game-card__blueprint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  background:
+    linear-gradient(var(--pattern-ink) 1px, transparent 1px) 0 0 / 14px 14px,
+    linear-gradient(90deg, var(--pattern-ink) 1px, transparent 1px) 0 0 / 14px 14px;
+  border-bottom: 1px dashed var(--border-strong);
+  color: var(--text-subtle);
+}
+
+.game-card__blueprint svg {
+  width: 30px;
+  height: 30px;
+}
+
+.game-card__blueprint span {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.game-card--planned .game-card__body {
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.game-card--planned .badge {
+  justify-self: start;
+  margin-top: var(--space-2);
+}
+
+[data-style='maximal'] .game-card--planned {
+  box-shadow: none;
+}
+
+/* ---------- Estado vacío ---------- */
+.game-empty {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  padding: var(--space-9) var(--space-5);
+  text-align: center;
+  border-radius: var(--gc-radius-lg);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+}
+
+.game-empty svg {
+  width: 40px;
+  height: 40px;
+  color: var(--text-subtle);
+}
+
+.game-empty__title {
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ---------- Estadísticas ---------- */
+.gc-stats {
+  display: grid;
+  gap: var(--space-5);
+}
+
+.gc-stats .section-header {
+  margin-bottom: 0;
+}
+
+/*
+ * Composición por ANCHO REAL de la sección (container queries), no de la ventana:
+ * antes, desde 900 px de ventana las fichas iban a una columna lateral del 45 %,
+ * pero con la navegación lateral la sección mide ~670 px en una tableta apaisada
+ * y las tres fichas quedaban en 86 px, con todas las etiquetas cortadas.
+ *
+ *   compacto  (< 520 px)  fichas en columna centrada (icono, valor, etiqueta)
+ *   medio     (≥ 520 px)  fichas en una fila de ancho completo, horizontales
+ *   ancho     (≥ 760 px)  y la lista de progreso por juego en columnas
+ */
+.gc-stats {
+  container: gc-stats / inline-size;
+}
+
+.game-stats {
+  display: grid;
+  gap: var(--space-4);
+  max-width: 1200px;
+}
+
+.game-tokens {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--gc-gap);
+  align-content: start;
+  list-style: none;
+  padding: 0;
+}
+
+/* Ficha de estadística: tamaño fijo por diseño, el valor se ajusta dentro sin
+ * deformarla (los minutos no son un progreso acotado: no van en un anillo). */
+.game-token {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: var(--space-2);
+  min-height: 76px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  background: var(--surface);
+  border: var(--surface-border-width) solid var(--surface-border);
+  box-shadow: var(--gc-shadow);
+  min-width: 0;
+}
+
+.game-token svg {
+  grid-row: span 2;
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  border-radius: 50%;
+  color: var(--accent-text);
+  background: color-mix(in oklab, var(--c-accent) 16%, transparent);
+}
+
+.game-token__value {
+  font-family: var(--font-bold);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.game-token__label {
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-style='maximal'] .game-token {
+  box-shadow: 3px 3px 0 var(--c-accent);
+}
+
+@container gc-stats (max-width: 519px) {
+  .game-tokens {
+    gap: var(--space-2);
+  }
+  .game-token {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: center;
+    text-align: center;
+    min-height: 0;
+    padding: var(--space-3) var(--space-2);
+  }
+  .game-token svg {
+    grid-row: auto;
+    width: 26px;
+    height: 26px;
+    padding: 5px;
+    margin-bottom: 2px;
+  }
+  .game-token__value {
+    font-size: var(--text-md);
+  }
+}
+
+.game-progress-panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--gc-radius-lg);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+  -webkit-backdrop-filter: var(--surface-blur);
+  backdrop-filter: var(--surface-blur);
+}
+
+.game-progress-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+
+.game-progress-panel__title {
+  font-weight: 800;
+}
+
+.game-progress-panel__value {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.game-progress-panel__list {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.game-progress-panel__list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-1) var(--space-3);
+  align-items: center;
+}
+
+.game-progress-panel__game {
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.game-progress-panel__detail {
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+  text-align: right;
+}
+
+.game-progress-panel__list .mini-meter {
+  grid-column: 1 / -1;
+  height: 5px;
+}
+
+@container gc-stats (min-width: 520px) {
+  .game-token {
+    padding: var(--space-3) var(--space-5);
+    column-gap: var(--space-3);
+  }
+  .game-token svg {
+    width: 36px;
+    height: 36px;
+    padding: 8px;
+  }
+  .game-token__value {
+    font-size: var(--text-xl);
+  }
+}
+
+@container gc-stats (min-width: 760px) {
+  .game-progress-panel {
+    padding: var(--space-5) var(--space-6);
+  }
+  .game-progress-panel__list {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+    gap: var(--space-4) var(--space-8);
+  }
+  /* Interruptor y volumen lado a lado: el deslizador no se estira a todo el ancho. */
+  .game-sound {
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 24rem);
+    align-items: center;
+    column-gap: var(--space-8);
+  }
+}
+
+.game-sound {
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  border-radius: var(--gc-radius-lg);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+}
+
+.game-sound__volume {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) 3.5em;
+  align-items: center;
+  gap: var(--space-3);
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+
+.game-sound__volume label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.game-sound__volume svg {
+  width: 18px;
+  height: 18px;
+}
+
+.game-sound__volume input {
+  width: 100%;
+  accent-color: var(--c-primary);
+  min-height: var(--tap);
+}
+
+.game-sound__volume input:disabled {
+  opacity: 0.45;
+}
+
+.game-sound__volume output {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+
+/* ---------- Hoja de ruta ---------- */
+.gc-roadmap__phases {
+  display: grid;
+  gap: var(--space-7);
+  padding: 0;
+  list-style: none;
+}
+
+.gc-roadmap__phase {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.gc-roadmap__phase-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.gc-roadmap__phase-title span {
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+.gc-roadmap__games {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+}
+
+[data-motion='reduced'] .gc-marquee__bulbs::after {
+  animation: none;
+}
+[data-motion='reduced'] .game-card,
+[data-motion='reduced'] .game-card .game-art {
+  transition: none;
+}
+
+/* =====================================================================
+ * Proporciones por tamaño de pantalla.
+ * En teléfono cambian las distribuciones (tarjetas horizontales, hoja de
+ * ruta en dos columnas): no es la versión de escritorio encogida.
+ * ===================================================================== */
+
+.game-card__body {
+  padding: var(--gc-pad);
+}
+
+.game-card__play {
+  min-height: var(--gc-control);
+}
+
+.gc-featured__copy {
+  padding: var(--gc-pad) calc(var(--gc-pad) * 1.4);
+}
+
+@media (min-width: 1280px) {
+  .game-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 759px) {
+  .gc-marquee {
+    padding: var(--space-8) var(--space-5);
+  }
+  .gc-marquee__bulbs,
+  .gc-marquee__bulbs::after {
+    inset: 7px;
+  }
+  .gc-marquee__bulbs::after {
+    inset: 0;
+  }
+  .gc-marquee__title {
+    font-size: clamp(2.1rem, 1rem + 7vw, 3.4rem);
+  }
+  .gc-marquee__lead {
+    font-size: var(--text-md);
+  }
+  .gc-marquee__greeting {
+    font-size: var(--text-xl);
+  }
+  .gc-featured__art {
+    aspect-ratio: 16 / 7;
+  }
+  .gc-featured__title {
+    font-size: var(--text-2xl);
+  }
+  .gc-featured__text {
+    font-size: var(--text-sm);
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* Teléfono: tarjeta horizontal (miniatura + datos) para ver varios juegos sin desplazarse tanto. */
+@media (max-width: 599px) {
+  .game-grid {
+    gap: var(--space-3);
+  }
+  .game-card {
+    grid-template-columns: 104px minmax(0, 1fr);
+    grid-template-rows: none;
+  }
+  .game-card__art {
+    aspect-ratio: auto;
+    height: 100%;
+    min-height: 100%;
+  }
+  .game-card__status {
+    display: none;
+  }
+  .game-card__body {
+    padding: var(--space-3) var(--space-4);
+    gap: 4px;
+  }
+  .game-card__title {
+    font-size: var(--text-lg);
+  }
+  .game-card__tagline {
+    font-size: var(--text-xs);
+  }
+  .game-card__facts {
+    display: none;
+  }
+  .game-card__footer {
+    margin-top: var(--space-1);
+    gap: 6px;
+  }
+  .game-card__highlight {
+    display: none;
+  }
+  .game-card__play {
+    min-height: var(--gc-control-sm);
+    padding: 0 var(--space-4);
+    font-size: var(--text-sm);
+    margin-top: 2px;
+  }
+  .game-card__meter {
+    height: 4px;
+  }
+  .gc-roadmap__games {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  /* Las tarjetas futuras van en dos columnas: la tira del plano arriba y el texto debajo
+     (la tarjeta horizontal de los juegos dejaba el texto en una franja de pocos píxeles). */
+  .game-card--planned {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+  }
+  .game-card--planned .game-card__blueprint {
+    padding: var(--space-2) var(--space-3);
+  }
+  .game-card--planned .game-card__blueprint svg {
+    width: 20px;
+    height: 20px;
+  }
+  .game-card--planned .game-card__body {
+    padding: var(--space-2) var(--space-3) var(--space-3);
+  }
+  .game-card--planned .game-card__title {
+    font-size: var(--text-md);
+  }
+  .game-card--planned .game-card__categories {
+    display: none;
+  }
+  /* La insignia no puede imponer su ancho: en la columna estrecha recortaba la descripción. */
+  .game-card--planned .game-card__body > * {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .game-card--planned .badge {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    white-space: normal;
+    letter-spacing: 0.04em;
+  }
+  .game-progress-panel,
+  .game-sound {
+    padding: var(--space-4);
+  }
+  .game-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    margin-inline: calc(var(--gutter) * -1);
+    padding: 2px var(--gutter);
+    scrollbar-width: none;
+  }
+  .game-chip {
+    flex: none;
+    min-height: 34px;
+  }
+}

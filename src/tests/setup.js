@@ -1,15 +1,19 @@
 import '@testing-library/jest-dom/vitest';
 import 'fake-indexeddb/auto';
 import { afterEach, beforeEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup, configure } from '@testing-library/react';
 import { __resetForTests } from '../services/storage/safeLocalStorage.js';
 import { __resetDatabaseForTests, DB_NAME } from '../services/storage/database.js';
+import { __resetGameStorageForTests } from '../features/game-center/services/gameStorage.js';
 
 /*
  * jsdom no implementa algunas APIs del navegador. Se simulan aquí con el
  * comportamiento mínimo necesario; las pruebas en navegador real
  * (npm run test:e2e) cubren su funcionamiento verdadero.
  */
+
+// Las pantallas con carga diferida pueden tardar más de 1 s cuando la suite corre en paralelo.
+configure({ asyncUtilTimeout: 8000 });
 
 // Movimiento reducido activado: las animaciones y esperas de la presentación se acortan.
 let reducedMotion = true;
@@ -34,6 +38,7 @@ afterEach(async () => {
   window.localStorage.clear();
   __resetForTests();
   __resetDatabaseForTests();
+  __resetGameStorageForTests();
   await new Promise((resolve) => {
     const request = indexedDB.deleteDatabase(DB_NAME);
     request.onsuccess = request.onerror = request.onblocked = () => resolve();

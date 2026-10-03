@@ -1,0 +1,354 @@
+/* =====================================================================
+ * Cubrir el espacio — prioridad: que el tablero se lea de un vistazo.
+ * Celdas por cubrir, cubiertas, muros, destinos posibles y la ficha
+ * se distinguen por forma además de por color.
+ * ===================================================================== */
+
+.game-screen[data-game='logic-grid'] {
+  --lg-paint-a: #7c5cff;
+  --lg-paint-b: #ff7ab6;
+  --lg-cell: rgb(255 255 255 / 0.07);
+  --lg-cell-border: rgb(255 255 255 / 0.16);
+  --lg-wall: #0d0b15;
+  --lg-wall-line: rgb(255 255 255 / 0.05);
+  --lg-board: rgb(255 255 255 / 0.04);
+  --lg-target: #ffd166;
+}
+[data-theme='light'] .game-screen[data-game='logic-grid'] {
+  --lg-cell: #ffffff;
+  --lg-cell-border: #d9d2c3;
+  --lg-wall: #2d2a3e;
+  --lg-wall-line: rgb(255 255 255 / 0.08);
+  --lg-board: #efe9dc;
+  --lg-target: #b7791f;
+}
+
+/* ---------- Selección de nivel ---------- */
+.lg-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  gap: var(--space-7);
+}
+
+.lg-select__title {
+  font-size: var(--text-3xl);
+}
+
+.lg-select__text,
+.lg-series__text {
+  color: var(--text-muted);
+}
+
+.lg-series {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.lg-series__title {
+  font-size: var(--text-xl);
+}
+
+.lg-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.lg-level {
+  width: 100%;
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  align-items: start;
+  gap: var(--space-1) var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  color: var(--text);
+  background: var(--surface);
+  border: var(--surface-border-width) solid var(--surface-border);
+  border-radius: var(--radius-md);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast);
+}
+
+.lg-level__number {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-bold);
+  font-weight: 800;
+  background: color-mix(in oklab, var(--lg-paint-a) 22%, transparent);
+  color: var(--text);
+}
+
+.lg-level.is-done .lg-level__number {
+  background: linear-gradient(135deg, var(--lg-paint-a), var(--lg-paint-b));
+  color: #fff;
+}
+
+.lg-level__name {
+  font-weight: 700;
+  line-height: var(--leading-snug);
+}
+
+.lg-level__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.lg-level__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lg-level:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .lg-level:not(:disabled):hover {
+    transform: translateY(-2px);
+    background: var(--surface-strong);
+  }
+}
+
+.lg-level:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+/* ---------- Partida ---------- */
+.lg-play {
+  position: relative;
+  min-height: 100%;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+}
+
+.lg-play .game-hud {
+  width: min(100%, 720px);
+}
+
+.lg-rule {
+  max-width: 52ch;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.lg-board-wrap {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  /* Los deslizamientos sobre el tablero son del juego, no del navegador. */
+  touch-action: none;
+}
+
+.lg-board {
+  --cell: min(64px, calc((100vw - 2 * var(--gutter) - 24px) / var(--cols)), calc((100dvh - 330px) / var(--rows)));
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-auto-rows: var(--cell);
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--lg-board);
+  border: var(--surface-border-width) solid var(--surface-border);
+  box-shadow: var(--surface-shadow);
+  box-sizing: content-box;
+}
+
+.lg-row {
+  display: contents;
+}
+
+.lg-cell-slot {
+  padding: 3px;
+}
+
+.lg-cell {
+  width: 100%;
+  height: 100%;
+  display: block;
+  padding: 0;
+  border-radius: 22%;
+  background: var(--lg-cell);
+  border: 2px solid var(--lg-cell-border);
+  transition:
+    background 220ms var(--ease-out) var(--delay, 0ms),
+    border-color 220ms var(--ease-out) var(--delay, 0ms),
+    transform 220ms var(--ease-spring) var(--delay, 0ms);
+}
+
+.lg-cell:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.lg-cell.is-wall {
+  border-radius: 22%;
+  margin: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
+  border: none;
+  background:
+    repeating-linear-gradient(135deg, var(--lg-wall-line) 0 4px, transparent 4px 9px),
+    var(--lg-wall);
+}
+
+.lg-cell.is-covered {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--lg-paint-a), var(--lg-paint-b));
+  transform: scale(1);
+}
+
+.lg-cell.is-start:not(.is-covered) {
+  border-style: dashed;
+}
+
+/* Destinos posibles: contorno discontinuo y punto central. */
+.lg-cell.is-target {
+  cursor: pointer;
+  border-style: dashed;
+  border-color: var(--lg-target);
+  background-image: radial-gradient(circle, var(--lg-target) 0 12%, transparent 13%);
+}
+
+.lg-cell.is-target.is-covered {
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 0.95) 0 12%, transparent 13%),
+    linear-gradient(135deg, var(--lg-paint-a), var(--lg-paint-b));
+}
+
+@media (hover: hover) {
+  .lg-cell.is-target:hover {
+    transform: scale(0.92);
+  }
+}
+
+.lg-cell.is-target:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.lg-cell.is-hint {
+  animation: lg-hint 900ms var(--ease-in-out) infinite;
+}
+
+@keyframes lg-hint {
+  50% {
+    box-shadow: 0 0 0 5px color-mix(in oklab, var(--lg-target) 55%, transparent);
+  }
+}
+
+.lg-ball {
+  position: absolute;
+  left: calc(10px + var(--c) * var(--cell));
+  top: calc(10px + var(--r) * var(--cell));
+  width: var(--cell);
+  height: var(--cell);
+  pointer-events: none;
+  transition:
+    left var(--travel) var(--ease-out),
+    top var(--travel) var(--ease-out);
+}
+
+.lg-ball__body {
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #e9e4ff 55%, #b9adff);
+  border: 3px solid #2d2a3e;
+  box-shadow: 0 6px 14px -4px rgb(0 0 0 / 0.5);
+}
+
+.lg-board.is-path .lg-ball__body {
+  border-radius: 30%;
+}
+
+.lg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+[data-motion='reduced'] .lg-ball,
+[data-motion='reduced'] .lg-cell {
+  transition-duration: 0ms;
+}
+[data-motion='reduced'] .lg-cell.is-hint {
+  animation: none;
+  box-shadow: 0 0 0 4px var(--lg-target);
+}
+
+/* Movimiento no válido: explicación breve y sacudida de la ficha. */
+.lg-notice {
+  min-height: 1.4em;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--warning);
+  text-align: center;
+}
+
+.lg-notice span {
+  display: inline-block;
+  animation: hint-in var(--dur-base) var(--ease-out) both;
+}
+
+.lg-ball__body.is-shaking {
+  animation: lg-shake 300ms var(--ease-out);
+}
+
+@keyframes lg-shake {
+  20%,
+  60% {
+    transform: translateX(-12%);
+  }
+  40%,
+  80% {
+    transform: translateX(12%);
+  }
+}
+
+@media (max-width: 599px) {
+  .lg-play {
+    gap: var(--space-2);
+    padding-top: var(--space-2);
+  }
+  .lg-rule {
+    font-size: var(--text-xs);
+  }
+  .lg-board {
+    --cell: min(64px, calc((100vw - 2 * var(--gutter) - 24px) / var(--cols)), calc((100dvh - 350px) / var(--rows)));
+    padding: 8px;
+  }
+  .lg-ball {
+    left: calc(8px + var(--c) * var(--cell));
+    top: calc(8px + var(--r) * var(--cell));
+  }
+  .lg-levels {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 140px), 1fr));
+    gap: var(--space-2);
+  }
+  .lg-level {
+    min-height: 72px;
+    padding: var(--space-2) var(--space-3);
+  }
+}

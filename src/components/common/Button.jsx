@@ -2,7 +2,8 @@ import { Link } from 'react-router';
 import { cx } from '../../utils/cx.js';
 
 /**
- * Botón de la app. Con `to` se renderiza como enlace interno con el mismo aspecto.
+ * Botón de la app. Con `to` se renderiza como enlace interno con el mismo aspecto;
+ * con `href`, como enlace externo (siempre en otra pestaña y sin `opener` ni referer).
  * variant: primary | secondary | ghost | danger    size: sm | md | lg
  */
 export function Button({
@@ -11,6 +12,7 @@ export function Button({
   icon: Icon,
   iconEnd: IconEnd,
   to,
+  href,
   className,
   children,
   type = 'button',
@@ -26,6 +28,13 @@ export function Button({
     </>
   );
 
+  if (href !== undefined) {
+    return (
+      <a ref={ref} href={href} className={classes} target="_blank" rel="noopener noreferrer" {...rest}>
+        {content}
+      </a>
+    );
+  }
   if (to !== undefined) {
     return (
       <Link ref={ref} to={to} className={classes} {...rest}>

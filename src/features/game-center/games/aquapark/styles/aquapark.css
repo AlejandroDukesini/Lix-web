@@ -1,0 +1,193 @@
+/* Aquapark — acuático y dinámico: cielo, toboganes de colores y agua. */
+
+.aquapark {
+  background: #5fd3f0;
+}
+
+.aquapark .game-hud__item,
+.aquapark .game-hud__pause {
+  background: rgb(8 60 90 / 0.5);
+  border-color: rgb(255 255 255 / 0.4);
+  color: #fff;
+}
+
+.aquapark .game-hud__item dt {
+  color: rgb(255 255 255 / 0.75);
+}
+
+.aquapark .game-hud__item.is-good dd {
+  color: #ffd166;
+}
+
+/* ---------- Selección de circuito ---------- */
+.aq-menu__head,
+.aq-circuits {
+  width: min(100%, 980px);
+  margin-inline: auto;
+}
+
+.aq-menu {
+  padding: var(--space-6) var(--gutter) calc(var(--space-10) + var(--safe-bottom));
+  display: grid;
+  gap: var(--space-6);
+  align-content: start;
+}
+
+.aq-menu__head {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.aq-menu__title {
+  font-size: var(--text-3xl);
+}
+
+.aq-menu__text {
+  color: var(--text-muted);
+}
+
+.aq-circuits {
+  display: grid;
+  gap: var(--space-4);
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 860px) {
+  .aq-circuits {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.aq-circuit {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  padding: 0;
+  overflow: hidden;
+  text-align: left;
+  color: var(--text);
+  border-radius: var(--gc-radius-lg);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base);
+}
+
+/* Miniatura del circuito: cielo y un tobogán en curva con sus colores. */
+.aq-circuit__scene {
+  position: relative;
+  aspect-ratio: 16 / 7;
+  background: linear-gradient(var(--sky-a), var(--sky-b));
+  overflow: hidden;
+}
+
+.aq-circuit__slide {
+  position: absolute;
+  inset: 30% -10% -60% 10%;
+  border-radius: 50%;
+  border: 14px solid var(--slide-a);
+  border-left-color: var(--slide-b);
+  border-bottom-color: transparent;
+  transform: rotate(-12deg);
+}
+
+.aq-circuit__body {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-5) var(--space-5);
+}
+
+.aq-circuit__difficulty {
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent-text);
+}
+
+.aq-circuit__name {
+  font-family: var(--heading-font);
+  font-weight: var(--heading-weight);
+  font-size: var(--text-xl);
+}
+
+.aq-circuit__text {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.aq-circuit__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-subtle);
+}
+
+.aq-circuit__meta svg {
+  width: 14px;
+  height: 14px;
+  flex: none;
+}
+
+@media (hover: hover) {
+  .aq-circuit:not(:disabled):hover {
+    transform: translateY(-4px);
+  }
+}
+
+.aq-circuit:not(:disabled):active {
+  transform: scale(0.99);
+}
+
+.aq-circuit:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.aq-circuit:disabled .aq-circuit__scene {
+  filter: grayscale(0.8);
+}
+
+[data-style='maximal'] .aq-circuit {
+  box-shadow: 6px 6px 0 var(--slide-a);
+}
+
+/* Aviso breve al superar un tramo. */
+.aq-toast {
+  position: absolute;
+  top: 74px;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 4;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-pill);
+  background: rgb(8 60 90 / 0.6);
+  color: #fff;
+  font-size: var(--text-sm);
+  font-weight: 800;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: hint-in var(--dur-base) var(--ease-out) both;
+}
+
+@media (max-width: 599px) {
+  .aq-toast {
+    top: 60px;
+    font-size: var(--text-xs);
+  }
+}
+
+/* Teléfono estrecho: tiempo y puesto bastan en el marcador; la velocidad se percibe en pantalla. */
+@media (max-width: 480px) {
+  .aquapark .game-hud__item:nth-child(3) {
+    display: none;
+  }
+}

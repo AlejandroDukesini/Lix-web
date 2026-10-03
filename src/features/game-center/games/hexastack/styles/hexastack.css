@@ -1,0 +1,350 @@
+/*
+ * HexaStack — geométrico pero suave: panal sobre la superficie del tema,
+ * fichas con canto (volumen sin sombras pesadas) y símbolo además del color.
+ */
+
+.hx-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.hx-select__title {
+  font-size: var(--text-3xl);
+}
+
+.hx-select__text {
+  color: var(--text-muted);
+}
+
+.hx-select__subtitle {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-xl);
+}
+
+.hx-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-text);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.hx-link svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hx-free {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid color-mix(in oklab, var(--game-a) 50%, var(--surface-border));
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.hx-free svg {
+  width: 28px;
+  height: 28px;
+  color: var(--accent-text);
+}
+
+.hx-free span {
+  display: grid;
+}
+
+.hx-free small {
+  color: var(--text-subtle);
+}
+
+.hx-challenges {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.hx-challenge {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 2px var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.hx-challenge.is-locked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.hx-challenge.is-done {
+  border-color: color-mix(in oklab, #5fd6a0 60%, var(--surface-border));
+}
+
+.hx-challenge__n {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%);
+  background: color-mix(in oklab, var(--game-a) 30%, transparent);
+  font-weight: 800;
+}
+
+.hx-challenge__name {
+  font-weight: 800;
+}
+
+.hx-challenge__meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.hx-challenge__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.hx-free:focus-visible,
+.hx-challenge:focus-visible,
+.hx-piece:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.hx-rules {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  padding-left: 1.2em;
+  color: var(--text-muted);
+}
+
+/* ---------- Partida ---------- */
+.hx-play {
+  container: hx-play / inline-size;
+  position: relative;
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+}
+
+.hx-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+.hx-layout {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+}
+
+.hx-board-wrap {
+  /* El tablero es ~1,15 veces más alto que ancho: el ancho se limita por el alto disponible. */
+  width: min(100%, calc((100dvh - 330px) * 0.87), 640px);
+  min-width: min(100%, 280px);
+  touch-action: manipulation;
+}
+
+.hx-board {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.hx-slot {
+  fill: color-mix(in oklab, var(--text) 7%, transparent);
+  stroke: color-mix(in oklab, var(--text) 16%, transparent);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.hx-cell.is-empty {
+  cursor: pointer;
+}
+
+.hx-cell.is-empty:hover .hx-slot,
+.hx-cell.is-target .hx-slot {
+  fill: color-mix(in oklab, var(--game-a) 28%, transparent);
+  stroke: var(--game-a);
+  stroke-width: 2.5;
+}
+
+.hx-cell:focus-visible {
+  outline: none;
+}
+
+.hx-cell:focus-visible .hx-slot {
+  stroke: var(--focus);
+  stroke-width: 3;
+}
+
+/* Vecinas que se fusionarían con la pila previsualizada. */
+.hx-cell.is-attract .hx-tile {
+  stroke: #ffffff;
+  stroke-width: 2.5;
+}
+
+.hx-tile,
+.hx-side {
+  stroke: rgb(0 0 0 / 0.18);
+  stroke-width: 1;
+  stroke-linejoin: round;
+}
+
+.hx-label {
+  fill: #23202b;
+  font-family: var(--font-body);
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.hx-stack.is-ghost {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.hx-cell.is-merged .hx-stack {
+  animation: hx-pop 0.3s var(--ease-out);
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.hx-cell.is-flash .hx-slot {
+  animation: hx-flash 0.45s var(--ease-out);
+}
+
+@keyframes hx-pop {
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+@keyframes hx-flash {
+  0% {
+    fill: #ffffff;
+  }
+}
+
+[data-motion='reduced'] .hx-cell.is-merged .hx-stack,
+[data-motion='reduced'] .hx-cell.is-flash .hx-slot {
+  animation: none;
+}
+
+.hx-side {
+  width: min(100%, 520px);
+  display: grid;
+  gap: var(--space-2);
+  justify-items: center;
+}
+
+.hx-hint {
+  min-height: 1.4em;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.hx-tray {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.hx-piece {
+  display: grid;
+  place-items: center;
+  height: 96px;
+  padding: var(--space-1);
+  border-radius: var(--gc-radius-md);
+  border: 2px solid var(--border);
+  background: var(--surface);
+  cursor: grab;
+  touch-action: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.hx-piece svg {
+  height: 100%;
+  width: auto;
+}
+
+.hx-piece.is-selected {
+  border-color: var(--game-a);
+  box-shadow: inset 0 0 0 2px var(--game-a);
+  transform: translateY(-3px);
+}
+
+.hx-piece:disabled {
+  opacity: 0.5;
+}
+
+.hx-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+[data-style='maximal'] .hx-piece.is-selected {
+  box-shadow: 4px 4px 0 var(--game-a);
+}
+
+/* Con espacio: tablero a la izquierda, mano y acciones a la derecha. */
+@container hx-play (min-width: 760px) {
+  .hx-layout {
+    grid-template-columns: auto minmax(220px, 300px);
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-6);
+  }
+  .hx-board-wrap {
+    width: min(calc(100cqw - 340px), calc((100dvh - 150px) * 0.87), 640px);
+  }
+  .hx-tray {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .hx-board-wrap {
+    width: min(calc((100dvh - 110px) * 0.87), 60cqw);
+  }
+  .hx-piece {
+    height: 74px;
+  }
+  .hx-tray {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

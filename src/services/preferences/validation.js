@@ -23,9 +23,9 @@ const CONTROL_CHARS = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g;
 export const PRESENTATION_TEXT_FIELDS = Object.freeze({
   openingLine: { label: 'Primera frase', max: LIMITS.shortText, multiline: false },
   openingReveal: { label: 'Frase que aparece después de la pausa', max: LIMITS.longText, multiline: true },
-  starsText: { label: 'Capítulo I · Estrellas', max: LIMITS.longText, multiline: true },
+  starsText: { label: 'Capítulo I · La galaxia', max: LIMITS.longText, multiline: true },
   constellationText: { label: 'Capítulo II · Constelaciones', max: LIMITS.longText, multiline: true },
-  galaxyText: { label: 'Capítulo III · Galaxia', max: LIMITS.longText, multiline: true },
+  galaxyText: { label: 'Capítulo III · La Tierra', max: LIMITS.longText, multiline: true },
   telescopeText: { label: 'Capítulo IV · Telescopio', max: LIMITS.longText, multiline: true },
   eyepieceText: { label: 'Capítulo V · Asomarse', max: LIMITS.shortText, multiline: false },
   candleText: { label: 'Capítulo VI · La vela', max: LIMITS.longText, multiline: true },

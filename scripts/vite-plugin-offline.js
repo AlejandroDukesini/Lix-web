@@ -2,8 +2,10 @@
  * Plugin de Vite que prepara la aplicación para funcionar sin conexión.
  *
  * 1. Inyecta una Content-Security-Policy que solo permite recursos del propio
- *    origen: cualquier intento de cargar algo externo queda bloqueado.
- * 2. Tras escribir el build, recorre `dist/`, genera la lista de archivos a
+ *    origen: cualquier intento de cargar algo externo queda bloqueado. La única
+ *    excepción posible son los iframes de juegos online cuyo proveedor autoriza
+ *    la inserción (`frame-src`, generado de onlineSources.js; hoy ninguno).
+ * 2. Tras escribir el build principal, recorre `dist/`, genera la lista de archivos a
  *    precachear y la inyecta en `service-worker.js` junto con un hash de versión.
  *    Si cualquier archivo cambia, cambia el hash y el navegador detecta un
  *    Service Worker nuevo (actualización controlada desde la app).
@@ -13,6 +15,7 @@
 import { createHash } from 'node:crypto';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { embedOrigins } from '../src/features/game-center/online/onlineSources.js';
 
 const SW_FILE = 'service-worker.js';
 const MANIFEST_PLACEHOLDER = 'self.__PRECACHE_MANIFEST__';
@@ -32,6 +35,8 @@ export const CONTENT_SECURITY_POLICY = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'none'",
+  // Solo orígenes de inserción verificados; sin ninguno, frame-src cae en default-src ('self').
+  ...(embedOrigins().length ? [`frame-src 'self' ${embedOrigins().join(' ')}`] : []),
 ].join('; ');
 
 async function listFiles(dir, base = dir) {
@@ -66,7 +71,11 @@ export function offlinePrecache() {
       ];
     },
 
-    async closeBundle() {
+    // writeBundle (y no closeBundle): Vite también construye los Web Workers con un
+    // sub-build que comparte los plugins; solo el build principal emite index.html,
+    // y solo entonces están en disco todos los archivos que hay que precachear.
+    async writeBundle(_options, bundle) {
+      if (!('index.html' in bundle)) return;
       const files = (await listFiles(outDir)).filter((file) => !EXCLUDED.some((re) => re.test(file))).sort();
 
       const swPath = path.join(outDir, SW_FILE);

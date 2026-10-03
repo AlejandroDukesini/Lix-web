@@ -24,9 +24,10 @@
  */
 export const SCENES = [
   { id: 'opening', numeral: '', title: 'Prólogo', length: 0.8 },
-  { id: 'stars', numeral: 'I', title: 'Una inmensidad de estrellas', length: 1.1, textKey: 'starsText' },
+  // Los textos conservan sus claves de preferencias (starsText, galaxyText) aunque cambie la escena.
+  { id: 'galaxy', numeral: 'I', title: 'La galaxia', length: 1.3, textKey: 'starsText', keyPose: 1 },
   { id: 'constellation', numeral: 'II', title: 'Las constelaciones', length: 1.6, textKey: 'constellationText' },
-  { id: 'galaxy', numeral: 'III', title: 'La galaxia', length: 1.4, textKey: 'galaxyText', keyPose: 0.6 },
+  { id: 'earth', numeral: 'III', title: 'La Tierra', length: 1.4, textKey: 'galaxyText', keyPose: 0.6 },
   { id: 'telescope', numeral: 'IV', title: 'El telescopio', length: 1.3, textKey: 'telescopeText' },
   { id: 'eyepiece', numeral: 'V', title: 'Asomarse', length: 1.3, textKey: 'eyepieceText' },
   { id: 'candle', numeral: 'VI', title: 'La vela', length: 1.6, textKey: 'candleText' },
@@ -50,8 +51,8 @@ export const SCENE_BOUNDS = (() => {
 
 /** Notas manuscritas de la bitácora (dirección de arte; no afirman hechos personales). */
 export const LOG_NOTES = {
-  stars: 'Registro 001 · cielo despejado, visibilidad perfecta.',
-  galaxy: 'Distancia: inmensa. Brillo: en aumento.',
+  galaxy: 'Registro 001 · cientos de miles de millones de estrellas en espiral.',
+  earth: 'Tercer planeta desde el Sol. Brillo: en aumento.',
   telescope: 'Linterna roja encendida: así los ojos no pierden la noche.',
 };
 
@@ -120,10 +121,10 @@ export function snapForReducedMotion(progress, activeIndex) {
  */
 export const CAPTION_WINDOWS = {
   opening: [-1, 0.62],
-  stars: [0.05, 0.97],
+  galaxy: [0.05, 0.97],
   constellation: [0.04, 0.97],
-  // Sale antes del destello: se atraviesa la galaxia sin texto encima.
-  galaxy: [0.04, 0.8],
+  // Sale antes del descenso: se baja a la Tierra sin texto encima.
+  earth: [0.04, 0.8],
   telescope: [0.06, 0.97],
   eyepiece: [0.2, 0.97],
   candle: [0.05, 0.54],
@@ -148,7 +149,8 @@ export function revealsFor(raw) {
   const final = raw[SCENE_IDS.indexOf('final')] ?? 0;
   return {
     together: range(candle, 0.56, 0.68) * (1 - range(final, 0, 0.08)),
-    finale: range(final, 0.04, 0.24),
+    // Entra mientras la vela termina de acomodarse en su sitio (ver `settle` en computeFrame).
+    finale: range(final, 0.12, 0.3),
   };
 }
 
@@ -238,14 +240,16 @@ export function constellationTip(timeline) {
 /**
  * Estado visual de todas las capas.
  * @param {Record<string, number>} t   progreso local por id de escena
- * @param {{ stage: {width:number,height:number}, area: {x:number,y:number,width:number,height:number}, portrait: boolean }} layout
+ * @param {{ stage: {width:number,height:number}, area: Rect, finalArea?: Rect, portrait: boolean }} layout
  *   `area` es la zona visual libre de texto dentro del escenario (medida del layout).
+ *   `finalArea` es el hueco que deja libre el mensaje final (en vertical, la tarjeta
+ *   final es más alta que los textos de capítulo y sube sobre la zona visual).
  */
 export function computeFrame(t, layout) {
   const { stage, area, portrait } = layout;
-  const s = t.stars ?? 0;
+  const s = t.galaxy ?? 0;
   const c = t.constellation ?? 0;
-  const g = t.galaxy ?? 0;
+  const g = t.earth ?? 0;
   const te = t.telescope ?? 0;
   const e = t.eyepiece ?? 0;
   const k = t.candle ?? 0;
@@ -256,13 +260,14 @@ export function computeFrame(t, layout) {
   const cy = area.y + area.height / 2;
   const areaMin = Math.min(area.width, area.height);
   const targetRadius = areaMin * (portrait ? 0.43 : 0.45);
-  const maxRadius =
-    Math.max(Math.hypot(cx, cy), Math.hypot(stage.width - cx, cy), Math.hypot(cx, stage.height - cy), Math.hypot(stage.width - cx, stage.height - cy)) + 24;
+  // Radio que cubre todo el escenario desde un centro dado (iris totalmente abierto).
+  const coverRadius = (x, y) =>
+    Math.max(Math.hypot(x, y), Math.hypot(stage.width - x, y), Math.hypot(x, stage.height - y), Math.hypot(stage.width - x, stage.height - y)) + 24;
   const inArea = (fx, fy) => [area.x + area.width * fx, area.y + area.height * fy];
 
   // Viaje total hasta llegar a la vela (para el contador de distancia).
   const journeyWeights = [
-    [s, 1.1],
+    [s, 1.3],
     [c, 1.6],
     [g, 1.4],
     [te, 1.3],
@@ -271,38 +276,59 @@ export function computeFrame(t, layout) {
   ];
   const journey = journeyWeights.reduce((sum, [p, w]) => sum + p * w, 0) / journeyWeights.reduce((sum, [, w]) => sum + w, 0);
 
-  // Cámara del campo de estrellas: un leve avance y, en la galaxia, un vuelo hacia delante.
-  const afterGalaxy = te > 0;
-  const warp = afterGalaxy ? 0 : easeIn(range(g, 0, 0.85)) * 1.4;
-  const starZoom = afterGalaxy ? 1.04 : 1 + s * 0.1 + c * 0.08 + warp;
+  // Cámara del campo de estrellas: un leve avance y, hacia la Tierra, un vuelo hacia delante.
+  const afterEarth = te > 0;
+  const warp = afterEarth ? 0 : easeIn(range(g, 0, 0.85)) * 0.6;
+  const starZoom = afterEarth ? 1.04 : 1 + s * 0.1 + c * 0.08 + warp;
 
-  // Galaxia: aparece lejana al cerrarse la «A», se acerca (permanece girando) y se atraviesa.
+  // Galaxia (I): puntos dispersos por el cielo se reúnen en los brazos de una espiral
+  // (`form`), que gira en el centro; con las constelaciones se aleja a una esquina.
   let galaxy;
   if (f > 0) {
     const [x, y] = inArea(0.86, 0.12);
-    galaxy = { x, y, radius: 0.2 * areaMin * 0.5, opacity: 0.55 * range(f, 0.15, 0.7) };
+    galaxy = { x, y, radius: 0.2 * areaMin * 0.5, opacity: 0.55 * range(f, 0.15, 0.7), form: 1 };
   } else if (te > 0 || e > 0 || k > 0) {
     const [x, y] = inArea(0.2, 0.14);
-    galaxy = { x, y, radius: 0.2 * areaMin * 0.5, opacity: 0.9 * range(te, 0.1, 0.45) * (1 - range(e, 0.1, 0.45)) };
-  } else if (g > 0) {
-    const travel = easeOut(range(g, 0, 0.5));
-    const [x0, y0] = inArea(0.82, 0.22);
-    const approach = easeInOut(range(g, 0, 0.82));
-    galaxy = {
-      x: mix(x0, cx, travel),
-      y: mix(y0, cy, travel),
-      radius: 0.14 * 26 ** approach * areaMin * 0.5,
-      opacity: 1 - range(g, 0.84, 0.98),
-    };
+    galaxy = { x, y, radius: 0.2 * areaMin * 0.5, opacity: 0.9 * range(te, 0.1, 0.45) * (1 - range(e, 0.1, 0.45)), form: 1 };
   } else {
-    const [x, y] = inArea(0.82, 0.22);
-    galaxy = { x, y, radius: 0.14 * areaMin * 0.5, opacity: range(c, 0.72, 0.95) };
+    const leave = easeInOut(range(c, 0, 0.3));
+    const [x1, y1] = inArea(0.84, 0.16);
+    galaxy = {
+      x: mix(cx, x1, leave),
+      y: mix(cy, y1, leave),
+      radius: mix(areaMin * 0.48, areaMin * 0.09, leave),
+      opacity: mix(mix(0.4, 1, range(s, 0, 0.25)), 0.7, leave) * (1 - range(g, 0, 0.25)),
+      form: easeInOut(range(s, 0.02, 0.62)),
+    };
   }
+
+  // La Tierra (III): un punto azul lejano que se acerca y gira (0–0.55), queda en
+  // primer plano mientras se lee (0.55–0.78) y la cámara desciende hasta que su
+  // borde es el horizonte (0.78–1); con el telescopio se funde con su planeta.
+  const earthHold = areaMin * 0.4;
+  const approach = easeInOut(range(g, 0, 0.55));
+  const travel = easeOut(range(g, 0, 0.45));
+  const [ex0, ey0] = inArea(0.78, 0.2);
+  const descent = easeIn(range(g, 0.78, 1));
+  const holdRadius = earthHold * mix(1, 1.08, range(g, 0.55, 0.78));
+  const finalRadius = Math.max(stage.width, stage.height) * 1.6;
+  const earthRadius = descent > 0 ? holdRadius * (finalRadius / holdRadius) ** descent : areaMin * 0.03 * (earthHold / (areaMin * 0.03)) ** approach;
+  const earthTop = mix(cy - holdRadius, stage.height * 0.74, descent);
+  const earth = {
+    x: descent > 0 ? mix(cx, stage.width / 2, descent) : mix(ex0, cx, travel),
+    y: descent > 0 ? earthTop + earthRadius : mix(ey0, cy, travel),
+    radius: earthRadius,
+    opacity: range(g, 0, 0.06) * (1 - range(te, 0.05, 0.4)),
+    // Fracción de vuelta: de África hacia las Américas mientras dura el capítulo.
+    spin: g * 0.25 + te * 0.03,
+    // Al descender, el globo se inclina hacia el ecuador: el horizonte es tierra, no hielo polar.
+    tilt: easeInOut(range(g, 0.74, 0.96)),
+  };
 
   const constellation = constellationProgress(c);
   const candleEcho = range(k, 0.3, 0.6);
   const constellationOpacity = Math.max(
-    range(c, 0.02, 0.1) * mix(1, 0.1, range(g, 0, 0.3)) * (1 - range(te, 0, 0.35)),
+    range(c, 0.02, 0.1) * (1 - range(g, 0, 0.3)) * (1 - range(te, 0, 0.35)),
     candleEcho * 0.42 * (1 - range(f, 0.05, 0.5)),
   );
 
@@ -312,7 +338,17 @@ export function computeFrame(t, layout) {
   const zoom = easeIn(range(e, 0, 0.7));
   const irisClose = easeInOut(range(e, 0.2, 0.65));
   const irisOpen = easeInOut(range(f, 0.02, 0.5));
-  const radius = mix(mix(maxRadius, targetRadius, irisClose), maxRadius, irisOpen);
+
+  // Final: la cámara sube la vela al hueco libre sobre el mensaje y la ajusta a ese
+  // espacio (la vela mide ~1,45 radios de alto), para que la tarjeta nunca la tape.
+  const settle = easeInOut(range(f, 0, 0.3));
+  const finalArea = layout.finalArea ?? area;
+  const restX = finalArea.x + finalArea.width / 2;
+  const restY = finalArea.y + finalArea.height / 2;
+  const fit = Math.min(0.88, Math.min(finalArea.width, finalArea.height) / (1.45 * targetRadius));
+  const ox = mix(cx, restX, settle);
+  const oy = mix(cy, restY, settle);
+  const radius = mix(mix(coverRadius(cx, cy), targetRadius, irisClose), coverRadius(ox, oy), irisOpen);
   const focus = clamp01(range(e, 0.55, 1) * 0.65 + range(k, 0, 0.22) * 0.35);
 
   return {
@@ -327,11 +363,14 @@ export function computeFrame(t, layout) {
     nebula: {
       opacity: clamp01(0.55 + s * 0.2 + g * 0.2 - range(e, 0.2, 0.6) * 0.5 + range(f, 0.05, 0.6) * 0.5),
       shift: -(s * 50 + c * 80 + g * 110 + te * 40),
-      scale: 1 + s * 0.06 + c * 0.04 + (afterGalaxy ? 0 : g * 0.35),
+      scale: 1 + s * 0.06 + c * 0.04 + (afterEarth ? 0 : g * 0.2),
     },
-    planets: { opacity: 1 - range(g, 0.1, 0.45), shift: -(s * 90 + c * 160 + g * 240) },
+    // Los planetas lejanos ceden protagonismo a la galaxia y desaparecen ante la Tierra.
+    planets: { opacity: (1 - 0.7 * galaxy.form * (1 - range(c, 0, 0.3))) * (1 - range(g, 0, 0.3)), shift: -(s * 90 + c * 160 + g * 240) },
     galaxy,
-    flash: bump(g, 0.82, 0.93, 1) * 0.85,
+    earth,
+    // Luz suave al entrar en la atmósfera.
+    flash: bump(g, 0.86, 0.95, 1) * 0.45,
     constellation: {
       ...constellation,
       opacity: constellationOpacity,
@@ -347,7 +386,7 @@ export function computeFrame(t, layout) {
       zoom,
       eyepieceGlow: range(te, 0.45, 0.75),
     },
-    iris: { x: cx, y: cy, radius, targetRadius, active: e > 0.01 && f < 0.99 },
+    iris: { x: ox, y: oy, radius, targetRadius, active: e > 0.01 && f < 0.99 },
     // La pantalla queda mayoritariamente oscura (se mira por el ocular) en cualquier tema.
     dark: e > 0.35 && f < 0.35,
     eyepiece: {
@@ -356,13 +395,14 @@ export function computeFrame(t, layout) {
       reticle: range(e, 0.55, 0.85) * (1 - range(f, 0, 0.3)),
       focus,
       blur: (1 - focus) * 16,
-      catalog: range(k, 0.35, 0.55) * (1 - range(f, 0, 0.25)),
+      // Se retira antes de que entre el mensaje final (revealsFor → finale desde 0.12).
+      catalog: range(k, 0.35, 0.55) * (1 - range(f, 0, 0.1)),
     },
     candle: {
       glow: range(k, 0.08, 0.35),
       letter: range(k, 0.12, 0.4),
-      // En el final la vela permanece en el centro de la zona visual, un poco más pequeña.
-      scale: 1 - easeInOut(range(f, 0.05, 0.5)) * 0.12,
+      // En el final la vela queda centrada sobre el mensaje, algo más pequeña.
+      scale: mix(1, fit, settle),
     },
   };
 }

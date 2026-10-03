@@ -1,0 +1,72 @@
+/* Tunnel Runner — velocidad, profundidad y tensión: neón sobre negro. */
+
+.tunnel {
+  background: #05030b;
+}
+
+.tunnel canvas {
+  cursor: pointer;
+}
+
+.tunnel .game-hud__item {
+  background: rgb(5 3 11 / 0.55);
+  border-color: rgb(94 242 255 / 0.3);
+  color: #fff;
+}
+
+.tunnel .game-hud__item dt {
+  color: rgb(255 255 255 / 0.65);
+}
+
+.tunnel .game-hud__item.is-good dd {
+  color: #5ef2ff;
+}
+
+.tunnel .game-hud__pause {
+  background: rgb(5 3 11 / 0.55);
+  border-color: rgb(94 242 255 / 0.4);
+  color: #fff;
+}
+
+/* Con poco ancho, la velocidad se oculta del marcador (ya se percibe en el túnel). */
+@media (max-width: 480px) {
+  .tunnel .game-hud__item:nth-child(2) {
+    display: none;
+  }
+}
+
+.tunnel__banner {
+  position: absolute;
+  top: 34%;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: 4;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  font-family: var(--font-bold);
+  font-weight: 800;
+  font-size: clamp(1.8rem, 1rem + 4vw, 3.4rem);
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow:
+    0 0 24px #ff4fd8,
+    0 0 4px #5ef2ff;
+  pointer-events: none;
+  animation: tunnel-banner 450ms var(--ease-out) both;
+  white-space: nowrap;
+}
+
+.tunnel__banner span {
+  font-size: 0.38em;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #5ef2ff;
+}
+
+@keyframes tunnel-banner {
+  from {
+    opacity: 0;
+    transform: scale(1.3);
+  }
+}

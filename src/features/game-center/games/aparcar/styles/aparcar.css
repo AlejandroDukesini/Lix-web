@@ -1,0 +1,135 @@
+/*
+ * Aparcar el carro — asfalto, pintura y un coche rojo. Los controles táctiles
+ * se reservan su propia franja (el lienzo dibuja el aparcamiento fuera de ella),
+ * así que nunca tapan la plaza ni los obstáculos.
+ */
+
+/* ---------- Selección de nivel ---------- */
+.pk-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.pk-select__title {
+  font-size: var(--text-3xl);
+}
+
+.pk-select__text {
+  color: var(--text-muted);
+}
+
+.pk-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-3);
+  padding: 0;
+  list-style: none;
+}
+
+.pk-level {
+  width: 100%;
+  min-height: 84px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 2px var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.pk-level:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.pk-level.is-locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.pk-level.is-done {
+  border-color: color-mix(in oklab, #5ce39a 55%, var(--surface-border));
+}
+
+.pk-level__number {
+  grid-row: span 2;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--gc-radius-sm);
+  background: color-mix(in oklab, var(--game-a) 20%, transparent);
+  color: var(--accent-text);
+  font-weight: 800;
+}
+
+.pk-level__name {
+  font-weight: 800;
+}
+
+.pk-level__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.pk-level__meta svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pk-stars {
+  display: inline-flex;
+  gap: 1px;
+}
+
+.pk-stars svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-subtle);
+}
+
+.pk-stars svg.is-on {
+  color: #f2b417;
+  fill: #f2b417;
+}
+
+/* ---------- Conducción ---------- */
+.parking {
+  background: #2b2d36;
+}
+
+.parking .game-hud__item {
+  background: rgb(43 45 54 / 0.85);
+  border-color: rgb(255 255 255 / 0.18);
+  color: #fff;
+}
+
+.parking .game-hud__item dt {
+  color: rgb(255 255 255 / 0.65);
+}
+
+.parking .game-hud__pause {
+  background: rgb(43 45 54 / 0.85);
+  border-color: rgb(255 255 255 / 0.3);
+  color: #fff;
+}
+
+/* Con poco ancho, el nombre del nivel no cabe en el marcador (está en la pista inicial). */
+@media (max-width: 480px) {
+  .parking .game-hud__item:first-child {
+    display: none;
+  }
+}

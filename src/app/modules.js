@@ -23,8 +23,8 @@ export const MODULES = [
     path: '/juegos',
     label: 'Juegos',
     icon: Gamepad2,
-    status: 'soon',
-    teaser: 'Juegos pensados para nosotros dos, para jugar juntos o retarnos.',
+    status: 'available',
+    teaser: 'Nuestra sala de juegos: carreras, lógica, ajedrez y arcade, sin conexión.',
   },
   {
     id: 'documentation',
