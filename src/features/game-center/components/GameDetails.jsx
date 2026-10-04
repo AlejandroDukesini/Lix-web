@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { ExternalLink, Globe, Keyboard, Play, Smartphone, Target, Gauge, WifiOff, HardDrive } from 'lucide-react';
 import { Button } from '../../../components/common/Button.jsx';
 import { useMediaQuery } from '../../../hooks/useMediaQuery.js';
@@ -80,7 +81,7 @@ function PlayModes({ source, onStart, onPlayOnline }) {
           <HardDrive aria-hidden="true" /> Offline
         </h2>
         <p className="play-mode__text">Versión de la app. Funciona sin conexión y guarda tu progreso y tus récords.</p>
-        <Button size="lg" icon={Play} onClick={onStart} autoFocus>
+        <Button size="lg" icon={Play} onClick={onStart} data-autofocus>
           Jugar
         </Button>
       </section>
@@ -118,8 +119,14 @@ export function GameDetails({ game, record, onStart, onlineSource = null, onPlay
   const progress = game.progress(record);
   const highlight = record ? game.highlight(record) : null;
   const last = formatLastPlayed(record?.lastPlayedAt);
+  const root = useRef(null);
+  // El foco va a «Jugar» para el teclado, pero SIN desplazar la pantalla: con
+  // autoFocus el navegador bajaba solo hasta el botón y la descripción quedaba fuera.
+  useEffect(() => {
+    root.current?.querySelector('[data-autofocus]')?.focus({ preventScroll: true });
+  }, []);
   return (
-    <article className="game-details" aria-labelledby="game-details-title">
+    <article ref={root} className="game-details" aria-labelledby="game-details-title">
       <header className="game-details__hero">
         <div className="game-details__art">
           <Art className="game-art" />
@@ -151,7 +158,7 @@ export function GameDetails({ game, record, onStart, onlineSource = null, onPlay
             </>
           ) : (
             <div className="game-details__start">
-              <Button size="lg" icon={Play} onClick={onStart} autoFocus>
+              <Button size="lg" icon={Play} onClick={onStart} data-autofocus>
                 Jugar
               </Button>
               <p className="game-details__meta">

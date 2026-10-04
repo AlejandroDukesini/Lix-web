@@ -206,7 +206,7 @@ export function sanitizePreferences(input, now = new Date()) {
       theme: field('appearance.theme', appearance.theme, defaults.appearance.theme, oneOf('dark', 'light')),
       paletteId: field('appearance.paletteId', appearance.paletteId, defaults.appearance.paletteId, oneOf(...paletteIds)),
       palette: field('appearance.palette', appearance.palette, defaults.appearance.palette, sanitizePalette),
-      motion: field('appearance.motion', appearance.motion, defaults.appearance.motion, oneOf('system', 'reduced')),
+      motion: field('appearance.motion', appearance.motion, defaults.appearance.motion, oneOf('system', 'reduced', 'full')),
     },
     presentation: {
       completed: field('presentation.completed', presentation.completed, false, bool),

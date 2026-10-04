@@ -31,7 +31,12 @@ import { LEVELS, SERIES, levelsOf } from './levels/levels.js';
 import './styles/logic-grid.css';
 
 const GAME_ID = 'logic-grid';
-const STEP_MS = 55; // animación por celda recorrida
+/**
+ * Duración por celda recorrida: lo bastante lenta para ver cómo se cubre cada
+ * casilla (antes 55 ms: un tramo de 6 celdas acababa en un tercio de segundo),
+ * pero un tramo largo nunca pasa de ~0,8 s para no frenar el juego.
+ */
+export const stepMsFor = (cells) => Math.round(Math.max(70, Math.min(120, 800 / Math.max(1, cells))));
 
 const SFX = {
   slide: { wave: 'triangle', from: 520, to: 780, dur: 0.12, gain: 0.12 },
@@ -102,7 +107,7 @@ function LevelSelect({ completed, best, onPick }) {
   );
 }
 
-function Board({ board, state, animating, hint, onMove, swipe, shake }) {
+function Board({ board, state, animating, hint, onMove, swipe, shake, notice }) {
   const moves = useMemo(() => (animating ? [] : availableMoves(board, state)), [board, state, animating]);
   const targets = new Map(moves.map((m) => [m.end, m.direction]));
   const last = state.history[state.history.length - 1];
@@ -118,6 +123,7 @@ function Board({ board, state, animating, hint, onMove, swipe, shake }) {
       order.set(r * board.width + c, i);
     }
   }
+  const stepMs = stepMsFor(order.size);
   const hintTarget = hint ? moves.find((m) => m.direction === hint)?.end : null;
   const ballRow = rowOf(board, state.pos);
   const ballCol = colOf(board, state.pos);
@@ -149,8 +155,9 @@ function Board({ board, state, animating, hint, onMove, swipe, shake }) {
                       direction && 'is-target',
                       hintTarget === index && 'is-hint',
                       board.start === index && 'is-start',
+                      animating && order.has(index) && 'is-painting',
                     )}
-                    style={order.has(index) ? { '--delay': `${order.get(index) * STEP_MS}ms` } : undefined}
+                    style={order.has(index) ? { '--delay': `${order.get(index) * stepMs}ms` } : undefined}
                     aria-label={label}
                     tabIndex={direction ? 0 : -1}
                     disabled={!direction}
@@ -166,13 +173,21 @@ function Board({ board, state, animating, hint, onMove, swipe, shake }) {
           style={{
             '--r': ballRow,
             '--c': ballCol,
-            '--travel': `${Math.max(1, order.size) * STEP_MS}ms`,
+            '--travel': `${Math.max(1, order.size) * stepMs}ms`,
           }}
           aria-hidden="true"
         >
           <span key={shake ?? 'still'} className={cx('lg-ball__body', shake && 'is-shaking')} />
         </span>
       </div>
+      {/* Aviso dentro del propio tablero: siempre a la vista, aunque la pantalla sea pequeña. */}
+      <p className="lg-notice" role="status" aria-live="polite">
+        {notice && (
+          <span key={notice.key} className="lg-notice__pill">
+            {notice.text}
+          </span>
+        )}
+      </p>
     </div>
   );
 }
@@ -197,7 +212,7 @@ function Play({ level, onLevels, onNext, frame }) {
   useEffect(() => () => clearTimeout(animTimer.current), []);
   useEffect(() => {
     if (!notice) return undefined;
-    const timer = setTimeout(() => setNotice(null), 2200);
+    const timer = setTimeout(() => setNotice(null), 2800);
     return () => clearTimeout(timer);
   }, [notice]);
   useInProgress(session.isPlaying && state.moves > 0 && !result);
@@ -224,7 +239,7 @@ function Play({ level, onLevels, onNext, frame }) {
         const reason = invalidReason(board, state, direction);
         setNotice({
           key: performance.now(),
-          text: reason === 'covered' ? 'Esa casilla ya está cubierta: ninguna se puede repetir.' : 'Por ahí hay un muro o el borde del tablero.',
+          text: reason === 'covered' ? 'Esa casilla ya está cubierta' : 'Por ahí hay un muro o el borde',
         });
         return;
       }
@@ -234,7 +249,7 @@ function Play({ level, onLevels, onNext, frame }) {
       setHint(null);
       setAnimating(true);
       const cells = Math.abs(rowOf(board, next.pos) - rowOf(board, state.pos)) + Math.abs(colOf(board, next.pos) - colOf(board, state.pos));
-      const travel = cells * STEP_MS;
+      const travel = cells * stepMsFor(cells);
       clearTimeout(animTimer.current);
       animTimer.current = setTimeout(async () => {
         setAnimating(false);
@@ -312,10 +327,7 @@ function Play({ level, onLevels, onNext, frame }) {
       />
       <p className="lg-rule">{RULES[level.rule].summary}</p>
 
-      <Board board={board} state={state} animating={animating} hint={hint} onMove={move} swipe={swipe} shake={notice?.key} />
-      <p className="lg-notice" role="status" aria-live="polite">
-        {notice && <span key={notice.key}>{notice.text}</span>}
-      </p>
+      <Board board={board} state={state} animating={animating} hint={hint} onMove={move} swipe={swipe} shake={notice?.key} notice={notice} />
 
       <div className="lg-actions">
         <Button variant="secondary" size="sm" icon={Undo2} onClick={undo} disabled={!state.history.length || animating || Boolean(result)}>

@@ -345,21 +345,42 @@
 .constellation__counter {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 30px;
+  /* --svg-px (applyFrame): unidades del viewBox por píxel; mínimo ~13 px en pantalla. */
+  font-size: max(30px, calc(var(--svg-px, 0) * 13px));
   fill: var(--astral-text);
   letter-spacing: 0.02em;
 }
 
 .constellation__label-note {
   font-family: var(--font-script);
-  font-size: 34px;
+  font-size: max(34px, calc(var(--svg-px, 0) * 15px));
   fill: var(--c-accent);
+}
+
+/* Zona visual pequeña: los rótulos se centran bajo su estrella para no salirse de la pantalla. */
+.astral__constellation[data-compact] :is(.constellation__label, .constellation__label-note) {
+  text-anchor: middle;
+}
+
+/* La nota manuscrita baja lo que crece la fecha de encima (tamaño mínimo en pantalla). */
+.astral__constellation[data-compact] .constellation__label-note {
+  transform: translateY(calc(var(--svg-px, 0) * 9px));
+}
+
+.constellation {
+  overflow: visible;
 }
 
 .constellation__counter {
   fill: color-mix(in oklab, var(--c-accent) 70%, var(--astral-text));
   font-variant-numeric: tabular-nums;
   opacity: 0;
+}
+
+/* Estos dos se encienden/apagan de golpe (0 → 1) en applyFrame: el fundido lo suaviza. */
+.constellation__counter,
+.constellation [data-today-label] {
+  transition: opacity 0.45s var(--ease-out);
 }
 
 [data-style='maximal'] .constellation__line {
@@ -654,7 +675,7 @@
 }
 .ts-note {
   font-family: var(--font-script);
-  font-size: 30px;
+  font-size: max(30px, calc(var(--svg-px, 0) * 15px));
   fill: var(--c-accent);
 }
 .ts-note-line {
@@ -837,13 +858,16 @@
 .eyepiece__focus {
   position: absolute;
   left: 50%;
-  top: calc(var(--iris-y, 50%) + var(--iris-r, 300px) * 0.8);
+  /* 0.74 r: la cuerda del círculo ahí mide ~1.35 r, suficiente para la lectura entera. */
+  top: calc(var(--iris-y, 50%) + var(--iris-r, 300px) * 0.74);
+  max-width: calc(var(--iris-r, 300px) * 1.3);
+  white-space: nowrap;
   translate: -50% -50%;
   margin: 0;
   font-family: var(--font-body);
-  font-size: 0.72rem;
+  font-size: clamp(0.62rem, calc(var(--iris-r, 300px) * 0.055), 0.72rem);
   font-weight: 700;
-  letter-spacing: 0.22em;
+  letter-spacing: clamp(0.08em, calc(var(--iris-r, 300px) * 0.0009em), 0.22em);
   text-transform: uppercase;
   color: var(--c-accent);
   font-variant-numeric: tabular-nums;
@@ -887,13 +911,21 @@
  */
 .eyepiece__catalog[data-place='inside'] {
   left: var(--iris-x, 50%);
-  top: calc(var(--iris-y, 50%) + var(--iris-r, 300px) * 0.8);
+  top: calc(var(--iris-y, 50%) + var(--iris-r, 300px) * 0.72);
   translate: -50% -50%;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   align-items: baseline;
-  gap: 0.75rem;
-  font-size: clamp(0.55rem, calc(var(--iris-r, 300px) * 0.045), 0.75rem);
+  gap: 0 0.6rem;
+  width: max-content;
+  max-width: calc(var(--iris-r, 300px) * 1.36);
+  font-size: clamp(0.66rem, calc(var(--iris-r, 300px) * 0.05), 0.8rem);
   white-space: nowrap;
+}
+
+.eyepiece__catalog[data-place='inside'] dt {
+  letter-spacing: 0.1em;
 }
 
 .eyepiece__catalog[data-place='inside'] > div {
@@ -988,9 +1020,13 @@
   min-height: 0;
 }
 
-/* Las capas que se componen en la zona visual reciben su caja desde JS. */
-.astral__constellation {
-  inset: auto !important;
+/*
+ * Las capas que se componen en la zona visual reciben su caja desde JS (left/top/
+ * width/height en línea). Sin !important: antes anulaba el top/left en línea y la
+ * constelación quedaba pegada arriba, bajo la cabecera, en pantallas bajas.
+ */
+.astral__backdrop > .astral__constellation {
+  inset: auto;
   transform-origin: center;
 }
 
@@ -1648,6 +1684,60 @@
 @media (orientation: landscape) and (min-width: 600px) and (min-height: 760px) {
   .astral__progress {
     padding-bottom: calc(var(--safe-bottom) + var(--space-5));
+  }
+}
+
+/*
+ * Celular mini y móviles bajos en vertical (≤ 700 px de alto o ≤ 380 px de ancho):
+ * la fila de textos mide lo que el capítulo más largo, y en Maximalismo ocupaba
+ * casi la mitad de la pantalla, dejando ~110 px a la ilustración. Se compactan
+ * las fichas (no el texto hasta hacerlo ilegible) y la barra de progreso, para
+ * que la constelación, el ocular y la vela tengan una zona visual central amplia.
+ */
+@media (max-height: 700px) and (orientation: portrait), (max-width: 380px) and (orientation: portrait) {
+  .astral__top {
+    padding-top: calc(var(--safe-top) + var(--space-2));
+    padding-bottom: 0;
+  }
+  .astral__skip {
+    min-height: 36px;
+    padding-inline: var(--space-2);
+    max-width: 8.5rem;
+  }
+  .astral__narrative {
+    padding-block: var(--space-1);
+  }
+  [data-style] .caption {
+    gap: var(--space-1);
+    padding: var(--space-2) var(--space-4) var(--space-3);
+  }
+  .caption__chapter {
+    font-size: 0.62rem;
+  }
+  .caption__numeral,
+  [data-style='maximal'] .caption__numeral {
+    font-size: 1.6rem;
+  }
+  .caption__text {
+    font-size: clamp(1rem, 0.3rem + 2.25vh, 1.2rem);
+    line-height: 1.28;
+  }
+  [data-style='maximal'] .caption__text {
+    letter-spacing: -0.02em;
+  }
+  .caption__note {
+    font-size: 1rem;
+    line-height: 1.25;
+  }
+  [data-style='maximal'] .caption {
+    box-shadow: 5px 5px 0 var(--c-accent);
+  }
+  /* El nombre del capítulo ya está en la ficha: la barra queda en una sola fila. */
+  .astral__current {
+    display: none;
+  }
+  .astral__progress {
+    padding-bottom: calc(var(--safe-bottom) + var(--space-2));
   }
 }
 

@@ -27,9 +27,10 @@ export const trafficRiderManifest = {
       ['R · Esc o P', 'Reiniciar · Pausa'],
     ],
     touch: [
-      ['Pedal verde ↑ (derecha)', 'Acelerar mientras lo mantienes'],
-      ['Pedal rojo ↓ (derecha)', 'Frenar mientras lo mantienes'],
-      ['Botones ← → (izquierda)', 'Desplazarte mientras los mantienes'],
+      ['Gas (derecha, verde)', 'Acelerar mientras lo mantienes'],
+      ['Freno (derecha, rojo)', 'Frenar mientras lo mantienes'],
+      ['Manillar ‹ › (izquierda)', 'Girar mientras lo mantienes'],
+      ['Botón «Controles»', 'Cambiar a deslizar o a inclinar el teléfono'],
     ],
   },
   difficulty: 'El tráfico se hace más denso y variado con la distancia.',

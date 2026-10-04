@@ -168,3 +168,17 @@ describe('carreras posibles', () => {
     expect(results.filter(Boolean).length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe('dibujo: la dirección en pantalla coincide con la del control', () => {
+  it('girar a la derecha lleva la moto a la derecha e inclina hacia la derecha', async () => {
+    const { bikeScreenX, leanFor } = await import('../engine/riderRenderer.js');
+    const ride = createRide(3);
+    const x0 = ride.bike.x;
+    for (let i = 0; i < 30; i += 1) step(ride, { throttle: 0, steer: 1 }, 1 / 60);
+    expect(ride.bike.x).toBeGreaterThan(x0);
+    expect(ride.bike.vx).toBeGreaterThan(0);
+    const size = { width: 360, height: 640 };
+    expect(bikeScreenX(size, ride.bike)).toBeGreaterThan(bikeScreenX(size, { ...ride.bike, x: x0 }));
+    expect(leanFor(ride.bike)).toBeGreaterThan(0);
+  });
+});

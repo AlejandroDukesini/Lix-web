@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, Flag, FlipVertical2, RotateCcw, Settings2, Users } from 'lucide-react';
+import { Bot, Flag, FlipVertical2, RotateCcw, Settings2, Shuffle, Users } from 'lucide-react';
 import { Button } from '../../../../components/common/Button.jsx';
 import { ConfirmDialog } from '../../../../components/common/Dialog.jsx';
 import { SegmentedControl } from '../../../../components/common/SegmentedControl.jsx';
@@ -33,6 +33,9 @@ const SFX = {
 };
 
 const COLOR_NAME = { [WHITE]: 'blancas', [BLACK]: 'negras' };
+const RANDOM = 'random';
+/** Color con el que se juega: 'random' se sortea una vez, antes de empezar la partida. */
+export const resolveColor = (choice, random = Math.random) => (choice === RANDOM ? (random() < 0.5 ? WHITE : BLACK) : choice === BLACK ? BLACK : WHITE);
 const REASONS = {
   checkmate: 'Jaque mate',
   stalemate: 'Tablas por ahogado',
@@ -46,7 +49,8 @@ const REASONS = {
 function Setup({ initial, onStart }) {
   const [mode, setMode] = useState(initial.mode ?? 'ai');
   const [level, setLevel] = useState(findLevel(initial.level ?? AI_LEVELS[0].id).id);
-  const [color, setColor] = useState(initial.color ?? WHITE);
+  // La preferencia guardada puede ser 'random': el color real se sortea al empezar.
+  const [color, setColor] = useState(initial.colorChoice ?? initial.color ?? WHITE);
   return (
     <div className="chess-setup">
       <header>
@@ -83,11 +87,12 @@ function Setup({ initial, onStart }) {
             options={[
               { value: WHITE, label: 'Blancas (empiezas tú)' },
               { value: BLACK, label: 'Negras' },
+              { value: RANDOM, label: 'Aleatorio', icon: Shuffle },
             ]}
           />
         </>
       )}
-      <Button size="lg" onClick={() => onStart({ mode, level, color })}>
+      <Button size="lg" onClick={() => onStart({ mode, level, color: resolveColor(color), colorChoice: color })}>
         Empezar partida
       </Button>
     </div>
@@ -398,6 +403,13 @@ function Match({ config, onNewGame, frame }) {
         </section>
 
         <aside className="chess__panel" aria-label="Estado de la partida">
+          {vsAI && (
+            <p className="chess__assigned">
+              <span className={cx('chess__dot', `is-${humanColor}`)} aria-hidden="true" />
+              Juegas con las {COLOR_NAME[humanColor]}
+              {config.colorChoice === RANDOM && <span className="chess__assigned-tag">sorteo</span>}
+            </p>
+          )}
           <p className={cx('chess__status', game.status.check && !game.status.over && 'is-check', thinking && 'is-thinking')} role="status">
             {game.status.check && !game.status.over ? `¡Jaque! ${turnText}` : turnText}
           </p>

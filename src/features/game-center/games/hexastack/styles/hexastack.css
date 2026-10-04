@@ -235,13 +235,110 @@
 }
 
 .hx-cell.is-merged .hx-stack {
-  animation: hx-pop 0.3s var(--ease-out);
+  animation: hx-pop 0.3s var(--ease-out) var(--fx-delay, 0s) both;
   transform-box: fill-box;
   transform-origin: center;
 }
 
 .hx-cell.is-flash .hx-slot {
-  animation: hx-flash 0.45s var(--ease-out);
+  animation: hx-flash 0.5s var(--ease-out) var(--fx-delay, 0s) both;
+}
+
+/* La pila colocada cae sobre su celda. */
+.hx-cell.is-placed > .hx-stack {
+  animation: hx-drop 0.22s cubic-bezier(0.3, 0, 0.5, 1.4) both;
+}
+
+@keyframes hx-drop {
+  from {
+    transform: translateY(-18px);
+    opacity: 0.4;
+  }
+}
+
+/* Fichas viajando de una vecina a la celda que las recibe. */
+.hx-fly {
+  pointer-events: none;
+  opacity: 0;
+  animation: hx-fly 0.3s cubic-bezier(0.5, 0, 0.3, 1) both;
+}
+
+@keyframes hx-fly {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0);
+  }
+  45% {
+    transform: translate(calc(var(--dx) * 0.5), calc(var(--dy) * 0.5 - 14px));
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy));
+  }
+}
+
+/* Grupo completo: la celda estalla y se muestran sus puntos. */
+.hx-burst {
+  pointer-events: none;
+}
+
+.hx-burst__hex {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  stroke: #fff;
+  stroke-width: 3;
+  animation: hx-burst 0.5s var(--ease-out) both;
+}
+
+@keyframes hx-burst {
+  0% {
+    opacity: 0.95;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+.hx-burst__points {
+  opacity: 0;
+  font-family: var(--font-bold);
+  font-weight: 800;
+  font-size: 15px;
+  fill: #fff;
+  stroke: rgb(20 16 30 / 0.85);
+  stroke-width: 3px;
+  paint-order: stroke;
+  animation: hx-points 0.9s var(--ease-out) both;
+}
+
+@keyframes hx-points {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  20% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px);
+  }
+}
+
+.hx-piece {
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    box-shadow var(--dur-fast) var(--ease-out);
 }
 
 @keyframes hx-pop {

@@ -8,7 +8,10 @@ import {
   SEGMENT_LENGTH,
   STEER_SPEED,
   createRace,
+  GRID_BACK,
+  heightAt,
   positionOf,
+  standings,
   progressOf,
   raceTimeMs,
   safeLane,
@@ -35,9 +38,13 @@ function run(race, pilot, maxSeconds = 240) {
 }
 
 describe('Aquapark: circuitos', () => {
-  it('hay tres circuitos con dificultad creciente', () => {
-    expect(CIRCUITS.map((c) => c.difficulty)).toEqual(['Fácil', 'Media', 'Difícil']);
+  it('hay seis circuitos con dificultad creciente y recorridos distintos', () => {
+    expect(CIRCUITS.map((c) => c.difficulty)).toEqual(['Fácil', 'Media', 'Difícil', 'Difícil', 'Muy difícil', 'Experto']);
     expect(findCircuit('cascada').name).toBe('Cascada Coral');
+    // No son copias con otros colores: cada uno tiene su propia secuencia de tramos.
+    const shapes = CIRCUITS.map((c) => c.sections.map((sec) => `${sec.len}:${sec.curve ?? 0}:${sec.width ?? 1}:${sec.walls ?? true}`).join('|'));
+    expect(new Set(shapes).size).toBe(6);
+    for (const c of CIRCUITS) expect(c.sections.flatMap((sec) => sec.items ?? []).some((i) => i.type === 'float')).toBe(true);
   });
 
   for (const circuit of CIRCUITS) {
@@ -73,7 +80,7 @@ describe('Aquapark: mecánicas', () => {
     for (let i = 0; i < 120; i += 1) stepRace(race, {}, DT);
     expect(race.player.speed).toBeGreaterThan(15);
     // Parte de cero: ~18 m en 2 s con 9 m/s² de aceleración.
-    expect(race.player.z).toBeGreaterThan(race.track.startZ + 15);
+    expect(race.player.z).toBeGreaterThan(race.track.startZ - GRID_BACK + 15);
     expect(raceTimeMs(race)).toBeCloseTo(2000, -2);
     expect(progressOf(race)).toBeGreaterThan(0);
   });
@@ -135,7 +142,7 @@ describe('Aquapark: mecánicas', () => {
     const race = createRace(circuit);
     run(race, autopilot);
     expect(race.player.finishedAt).not.toBeNull();
-    expect(race.rivals.every((r) => r.name.startsWith('Bot'))).toBe(true);
+    expect(race.rivals.map((r) => r.name)).toEqual(['Bot Pro', 'Bot Regular', 'Bot Fácil']);
     expect(positionOf(race)).toBeGreaterThanOrEqual(1);
     expect(positionOf(race)).toBeLessThanOrEqual(4);
     // Un pilotaje limpio gana al rival más rápido del circuito fácil.
@@ -147,8 +154,84 @@ describe('Aquapark: mecánicas', () => {
     const race = createRace(circuit);
     run(race, autopilot, 5);
     const fresh = createRace(circuit);
-    expect(fresh.player.z).toBe(fresh.track.startZ);
+    expect(fresh.player.z).toBe(fresh.track.startZ - GRID_BACK);
     expect(fresh.time).toBe(0);
     expect(fresh.track.segments.flatMap((s) => s.items).every((i) => !i.hit)).toBe(true);
+  });
+});
+
+describe('Aquapark: competidores y equilibrio', () => {
+  it('cuatro corredores: el jugador sale detrás, todos separados y sin solaparse', () => {
+    const race = createRace(CIRCUITS[0]);
+    for (const rival of race.rivals) expect(rival.z).toBeGreaterThan(race.player.z);
+    const racers = [race.player, ...race.rivals];
+    for (let i = 0; i < racers.length; i += 1) {
+      for (let j = i + 1; j < racers.length; j += 1) {
+        const apart = Math.abs(racers[i].z - racers[j].z) > 2 || Math.abs(racers[i].x - racers[j].x) > PLAYER_HALF * 4;
+        expect(apart).toBe(true);
+      }
+    }
+  });
+
+  for (const circuit of CIRCUITS) {
+    it(`«${circuit.name}»: los bots terminan en orden Pro → Regular → Fácil y no siguen al jugador`, () => {
+      const race = createRace(circuit);
+      // Jugador quieto: los bots corren por su cuenta.
+      for (let t = 0; t < 200 && race.rivals.some((r) => r.finishedAt === null); t += DT) stepRace(race, { steer: 0 }, DT);
+      const [pro, regular, easy] = race.rivals;
+      expect(pro.finishedAt).not.toBeNull();
+      expect(easy.finishedAt).not.toBeNull();
+      expect(pro.finishedAt).toBeLessThan(regular.finishedAt);
+      expect(regular.finishedAt).toBeLessThan(easy.finishedAt);
+    });
+  }
+
+  it('el jugador no es mucho más rápido que el Bot Pro: un recorrido limpio gana por poco en los difíciles', () => {
+    for (const circuit of CIRCUITS.slice(2)) {
+      const race = createRace(circuit);
+      run(race, autopilot);
+      const pro = race.rivals[0];
+      for (let t = 0; t < 60 && pro.finishedAt === null; t += DT) stepRace(race, {}, DT);
+      const margin = (pro.finishedAt - race.player.finishedAt) / race.player.finishedAt;
+      // Gana quien pilota bien, pero con menos de un 8 % de ventaja: hay carrera.
+      expect(margin).toBeLessThan(0.08);
+    }
+  });
+
+  it('pilotar mal (contra la pared todo el rato) pierde contra el Bot Pro', () => {
+    const race = createRace(CIRCUITS[0]);
+    run(race, () => ({ right: true }));
+    expect(standings(race)[0].id).not.toBe('player');
+  });
+
+  it('tras la meta el flotador se desliza hasta detenerse, sin saltos ni retrocesos', () => {
+    const race = createRace(CIRCUITS[0]);
+    run(race, autopilot);
+    let last = race.player.z;
+    for (let i = 0; i < 180; i += 1) {
+      expect(stepRace(race, {}, DT)).toEqual([]);
+      expect(race.player.z).toBeGreaterThanOrEqual(last);
+      last = race.player.z;
+    }
+    expect(race.player.speed).toBe(0);
+  });
+
+  it('al estrecharse el canal la pared empuja hacia dentro de forma continua (sin rebote)', () => {
+    const race = createRace(findCircuit('glaciar'));
+    const narrow = race.track.segments.find((s) => s.width < 0.7 && s.walls);
+    race.player.z = narrow.z - 2;
+    race.player.x = 0.85;
+    race.player.speed = MAX_SPEED;
+    let previous = race.player.x;
+    for (let i = 0; i < 30; i += 1) {
+      stepRace(race, { steer: 0 }, DT);
+      expect(Math.abs(race.player.x - previous)).toBeLessThan(0.06);
+      previous = race.player.x;
+    }
+  });
+
+  it('la altura del tobogán es continua (la cámara no salta entre segmentos)', () => {
+    const { track } = createRace(CIRCUITS[0]);
+    for (let z = 0; z < 400; z += 0.5) expect(Math.abs(heightAt(track, z + 0.5) - heightAt(track, z))).toBeLessThan(0.2);
   });
 });

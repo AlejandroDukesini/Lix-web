@@ -78,7 +78,7 @@ function LevelSelect({ completed, onPick }) {
 }
 
 /** Tablero: pilares, salidas marcadas en el borde y coches que se arrastran en su eje. */
-function Board({ level, state, leaving, onMove, disabled }) {
+function Board({ level, state, leaving, bump, onMove, disabled }) {
   const boardRef = useRef(null);
   const drag = useRef(null);
   const [offset, setOffset] = useState(null); // { id, cells, invalid }
@@ -143,6 +143,7 @@ function Board({ level, state, leaving, onMove, disabled }) {
           const moving = offset?.id === car.id ? offset : null;
           const [dr, dc] = DIRS[car.dir];
           const shift = isLeaving ? Math.max(level.width, level.height) + car.length : moving?.cells ?? 0;
+          const bumped = bump?.id === car.id;
           const w = car.axis === 'h' ? car.length : 1;
           const h = car.axis === 'h' ? 1 : car.length;
           const { steps, canExit } = isLeaving ? { steps: 0, canExit: false } : reach(level, state, car.id);
@@ -150,13 +151,25 @@ function Board({ level, state, leaving, onMove, disabled }) {
             <button
               key={car.id}
               type="button"
-              className={cx('jm-car', `jm-car--${car.axis}`, moving && 'is-dragging', moving?.invalid && 'is-invalid', isLeaving && 'is-leaving', !isLeaving && !steps && !canExit && 'is-blocked')}
+              className={cx(
+                'jm-car',
+                `jm-car--${car.axis}`,
+                moving && 'is-dragging',
+                moving?.invalid && 'is-invalid',
+                isLeaving && 'is-leaving',
+                bumped && 'is-bumped',
+                !isLeaving && !steps && !canExit && 'is-blocked',
+              )}
               style={{
                 left: pct(car.col, level.width),
                 top: pct(car.row, level.height),
                 width: pct(w, level.width),
                 height: pct(h, level.height),
                 '--hue': car.hue,
+                // Salida: recorre el aparcamiento hasta perderse por el borde (dura según la distancia).
+                '--exit-dur': `${Math.min(0.95, 0.4 + shift * 0.045).toFixed(2)}s`,
+                '--bx': dc,
+                '--by': dr,
                 transform: `translate(${shift * dc * 100 / w}%, ${shift * dr * 100 / h}%)`,
               }}
               aria-label={`Coche ${car.axis === 'h' ? 'horizontal' : 'vertical'} de ${car.length} casillas hacia ${{ right: 'la derecha', left: 'la izquierda', up: 'arriba', down: 'abajo' }[car.dir]}. ${canExit ? 'Puede salir.' : steps ? `Puede avanzar ${steps}.` : 'Bloqueado.'}`}
@@ -187,6 +200,16 @@ function Play({ level, frame, onLevels, onNext }) {
   const [history, setHistory] = useState([]);
   const [state, setState] = useState(() => createState(level));
   const [leaving, setLeaving] = useState([]);
+  const [bump, setBump] = useState(null);
+  const timers = useRef(new Set());
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  const later = useCallback((fn, ms) => {
+    const id = setTimeout(() => {
+      timers.current.delete(id);
+      fn();
+    }, ms);
+    timers.current.add(id);
+  }, []);
   const [notice, setNotice] = useState(null);
   const [stuck, setStuck] = useState(false);
   const [result, setResult] = useState(null);
@@ -223,7 +246,9 @@ function Play({ level, frame, onLevels, onNext }) {
     [audio, elapsedMs, finish, level],
   );
 
-  const playing = session.isPlaying && !result && !stuck;
+  // Mientras un coche sale, el tablero no admite otra acción (nada se cruza con la animación).
+  const animating = leaving.length > 0;
+  const playing = session.isPlaying && !result && !stuck && !animating;
   const act = useCallback(
     (id, kind) => {
       if (!playing) return;
@@ -240,7 +265,10 @@ function Play({ level, frame, onLevels, onNext }) {
         next = outcome.state;
         exited = outcome.exited;
         if (!next) {
+          // Intenta avanzar, choca con lo que tiene delante y vuelve a su sitio.
           audio.play(SFX.blocked);
+          setBump({ id, key: Date.now() });
+          later(() => setBump((b) => (b?.id === id ? null : b)), 480);
           setNotice({ key: Date.now(), text: 'Ese coche está bloqueado: libera antes su camino.' });
           return;
         }
@@ -253,8 +281,9 @@ function Play({ level, frame, onLevels, onNext }) {
       setNotice(null);
       if (exited) {
         const car = state.cars[id];
+        const distance = Math.max(level.width, level.height) + car.length;
         setLeaving((list) => [...list, car]);
-        setTimeout(() => setLeaving((list) => list.filter((c) => c !== car)), 420);
+        later(() => setLeaving((list) => list.filter((c) => c !== car)), Math.min(950, 400 + distance * 45) + 60);
       }
       setHistory((h) => [...h, state]);
       setState(next);
@@ -269,12 +298,12 @@ function Play({ level, frame, onLevels, onNext }) {
   );
 
   const undo = useCallback(() => {
-    if (!history.length || result) return;
+    if (!history.length || result || leaving.length) return;
     setState(history.at(-1));
     setHistory((h) => h.slice(0, -1));
     setStuck(false);
     setNotice(null);
-  }, [history, result]);
+  }, [history, result, leaving.length]);
   const restart = useCallback(() => {
     setState(createState(level));
     setHistory([]);
@@ -320,12 +349,12 @@ function Play({ level, frame, onLevels, onNext }) {
           { id: 'time', label: 'Tiempo', value: formatTime(clock, { decimals: 0 }) },
         ]}
       />
-      <Board level={level} state={state} leaving={leaving} onMove={act} disabled={!playing} />
+      <Board level={level} state={state} leaving={leaving} bump={bump} onMove={act} disabled={!playing} />
       <p className="jm-notice" role="status" aria-live="polite">
         {notice ? <span key={notice.key}>{notice.text}</span> : `Arrastra o toca un coche. Para 3 estrellas: ${level.par} movimientos o menos.`}
       </p>
       <div className="jm-actions">
-        <Button variant="secondary" size="sm" icon={Undo2} onClick={undo} disabled={!history.length || Boolean(result)}>
+        <Button variant="secondary" size="sm" icon={Undo2} onClick={undo} disabled={!history.length || Boolean(result) || animating}>
           Deshacer
         </Button>
         <Button variant="secondary" size="sm" icon={RotateCcw} onClick={restart} disabled={Boolean(result)}>

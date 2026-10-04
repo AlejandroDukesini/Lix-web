@@ -15,7 +15,7 @@
  *
  * Se dibuja de lejos a cerca (algoritmo del pintor) y el jugador al final.
  */
-import { FALL_TIME, FLOAT_HALF, PLAYER_HALF, SEGMENT_LENGTH, segmentAt } from './aquaparkEngine.js';
+import { FALL_TIME, FLOAT_HALF, PLAYER_HALF, SEGMENT_LENGTH, heightAt, segmentAt } from './aquaparkEngine.js';
 
 const ROAD_W = 3.2; // metros por unidad de ancho normalizado
 const CAMERA_BACK = 7;
@@ -401,7 +401,10 @@ export function renderAquapark(ctx, size, race, view, dt = 0) {
   const camZ = player.z - CAMERA_BACK;
   const baseSeg = segmentAt(track, Math.max(0, camZ));
   const playerSeg = segmentAt(track, player.z);
-  const camY = playerSeg.y + CAMERA_HEIGHT + (baseSeg.y - playerSeg.y) * 0.4;
+  // Altura interpolada: con la altura del segmento (escalonada cada 4 m) la cámara
+  // daba un salto al cruzar cada borde y todo el tobogán parecía brincar.
+  const playerY = heightAt(track, player.z);
+  const camY = playerY + CAMERA_HEIGHT + (heightAt(track, Math.max(0, camZ)) - playerY) * 0.4;
   const camX = player.x * ROAD_W * 0.5;
   view.bgOffset += playerSeg.curve * player.speed * dt * 6;
 

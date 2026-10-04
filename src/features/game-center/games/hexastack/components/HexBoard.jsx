@@ -51,7 +51,59 @@ const cx_ = (ghost) => cx('hx-stack', ghost && 'is-ghost');
  * Tablero en SVG. `preview` = { key, stack } muestra dónde caería la pila y
  * qué vecinas se fusionarían; `flash` marca celdas que acaban de despejarse.
  */
-export function HexBoard({ state, preview, flash, merged, onCell, onCellHover }) {
+/**
+ * Cronología visual de una jugada a partir de los eventos del motor (no cambia
+ * ninguna regla): la pila cae, las fichas viajan de cada vecina a la celda que
+ * las recibe en el orden en que el motor las movió y, al completar el grupo,
+ * estalla con sus puntos. Devuelve los pasos con su retraso y la duración total.
+ */
+export const FX_STEP = 0.17; // s entre una fusión y la siguiente
+export function timelineFor(events) {
+  let t = 0.16; // tras la caída de la pila
+  const steps = [];
+  for (const event of events) {
+    if (event.type === 'merge') {
+      steps.push({ ...event, delay: t });
+      t += FX_STEP;
+    } else if (event.type === 'clear') {
+      t += 0.12;
+      steps.push({ ...event, delay: t, points: event.tiles * 10 * event.chain });
+      t += 0.32;
+    }
+  }
+  return { steps, duration: t + 0.35 };
+}
+
+function MoveFx({ fx }) {
+  if (!fx?.steps?.length) return null;
+  return (
+    <g className="hx-fx" aria-hidden="true" key={fx.key}>
+      {fx.steps.map((step, i) => {
+        if (step.type === 'merge') {
+          const [x0, y0] = center(step.from);
+          const [x1, y1] = center(step.to);
+          return (
+            <g key={i} className="hx-fly" style={{ '--dx': `${x1 - x0}px`, '--dy': `${y1 - y0}px`, animationDelay: `${step.delay}s` }}>
+              <Stack stack={Array(step.tiles).fill(step.color)} cx={x0} cy={y0} scale={0.82} />
+            </g>
+          );
+        }
+        const [x, y] = center(step.key);
+        return (
+          <g key={i} className="hx-burst">
+            <polygon points={hexPoints(x, y, SIZE * 0.95)} fill={COLORS[step.color].hex} className="hx-burst__hex" style={{ animationDelay: `${step.delay}s` }} />
+            <text x={x} y={y - SIZE * 0.9} textAnchor="middle" className="hx-burst__points" style={{ animationDelay: `${step.delay}s` }}>
+              +{step.points}
+              {step.chain > 1 ? ` ×${step.chain}` : ''}
+            </text>
+          </g>
+        );
+      })}
+    </g>
+  );
+}
+
+export function HexBoard({ state, preview, flash, merged, placed, fx, onCell, onCellHover }) {
   const keys = Object.keys(state.board);
   const points = keys.map(center);
   const xs = points.map(([x]) => x);
@@ -75,7 +127,16 @@ export function HexBoard({ state, preview, flash, merged, onCell, onCellHover })
             tabIndex={empty ? 0 : -1}
             aria-label={`Celda ${key}: ${label}`}
             data-cell={key}
-            className={cx('hx-cell', empty && 'is-empty', preview?.key === key && 'is-target', attract.has(key) && 'is-attract', flash?.has(key) && 'is-flash', merged?.has(key) && 'is-merged')}
+            className={cx(
+              'hx-cell',
+              empty && 'is-empty',
+              preview?.key === key && 'is-target',
+              attract.has(key) && 'is-attract',
+              flash?.has(key) && 'is-flash',
+              merged?.has(key) && 'is-merged',
+              placed === key && 'is-placed',
+            )}
+            style={flash?.has(key) || merged?.has(key) ? { '--fx-delay': `${fx?.delays?.[key] ?? 0}s` } : undefined}
             onClick={() => onCell(key)}
             onPointerEnter={(event) => event.pointerType === 'mouse' && onCellHover?.(key)}
             onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && (event.preventDefault(), onCell(key))}
@@ -85,6 +146,7 @@ export function HexBoard({ state, preview, flash, merged, onCell, onCellHover })
           </g>
         );
       })}
+      <MoveFx fx={fx} />
       {preview && (() => {
         const [x, y] = center(preview.key);
         return <Stack stack={preview.stack} cx={x} cy={y} ghost />;

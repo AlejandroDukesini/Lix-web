@@ -122,3 +122,331 @@
   border-color: rgb(255 255 255 / 0.3);
   color: #fff;
 }
+
+/* ---------- Pantalla de modos: botón de controles y su panel ---------- */
+.tr-select__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.tr-select__header > div {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1 1 16rem;
+}
+
+.tr-controls {
+  padding: var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  animation: tr-panel-in var(--dur-base) var(--ease-out) both;
+}
+
+@keyframes tr-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.rider-settings {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: start;
+  text-align: left;
+}
+
+.rider-settings__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.rider-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--gc-radius-sm);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface-strong);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-out);
+}
+
+.rider-option > svg {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  color: var(--accent-text);
+}
+
+.rider-option span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rider-option small {
+  color: var(--text-subtle);
+  font-size: var(--text-xs);
+}
+
+.rider-option em {
+  font-style: normal;
+  font-weight: 700;
+  color: var(--accent-text);
+}
+
+.rider-option.is-active {
+  border-color: var(--game-a, var(--c-primary));
+  background: color-mix(in oklab, var(--game-a, var(--c-primary)) 16%, var(--surface-strong));
+}
+
+.rider-option:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.rider-settings__note,
+.rider-settings__error {
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.rider-settings__error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.tr-pause-controls {
+  text-align: left;
+}
+
+.tr-pause-controls summary {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--tap);
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tr-pause-controls summary svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ---------- Mandos de la moto (táctil) ---------- */
+.rider-pad {
+  position: absolute;
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+  bottom: calc(var(--safe-bottom) + var(--space-3));
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  pointer-events: none;
+}
+
+.rider-pad > * {
+  pointer-events: auto;
+}
+
+/* Manillar: dos puños unidos por la barra, que se inclina con el giro. */
+.rider-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 999px;
+  background: rgb(14 16 28 / 0.55);
+  border: 1px solid rgb(255 255 255 / 0.25);
+  rotate: calc(var(--turn, 0) * 8deg);
+  transition: rotate 120ms var(--ease-out);
+}
+
+.rider-bar__stem {
+  width: 18px;
+  height: 6px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.55);
+}
+
+.rider-grip.hold-btn {
+  width: 66px;
+  height: 56px;
+  border-radius: 28px;
+  border: 1px solid rgb(255 255 255 / 0.35);
+  background: linear-gradient(180deg, #3a3f55, #1d2030);
+  color: #fff;
+}
+
+.rider-grip.hold-btn svg {
+  width: 30px;
+  height: 30px;
+}
+
+.rider-grip.hold-btn.is-pressed {
+  background: linear-gradient(180deg, #5fb4ff, #2f6fd6);
+}
+
+.rider-pad__method {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: 999px;
+  background: rgb(14 16 28 / 0.55);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.rider-pad__method svg {
+  width: 18px;
+  height: 18px;
+  rotate: calc(var(--turn, 0) * 20deg);
+  transition: rotate 120ms linear;
+}
+
+.rider-pedals {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-2);
+}
+
+.rider-pedal {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.rider-pedal__label {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgb(14 16 28 / 0.55);
+  color: rgb(255 255 255 / 0.85);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: background-color var(--dur-fast), color var(--dur-fast);
+}
+
+.rider-btn.hold-btn {
+  width: 62px;
+  height: 76px;
+  border-radius: 18px;
+  color: #fff;
+}
+
+.rider-btn.hold-btn svg {
+  width: 30px;
+  height: 30px;
+}
+
+.rider-btn--brake.hold-btn {
+  background: rgb(229 72 77 / 0.3);
+  border-color: rgb(255 120 120 / 0.7);
+}
+
+.rider-btn--gas.hold-btn {
+  height: 90px;
+  background: rgb(92 227 154 / 0.28);
+  border-color: rgb(92 227 154 / 0.75);
+}
+
+.rider-btn--brake.is-pressed {
+  background: rgb(229 72 77 / 0.75);
+}
+
+.rider-btn--gas.is-pressed {
+  background: rgb(92 227 154 / 0.7);
+}
+
+.rider-pedal:first-child .rider-pedal__label.is-on {
+  background: #e5484d;
+  color: #fff;
+}
+
+.rider-pedal:last-child .rider-pedal__label.is-on {
+  background: #3fcf86;
+  color: #08130d;
+}
+
+/* Móvil en horizontal: manillar y pedales a los lados, más bajos. */
+.rider-pad.is-side .rider-grip.hold-btn {
+  width: 54px;
+  height: 46px;
+}
+.rider-pad.is-side .rider-btn.hold-btn {
+  width: 54px;
+  height: 60px;
+}
+
+@media (max-width: 359px) {
+  .rider-grip.hold-btn {
+    width: 56px;
+  }
+  .rider-btn.hold-btn {
+    width: 54px;
+  }
+}
+
+/* ---------- Leyenda de teclado (escritorio) ---------- */
+.rider-keys {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + var(--space-4));
+  translate: -50% 0;
+  z-index: 3;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2) var(--space-4);
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
+  background: rgb(14 16 28 / 0.6);
+  color: #fff;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  pointer-events: none;
+}
+
+.rider-keys span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rider-keys kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: 1px solid rgb(255 255 255 / 0.45);
+  background: rgb(255 255 255 / 0.12);
+  font: inherit;
+  font-size: 0.75rem;
+}

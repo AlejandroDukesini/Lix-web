@@ -14,10 +14,11 @@ import { updateGameSettings } from '../../services/gameStorage.js';
 import { cx } from '../../../../utils/cx.js';
 import { CLEAR_SIZE, createGame, place } from './engine/hexEngine.js';
 import { CHALLENGES, FREE_PLAY } from './levels/levels.js';
-import { HexBoard, Stack } from './components/HexBoard.jsx';
+import { HexBoard, Stack, timelineFor } from './components/HexBoard.jsx';
 import './styles/hexastack.css';
 
 const GAME_ID = 'hexastack';
+const reducedMotion = () => document.documentElement.dataset.motion === 'reduced';
 const SFX = {
   place: { wave: 'triangle', from: 420, to: 520, dur: 0.08, gain: 0.08 },
   merge: { wave: 'sine', from: 600, to: 900, dur: 0.1, gain: 0.07 },
@@ -105,7 +106,9 @@ function Play({ mode, frame, record, onMenu, onRules }) {
   const [state, setState] = useState(() => createGame(mode, Date.now()));
   const [selected, setSelected] = useState(0);
   const [preview, setPreview] = useState(null); // clave de celda
-  const [fx, setFx] = useState({ flash: new Set(), merged: new Set(), key: 0 });
+  const [fx, setFx] = useState({ flash: new Set(), merged: new Set(), key: 0, steps: [], delays: {}, placed: null, duration: 0 });
+  const resultTimer = useRef(null);
+  useEffect(() => () => clearTimeout(resultTimer.current), []);
   const [result, setResult] = useState(null);
   const drag = useRef(null);
   const { start, finish } = session;
@@ -118,15 +121,21 @@ function Play({ mode, frame, record, onMenu, onRules }) {
 
   useEffect(() => {
     if (!fx.flash.size && !fx.merged.size) return undefined;
-    const timer = setTimeout(() => setFx((f) => ({ ...f, flash: new Set(), merged: new Set() })), 450);
+    const timer = setTimeout(() => setFx((f) => ({ ...f, flash: new Set(), merged: new Set(), steps: [], placed: null })), (fx.duration + 0.2) * 1000);
     return () => clearTimeout(timer);
   }, [fx]);
 
   const end = useCallback(
-    async (final) => {
+    async (final, wait = 0) => {
       const key = `score:${mode.id}`;
       const won = final.status === 'won';
-      setResult({ won, saving: true });
+      // El panel final espera a que termine la animación de la última jugada.
+      const summary = { won, saving: true };
+      clearTimeout(resultTimer.current);
+      if (wait > 0) {
+        setResult({ won, pending: true });
+        resultTimer.current = setTimeout(() => setResult((r) => (r?.pending ? { ...summary } : r)), wait * 1000);
+      } else setResult(summary);
       const saved = await finish({
         completed: won || mode.target === null,
         marks: [{ key, value: final.score, better: 'higher' }],
@@ -137,7 +146,9 @@ function Play({ mode, frame, record, onMenu, onRules }) {
           completed: won ? { ...(p.completed ?? {}), [mode.id]: true } : (p.completed ?? {}),
         }),
       });
-      setResult({ won, saving: false, mark: saved.marks[key] });
+      summary.saving = false;
+      summary.mark = saved.marks[key];
+      setResult((r) => (r?.pending ? r : { won, saving: false, mark: saved.marks[key] }));
     },
     [finish, mode],
   );
@@ -152,13 +163,24 @@ function Play({ mode, frame, record, onMenu, onRules }) {
       const clears = events.filter((e) => e.type === 'clear');
       const merges = events.filter((e) => e.type === 'merge');
       audio.play(clears.length ? SFX.clear : merges.length ? SFX.merge : SFX.place);
-      setFx({ flash: new Set(clears.map((e) => e.key)), merged: new Set(merges.map((e) => e.to)), key: Date.now() });
+      const timeline = timelineFor(events);
+      const delays = {};
+      for (const step of timeline.steps) delays[step.type === 'merge' ? step.to : step.key] ??= step.delay + (step.type === 'merge' ? 0.28 : 0);
+      setFx({
+        flash: new Set(clears.map((e) => e.key)),
+        merged: new Set(merges.map((e) => e.to)),
+        key: Date.now(),
+        steps: reducedMotion() ? [] : timeline.steps,
+        delays,
+        placed: key,
+        duration: timeline.duration,
+      });
       setState(outcome.state);
       setPreview(null);
       setSelected(0);
       if (outcome.state.status !== 'playing') {
         if (outcome.state.status === 'over') audio.play(SFX.over);
-        end(outcome.state);
+        end(outcome.state, reducedMotion() ? 0.3 : timeline.duration + 0.25);
       }
     },
     [playing, state, selected, audio, end],
@@ -215,6 +237,7 @@ function Play({ mode, frame, record, onMenu, onRules }) {
   });
 
   const restart = () => {
+    clearTimeout(resultTimer.current);
     session.reset();
     setState(createGame(mode, Date.now()));
     setSelected(0);
@@ -245,6 +268,8 @@ function Play({ mode, frame, record, onMenu, onRules }) {
             preview={preview ? { key: preview, stack: state.hand[selected] } : null}
             flash={fx.flash}
             merged={fx.merged}
+            placed={fx.placed}
+            fx={fx}
             onCell={onCell}
             onCellHover={(key) => playing && !state.board[key].length && setPreview(key)}
           />
@@ -288,7 +313,7 @@ function Play({ mode, frame, record, onMenu, onRules }) {
         </div>
       </div>
       {session.isPaused && !result && <PauseMenu onResume={session.resume} onRestart={restart} onExit={frame.exit} />}
-      {result && (
+      {result && !result.pending && (
         <GameResults
           outcome={result.won ? 'win' : 'end'}
           eyebrow={result.won ? '¡Desafío superado!' : 'Tablero lleno'}

@@ -23,21 +23,26 @@
 /* Índice de secciones: fila desplazable en móvil, columna fija en escritorio. */
 .settings__nav {
   min-width: 0;
+  /* Móvil y tableta: el índice queda fijo bajo la barra superior para saltar a cualquier sección. */
+  position: sticky;
+  top: calc(var(--safe-top) + 3.6rem);
+  z-index: 2;
+  margin-inline: calc(var(--gutter) * -1);
+  padding-block: var(--space-2);
+  background: linear-gradient(to bottom, var(--bg) 70%, color-mix(in oklab, var(--bg) 0%, transparent));
 }
 
 .settings__nav ul {
-  display: flex;
-  gap: var(--space-2);
-  margin: 0 calc(var(--gutter) * -1);
+  margin: 0;
   padding: var(--space-1) var(--gutter);
   list-style: none;
-  overflow-x: auto;
-  scrollbar-width: none;
   scroll-padding-inline: var(--gutter);
 }
 
-.settings__nav ul::-webkit-scrollbar {
-  display: none;
+@media (min-width: 960px) {
+  .settings__nav {
+    top: 0;
+  }
 }
 
 .settings__nav-item {
@@ -69,6 +74,19 @@
   font-family: var(--font-bold);
 }
 
+.settings__nav-item.is-active {
+  color: var(--text);
+  background: var(--selected);
+  border-color: color-mix(in oklab, var(--c-primary) 60%, transparent);
+}
+
+[data-style='maximal'] .settings__nav-item.is-active {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+  border-color: var(--surface-border);
+  box-shadow: 3px 3px 0 var(--surface-border);
+}
+
 @media (min-width: 1100px) {
   .settings__layout {
     grid-template-columns: 200px minmax(0, 1fr);
@@ -76,12 +94,21 @@
   .settings__nav {
     position: sticky;
     top: var(--space-9);
+    margin-inline: 0;
+    padding-block: 0;
+    background: none;
   }
   .settings__nav ul {
     flex-direction: column;
     margin: 0;
     padding: 0;
     overflow: visible;
+    -webkit-mask-image: none;
+    mask-image: none;
+    cursor: auto;
+  }
+  .settings__nav .hscroll__arrow {
+    display: none !important;
   }
   .settings__nav-item {
     width: 100%;
@@ -103,10 +130,16 @@
 .settings-section {
   display: grid;
   gap: var(--space-6);
-  scroll-margin-top: calc(var(--safe-top) + 5rem);
+  scroll-margin-top: calc(var(--safe-top) + 8rem);
 }
 
 @media (min-width: 960px) {
+  .settings-section {
+    scroll-margin-top: 5rem;
+  }
+}
+
+@media (min-width: 1100px) {
   .settings-section {
     scroll-margin-top: var(--space-7);
   }

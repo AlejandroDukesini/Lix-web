@@ -13,7 +13,7 @@
  * "Borrar todos los datos" (Configuración) elimina la base de datos completa,
  * y con ella también estas estadísticas.
  */
-import { dbEntries, dbGet, dbPut, isIndexedDBAvailable, STORES } from '../../../services/storage/database.js';
+import { dbEntries, dbGet, dbPut, dbReplaceAll, isIndexedDBAvailable, STORES } from '../../../services/storage/database.js';
 
 export const RECORD_VERSION = 1;
 export const CENTER_KEY = '__center__';
@@ -220,6 +220,81 @@ export function updateGameSettings(gameId, patch) {
     record.settings = { ...record.settings, ...patch };
     return record;
   });
+}
+
+// --- Copias de seguridad ----------------------------------------------------------
+
+/** Espera a que terminen las escrituras pendientes de todos los juegos. */
+async function settleQueues() {
+  await Promise.all([...queues.values()]);
+}
+
+/**
+ * Instantánea completa del store `games` para la copia de seguridad: todos los
+ * registros (estadísticas, récords, progreso y ajustes de cada juego) y las
+ * preferencias del Game Center. Espera a las escrituras en curso.
+ */
+export async function exportGameData() {
+  await settleQueues();
+  const records = await readAllGameRecords();
+  const center = await readCenterSettings();
+  return { recordVersion: RECORD_VERSION, records, center };
+}
+
+/** Valida datos de juegos importados. Nunca lanza; devuelve lo válido y los problemas. */
+export function sanitizeGameData(raw) {
+  const issues = [];
+  if (!isObject(raw)) return { value: { records: {}, center: { ...DEFAULT_CENTER_SETTINGS } }, issues: ['games'] };
+  const records = {};
+  if (isObject(raw.records)) {
+    for (const [id, record] of Object.entries(raw.records)) {
+      // Ids como los del registro de juegos: minúsculas, números y guiones.
+      if (!/^[a-z0-9][a-z0-9-]{0,47}$/.test(id) || !isObject(record)) {
+        issues.push(`games.records.${id}`);
+        continue;
+      }
+      records[id] = normalizeRecord(record, id);
+    }
+  } else if (raw.records !== undefined) {
+    issues.push('games.records');
+  }
+  return { value: { records, center: normalizeCenterSettings(raw.center) }, issues };
+}
+
+/**
+ * Sustituye todos los datos de juegos por los de una copia ya validada, en una
+ * única transacción. Restaurar dos veces la misma copia deja exactamente el
+ * mismo estado (no suma partidas). Devuelve lo que quedó guardado.
+ */
+export async function restoreGameData({ records, center }) {
+  await settleQueues();
+  const previous = await readAllGameRecords();
+  const entries = [...Object.entries(records), [CENTER_KEY, center]];
+  if (persistent && isIndexedDBAvailable()) {
+    try {
+      await dbReplaceAll(STORES.games, entries);
+    } catch (error) {
+      // La transacción se revierte entera: los datos previos siguen intactos.
+      throw new Error('No se pudieron guardar los datos de los juegos.', { cause: error });
+    }
+  }
+  memory.clear();
+  for (const [key, value] of entries) memory.set(key, value);
+
+  // Comprobación: lo leído debe coincidir con lo restaurado.
+  const stored = await readAllGameRecords();
+  for (const [id, record] of Object.entries(records)) {
+    const saved = stored[id];
+    if (!saved || saved.plays !== record.plays || saved.completions !== record.completions || saved.totalTimeMs !== record.totalTimeMs) {
+      throw new Error(`La verificación de "${id}" no coincide tras restaurar.`);
+    }
+  }
+
+  // Avisar a las pantallas abiertas, incluidas las de juegos que no venían en la copia.
+  for (const id of Object.keys(previous)) if (!(id in records)) emit(id, createEmptyRecord(id));
+  for (const [id, record] of Object.entries(stored)) emit(id, record);
+  emit(CENTER_KEY, normalizeCenterSettings(center));
+  return { records: stored, center: normalizeCenterSettings(center) };
 }
 
 /** Solo para pruebas. */

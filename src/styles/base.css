@@ -39,6 +39,9 @@ h4 {
   letter-spacing: var(--heading-tracking);
   line-height: var(--leading-tight);
   text-wrap: balance;
+  /* Palabras largas en títulos grandes (Maximalismo a 320 px) se parten antes que desbordar. */
+  overflow-wrap: break-word;
+  hyphens: auto;
 }
 
 /* Sin la sangría de 40 px del navegador: los valores de las fichas (HUD, resultados, ayuda) se alinean con su etiqueta. */
@@ -135,10 +138,11 @@ a {
   scroll-behavior: auto !important;
 }
 
+/* Respaldo antes de que la app marque data-motion; "Activadas" (data-motion='full') lo anula. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :root:not([data-motion='full']) *,
+  :root:not([data-motion='full']) *::before,
+  :root:not([data-motion='full']) *::after {
     animation-duration: 1ms !important;
     animation-iteration-count: 1 !important;
     animation-delay: 0ms !important;
@@ -153,4 +157,18 @@ a {
     scrollbar-width: thin;
     scrollbar-color: var(--border-strong) transparent;
   }
+}
+
+/* Cambio de tema/estilo (withThemeTransition): todo se funde a la vez. */
+:root.is-theming *,
+:root.is-theming *::before,
+:root.is-theming *::after {
+  transition:
+    background-color 420ms var(--ease-in-out),
+    color 420ms var(--ease-in-out),
+    border-color 420ms var(--ease-in-out),
+    outline-color 420ms var(--ease-in-out),
+    box-shadow 420ms var(--ease-in-out),
+    fill 420ms var(--ease-in-out),
+    stroke 420ms var(--ease-in-out) !important;
 }

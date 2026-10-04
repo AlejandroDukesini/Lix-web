@@ -14,7 +14,7 @@ import { COLS, chickenX, logicalRow } from './chickenEngine.js';
 const VISIBLE_ROWS = 11;
 
 export function createRenderState() {
-  return { camera: null, particles: [], time: 0, reduced: false, deathAt: null };
+  return { camera: null, particles: [], time: 0, reduced: false, deathAt: null, impact: null };
 }
 
 /** Geometría de la vista: tamaño de casilla y margen para centrar la cuadrícula. */
@@ -244,20 +244,42 @@ function drawChicken(ctx, cx, cy, cell, facing, lift, dead) {
   ctx.restore();
 }
 
-/** Lanza plumas (y gotas si cae al agua) desde un punto. */
-export function burst(view, x, y, kind) {
-  if (view.reduced) return;
-  for (let i = 0; i < 16; i += 1) {
+/** Duración de la secuencia de impacto antes del menú de derrota (s). */
+export const IMPACT_SECONDS = 3;
+const BLOOD = ['#d1203b', '#e63950', '#a3132b', '#ff5470'];
+
+/**
+ * Impacto: plumas y, si fue un coche, «salpicadura» de dibujos animados (círculos
+ * rojos de tamaños y velocidades variados) más una mancha que crece en el suelo.
+ * Es parte del juego en todas las plataformas: la densidad se adapta al tamaño
+ * del tablero y, con movimiento reducido, las partículas apenas se desplazan.
+ */
+export function burst(view, x, y, kind, cell = 40) {
+  const calm = view.reduced ? 0.2 : 1;
+  const density = Math.max(0.6, Math.min(1.3, cell / 48));
+  view.impact = { x, y, kind, at: view.time };
+  const feathers = Math.round(12 * density);
+  for (let i = 0; i < feathers; i += 1) {
     const a = Math.random() * Math.PI * 2;
-    const speed = 40 + Math.random() * 120;
+    const speed = (40 + Math.random() * 120) * calm;
+    view.particles.push({ x, y, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed - 60 * calm, spin: Math.random() * 6, life: 1, decay: 0.45, kind: kind === 'water' && i % 2 ? 'drop' : 'feather' });
+  }
+  if (kind !== 'car') return;
+  const drops = Math.round(26 * density);
+  for (let i = 0; i < drops; i += 1) {
+    const a = Math.random() * Math.PI * 2;
+    const speed = (60 + Math.random() * 260) * calm;
     view.particles.push({
       x,
       y,
       vx: Math.cos(a) * speed,
-      vy: Math.sin(a) * speed - 60,
-      spin: Math.random() * 6,
+      vy: Math.sin(a) * speed * 0.7 - 40 * calm,
+      spin: 0,
+      size: 0.035 + Math.random() * 0.09,
       life: 1,
-      kind: kind === 'water' && i % 2 ? 'drop' : 'feather',
+      decay: 0.32 + Math.random() * 0.12,
+      color: BLOOD[i % BLOOD.length],
+      kind: 'blood',
     });
   }
 }
@@ -276,6 +298,12 @@ export function renderChicken(ctx, size, state, view, dt) {
   else view.camera += (target - view.camera) * Math.min(1, dt * 6);
   view.camera = Math.max(-0.5, view.camera);
   const screenY = (row) => size.height - (row - view.camera + 1) * cell;
+
+  // Sacudida breve del impacto (no con movimiento reducido).
+  const sinceImpact = view.impact ? view.time - view.impact.at : Infinity;
+  const shake = !view.reduced && sinceImpact < 0.35 ? (1 - sinceImpact / 0.35) * cell * 0.12 : 0;
+  ctx.save();
+  if (shake) ctx.translate((Math.random() - 0.5) * shake * 2, (Math.random() - 0.5) * shake * 2);
 
   ctx.fillStyle = '#5fb24f';
   ctx.fillRect(0, 0, size.width, size.height);
@@ -306,6 +334,17 @@ export function renderChicken(ctx, size, state, view, dt) {
   const cx = left + (chickenX(chicken) + 0.5) * cell;
   const cy = size.height - (rowPos - view.camera + 0.5) * cell;
   const sunk = deadKind === 'water' || deadKind === 'current';
+  // Mancha en el asfalto: crece rápido y se queda (estilo arcade, círculos planos).
+  if (view.impact?.kind === 'car') {
+    const grow = Math.min(1, sinceImpact / 0.25);
+    ctx.fillStyle = 'rgba(178, 20, 45, 0.85)';
+    const blobs = [[0, 0, 0.42], [0.32, 0.12, 0.2], [-0.3, 0.16, 0.18], [0.12, -0.28, 0.15], [-0.22, -0.2, 0.12], [0.46, -0.1, 0.09]];
+    for (const [dx, dy, r] of blobs) {
+      ctx.beginPath();
+      ctx.ellipse(cx + dx * cell, cy + dy * cell * 0.7, r * cell * grow, r * cell * 0.75 * grow, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
   if (!sunk) drawChicken(ctx, cx, cy, cell, chicken.facing, lift, deadKind);
   for (let i = first; i <= last; i += 1) {
     const row = state.rows[i];
@@ -333,10 +372,33 @@ export function renderChicken(ctx, size, state, view, dt) {
     }
   }
 
-  // Partículas (plumas y gotas).
+  // Destello del golpe: un aro blanco que se abre.
+  if (view.impact && sinceImpact < 0.4) {
+    const k = sinceImpact / 0.4;
+    ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - k)})`;
+    ctx.lineWidth = Math.max(2, cell * 0.08 * (1 - k));
+    ctx.beginPath();
+    ctx.arc(view.impact.x, view.impact.y, cell * (0.3 + k * 0.9), 0, Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Partículas (plumas, gotas y salpicadura).
   view.particles = view.particles.filter((p) => p.life > 0);
   for (const p of view.particles) {
-    p.life -= dt * 0.8;
+    if (p.kind === 'blood') {
+      p.life -= dt * p.decay;
+      p.vy += 260 * dt;
+      p.vx *= 1 - dt * 2.4;
+      p.x += p.vx * dt;
+      p.y += p.vy * dt;
+      ctx.globalAlpha = Math.min(1, p.life * 1.6);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, Math.max(1.5, cell * p.size * (0.6 + 0.4 * p.life)), 0, Math.PI * 2);
+      ctx.fill();
+      continue;
+    }
+    p.life -= dt * (p.decay ?? 0.8);
     p.vy += 160 * dt;
     p.vx *= 1 - dt * 1.5;
     p.x += p.vx * dt;
@@ -354,6 +416,7 @@ export function renderChicken(ctx, size, state, view, dt) {
     ctx.restore();
   }
   ctx.globalAlpha = 1;
+  ctx.restore();
 }
 
 /** Centro en pantalla de la gallina (para lanzar las plumas desde allí). */

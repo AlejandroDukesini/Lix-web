@@ -6,6 +6,7 @@ import { Badge } from '../common/Card.jsx';
 import { Dialog } from '../common/Dialog.jsx';
 import { IconButton } from '../common/Button.jsx';
 import { cx } from '../../utils/cx.js';
+import { withThemeTransition } from '../../utils/themeTransition.js';
 
 function BrandMark() {
   return (
@@ -33,7 +34,7 @@ export function ThemeToggle() {
     <IconButton
       icon={dark ? Sun : Moon}
       label={dark ? 'Cambiar a tema claro' : 'Cambiar a tema oscuro'}
-      onClick={() => update('appearance', { theme: dark ? 'light' : 'dark' })}
+      onClick={() => withThemeTransition(() => update('appearance', { theme: dark ? 'light' : 'dark' }))}
     />
   );
 }

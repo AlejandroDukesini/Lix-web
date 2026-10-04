@@ -320,8 +320,14 @@
   background: var(--hover);
   color: var(--text);
   font: inherit;
-  font-size: 0.7rem;
+  /* «Comprobar» cabe en la columna más estrecha (≈54 px a 320 px) sin salirse. */
+  font-size: clamp(0.6rem, 0.36rem + 1.25vw, 0.72rem);
   font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-align: center;
   cursor: pointer;
 }
 

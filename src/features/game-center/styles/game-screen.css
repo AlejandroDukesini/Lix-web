@@ -1174,22 +1174,28 @@ kbd {
 /* Indicación de controles al empezar (y siempre consultable con «?»). */
 .controls-hint {
   position: absolute;
-  left: 50%;
+  /* Centrada con márgenes a ambos lados: con left 50% + translate solo disponía de
+     media pantalla y por eso iba en una línea que se salía por los bordes. */
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
   top: calc(var(--space-3) + 64px);
-  translate: -50% 0;
   z-index: 5;
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-2);
-  max-width: calc(100% - 2 * var(--space-4));
+  width: fit-content;
+  max-width: min(32rem, calc(100% - 2 * var(--space-3)));
+  margin-inline: auto;
   padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-pill);
+  border-radius: 18px;
   background: rgb(10 8 20 / 0.62);
   color: #fff;
   font-size: var(--text-xs);
   font-weight: 700;
   text-align: center;
-  white-space: nowrap;
+  text-wrap: balance;
+  line-height: 1.3;
   pointer-events: none;
   /* Solo entra con suavidad; React la retira a los pocos segundos (con movimiento
      reducido también se ve: la animación no decide cuándo desaparece). */
@@ -1253,9 +1259,18 @@ kbd {
     padding: 4px 8px;
     border-radius: var(--gc-radius-sm);
   }
+  /* El indicador ancho (nombre del nivel) ocupa su propia fila: las cifras no se aplastan. */
+  .game-hud__items:has(> .is-wide) {
+    flex-wrap: wrap;
+  }
+  .game-hud__item.is-wide {
+    flex: 1 1 100%;
+  }
   .game-hud__item dt {
     font-size: 0.6rem;
     letter-spacing: 0.06em;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .game-hud__item dd {
     font-size: var(--text-sm);

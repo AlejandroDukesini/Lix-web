@@ -14,6 +14,7 @@
 import { LANES, LANE_W, PHYSICS, ROAD_HALF, sceneAt } from './riderEngine.js';
 
 const CAM_BACK = 7; // metros entre la cámara y la moto
+const CAM_FOLLOW = 0.3; // fracción del movimiento lateral de la moto que sigue la cámara
 const DRAW_DIST = 240;
 const SEG = 6;
 
@@ -48,9 +49,21 @@ export function cameraFor(size, bottomInset) {
   const roadPx = Math.min(size.width * 0.92, size.height * 1.3);
   const bikeScale = roadPx / (ROAD_HALF * 2); // px por metro a la distancia de la moto
   const F = bikeScale * CAM_BACK;
-  const bikeY = Math.min(size.height - bottomInset - 24, size.height * 0.86);
+  // La moto queda por encima de los controles y nunca pegada al borde inferior: en
+  // vertical, hacia el 72 % del alto (se ve la carretera por delante y la moto entera).
+  const portrait = size.height > size.width * 1.15;
+  const bikeY = Math.min(size.height - bottomInset - 24, size.height * (portrait ? 0.72 : 0.84));
   const camH = Math.max(0.8, (bikeY - horizon) / bikeScale);
   return { horizon, F, camH, bikeY, bikeScale };
+}
+
+/** Inclinación de la moto (radianes, positivo = hacia la derecha en pantalla). */
+export const leanFor = (bike) => (bike.vx / PHYSICS.lateralMax) * 0.32;
+
+/** Posición horizontal de la moto en pantalla (sin la curva visual): crece al girar a la derecha. */
+export function bikeScreenX(size, bike, bottomInset = 0) {
+  const cam = cameraFor(size, bottomInset);
+  return size.width / 2 + (bike.x - bike.x * CAM_FOLLOW) * (cam.F / CAM_BACK);
 }
 
 export function renderRide(ctx, size, state, view, bottomInset, dt) {
@@ -62,7 +75,10 @@ export function renderRide(ctx, size, state, view, bottomInset, dt) {
   const scene = sceneAt(bike.z);
   const P = PALETTES[scene.id];
   const camZ = bike.z - CAM_BACK;
-  const camX = bike.x * 0.75;
+  // La cámara sigue solo un poco el movimiento lateral: así la moto se desplaza en
+  // pantalla hacia donde se gira (antes la cámara seguía el 75 % y parecía que la
+  // carretera huía hacia el lado contrario, con la moto casi quieta).
+  const camX = bike.x * CAM_FOLLOW;
   const cx = w / 2;
 
   // Cielo y horizonte.
@@ -106,7 +122,10 @@ export function renderRide(ctx, size, state, view, bottomInset, dt) {
   };
 
   // Carretera: de lejos a cerca, por tramos.
-  const startZ = Math.floor(camZ / SEG) * SEG + SEG;
+  // El primer tramo empieza en el que contiene a la cámara (recortado delante de ella):
+  // antes se saltaba y entre la cámara y el siguiente múltiplo de SEG se veía el césped,
+  // un hueco que cambiaba en cada fotograma justo bajo la moto (parpadeo).
+  const startZ = Math.floor(camZ / SEG) * SEG;
   const segments = [];
   for (let z = startZ + DRAW_DIST; z >= startZ; z -= SEG) segments.push(z);
   for (const z of segments) {
@@ -119,8 +138,9 @@ export function renderRide(ctx, size, state, view, bottomInset, dt) {
       ctx.beginPath();
       ctx.moveTo(xFar - wFar, far.sy);
       ctx.lineTo(xFar + wFar, far.sy);
-      ctx.lineTo(xNear + wNear, near.sy);
-      ctx.lineTo(xNear - wNear, near.sy);
+      // +1 px: los tramos se solapan y el antialiasing no deja una costura clara entre ellos.
+      ctx.lineTo(xNear + wNear, near.sy + 1);
+      ctx.lineTo(xNear - wNear, near.sy + 1);
       ctx.closePath();
       ctx.fill();
     };
@@ -142,7 +162,7 @@ export function renderRide(ctx, size, state, view, bottomInset, dt) {
       }
     }
     // Elementos del borde cada 48 m (árboles redondeados o farolas).
-    if (Math.floor(z) % 48 === 0) {
+    if (Math.floor(z) % 48 === 0 && z > camZ + 1) {
       for (const side of [-1, 1]) {
         const p = project(side * (ROAD_HALF + 3.5), z);
         const s = p.scale;
@@ -201,7 +221,8 @@ export function renderRide(ctx, size, state, view, bottomInset, dt) {
   // La moto: vista trasera, inclinada según el movimiento lateral.
   const bp = project(bike.x, bike.z);
   const s = bp.scale;
-  const lean = -(bike.vx / PHYSICS.lateralMax) * 0.32;
+  // Inclinación hacia el lado del giro (en canvas, un ángulo positivo gira en sentido horario: hacia la derecha).
+  const lean = leanFor(bike);
   ctx.save();
   ctx.translate(bp.sx, bp.sy);
   ctx.rotate(lean);

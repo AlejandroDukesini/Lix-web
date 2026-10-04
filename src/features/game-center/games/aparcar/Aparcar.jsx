@@ -4,7 +4,7 @@ import { Button } from '../../../../components/common/Button.jsx';
 import { GameHUD } from '../../components/GameHUD.jsx';
 import { PauseMenu } from '../../components/GameOverlay.jsx';
 import { GameResults } from '../../components/GameResults.jsx';
-import { ControlsHint, DriveControls } from '../../components/TouchControls.jsx';
+import { ControlsHint, DriveControls, useTouchUI } from '../../components/TouchControls.jsx';
 import { useCanvas } from '../../hooks/useCanvas.js';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useGameSession } from '../../hooks/useGameSession.js';
@@ -88,7 +88,7 @@ function LevelSelect({ completed, best, onPick }) {
 function Drive({ level, frame, onLevels, onNext }) {
   const session = useGameSession(GAME_ID);
   const audio = useGameAudio();
-  const touchUI = useMediaQuery('(hover: none), (pointer: coarse)');
+  const touchUI = useTouchUI();
   const lowLandscape = useMediaQuery('(orientation: landscape) and (max-height: 500px)');
   const [round, setRound] = useState(0);
   const [hud, setHud] = useState({ hits: 0, time: 0, gear: 'N' });

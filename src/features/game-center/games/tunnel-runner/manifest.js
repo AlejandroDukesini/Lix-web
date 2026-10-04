@@ -6,16 +6,17 @@ export const tunnelRunnerManifest = {
   title: 'Tunnel Runner',
   tagline: 'Velocidad, profundidad y reflejos.',
   description:
-    'Una nave recorre un túnel de neón que acelera sin descanso. Gira alrededor de sus paredes para colarte por los huecos de cada anillo. Cada sector es más rápido, más estrecho y más traicionero.',
+    'Una nave recorre un túnel que acelera poco a poco. Gira alrededor de sus paredes para esquivar bloques pequeños, medianos y grandes —algunos se lanzan hacia ti— y colarte por los huecos de los anillos. Cada 1000 m el túnel cambia de aspecto.',
   categories: ['habilidad', 'arcade', 'carreras'],
   Art: TunnelArt,
   palette: { a: '#5ef2ff', b: '#ff4fd8' },
-  facts: ['Infinito', 'Sectores de dificultad', 'Récord de distancia'],
+  facts: ['Infinito', '6 tipos de obstáculo', 'Un tramo nuevo cada 1000 m'],
   objective: 'Llegar lo más lejos posible sin chocar. Hitos en 500, 1 500 y 3 000 metros.',
   howTo: [
     'El túnel gira a tu alrededor: tú siempre estás abajo.',
-    'Busca el hueco de cada anillo antes de llegar; siempre hay uno alcanzable.',
-    'Desde el tercer sector algunos anillos giran mientras se acercan.',
+    'Busca el hueco de cada obstáculo antes de llegar; siempre hay uno alcanzable.',
+    'Los obstáculos con borde amarillo y estela vienen hacia ti: aparecen con más margen, pero se acercan rápido.',
+    'Más adelante algunos anillos y bloques giran mientras se acercan.',
     'No hay salto ni deslizamiento: todo se esquiva girando.',
   ],
   controls: {

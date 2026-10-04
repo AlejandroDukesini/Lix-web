@@ -164,7 +164,15 @@
   font-size: var(--text-sm);
   letter-spacing: 0.01em;
   text-decoration: none;
-  white-space: nowrap;
+  /* Una sola línea mientras quepa; en contenedores estrechos el texto se reparte
+     en dos líneas en lugar de salirse del borde (Celular mini). */
+  max-width: 100%;
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+  text-wrap: balance;
+  line-height: 1.2;
+  padding-block: var(--space-2);
   user-select: none;
   transition:
     transform var(--dur-fast) var(--ease-out),
@@ -857,4 +865,100 @@ input[type='time'].field__control {
   background: radial-gradient(circle at 50% 70%, var(--paper), var(--c-accent) 45%, var(--c-primary) 85%);
   box-shadow: 0 0 40px 10px color-mix(in oklab, var(--c-accent) 35%, transparent);
   opacity: 0.6;
+}
+
+/* ---------- Lista horizontal desplazable (HorizontalScroller) ---------- */
+.hscroll {
+  position: relative;
+  min-width: 0;
+}
+
+.hscroll__track {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  /* Degradado en los bordes con contenido oculto: indica que la lista continúa. */
+  --fade-before: 0px;
+  --fade-after: 0px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-before), #000 calc(100% - var(--fade-after)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-before), #000 calc(100% - var(--fade-after)), transparent 100%);
+}
+
+.hscroll__track::-webkit-scrollbar {
+  display: none;
+}
+
+.hscroll__track > * {
+  flex: none;
+}
+
+.hscroll.has-before .hscroll__track {
+  --fade-before: 28px;
+}
+.hscroll.has-after .hscroll__track {
+  --fade-after: 36px;
+}
+
+@media (pointer: fine) {
+  .hscroll__track {
+    cursor: grab;
+  }
+}
+
+.hscroll__track[data-dragging] {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.hscroll__track[data-dragging] * {
+  pointer-events: none;
+}
+
+.hscroll__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  display: none;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  translate: 0 -50%;
+  border-radius: 50%;
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface-strong);
+  color: var(--text);
+  box-shadow: var(--shadow-sm, 0 4px 14px -6px rgb(0 0 0 / 0.4));
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.hscroll__arrow svg {
+  width: 18px;
+  height: 18px;
+}
+
+.hscroll__arrow--prev {
+  left: 0;
+}
+.hscroll__arrow--next {
+  right: 0;
+}
+
+/* Solo con ratón: en táctil el swipe es la forma natural de desplazarse. */
+@media (hover: hover) and (pointer: fine) {
+  .hscroll__arrow:not([hidden]) {
+    display: grid;
+  }
+}
+
+.backup-summary {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0 0 var(--space-3);
+  padding-left: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
 }

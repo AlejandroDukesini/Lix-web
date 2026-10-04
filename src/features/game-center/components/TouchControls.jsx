@@ -289,6 +289,29 @@ if (typeof window !== 'undefined') {
   window.addEventListener('pointerdown', (event) => (lastPointerType = event.pointerType), { capture: true, passive: true });
 }
 
+/**
+ * ¿Mostrar controles táctiles? Sí si el dispositivo se declara táctil o si la
+ * persona acaba de tocar la pantalla (algunos móviles con lápiz o en «modo
+ * escritorio» dicen tener ratón y antes se quedaban sin flechas). Reactivo: si
+ * se pasa de ratón a dedo, los controles aparecen al primer toque.
+ */
+export function useTouchUI() {
+  const query = '(hover: none), (pointer: coarse)';
+  const [touch, setTouch] = useState(() => usesTouch() || Boolean(window.matchMedia?.(query).matches));
+  useEffect(() => {
+    const media = window.matchMedia?.(query);
+    const onPointer = (event) => setTouch(event.pointerType !== 'mouse' || Boolean(media?.matches));
+    const onChange = () => setTouch(usesTouch() || Boolean(media?.matches));
+    window.addEventListener('pointerdown', onPointer, { capture: true, passive: true });
+    media?.addEventListener?.('change', onChange);
+    return () => {
+      window.removeEventListener('pointerdown', onPointer, { capture: true });
+      media?.removeEventListener?.('change', onChange);
+    };
+  }, []);
+  return touch;
+}
+
 export function usesTouch() {
   if (lastPointerType) return lastPointerType !== 'mouse';
   return typeof window !== 'undefined' && Boolean(window.matchMedia?.('(pointer: coarse)').matches);

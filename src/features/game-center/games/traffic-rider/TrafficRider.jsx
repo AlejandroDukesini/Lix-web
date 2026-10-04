@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Check, Flag, Infinity as InfinityIcon, ListOrdered, Lock, Smartphone } from 'lucide-react';
+import { Check, Flag, Infinity as InfinityIcon, ListOrdered, Lock, Settings2, Smartphone } from 'lucide-react';
 import { Button } from '../../../../components/common/Button.jsx';
 import { GameHUD } from '../../components/GameHUD.jsx';
 import { PauseMenu } from '../../components/GameOverlay.jsx';
 import { GameResults } from '../../components/GameResults.jsx';
 import { Countdown } from '../../components/Countdown.jsx';
-import { ControlsHint, DriveControls } from '../../components/TouchControls.jsx';
+import { ControlsHint, DragIndicator, useDragSteer, useTouchUI } from '../../components/TouchControls.jsx';
 import { useCanvas } from '../../hooks/useCanvas.js';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useGameSession } from '../../hooks/useGameSession.js';
@@ -13,11 +13,13 @@ import { useGameRecord } from '../../hooks/useGameStatistics.js';
 import { useGameAudio } from '../../hooks/useGameAudio.js';
 import { useGameFrame, useInProgress, usePauseOnInterrupt } from '../../hooks/useGameFrame.js';
 import { useKeyboard } from '../../hooks/useKeyboard.js';
+import { updateGameSettings } from '../../services/gameStorage.js';
 import { useMediaQuery } from '../../../../hooks/useMediaQuery.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { cx } from '../../../../utils/cx.js';
 import { KMH, MISSIONS, createRide, missionProgress, sceneAt, step } from './engine/riderEngine.js';
 import { createRenderState, renderRide } from './engine/riderRenderer.js';
+import { ControlSettings, KeyLegend, RiderControls, controlMethod, useTiltSteer } from './components/RiderControls.jsx';
 import './styles/traffic-rider.css';
 
 const GAME_ID = 'traffic-rider';
@@ -50,16 +52,39 @@ const describe = (m) =>
     fast: `Recorre ${(m.target / 1000).toLocaleString('es')} km por encima de 100 km/h.`,
   })[m.type];
 
+const saveControl = (control) => updateGameSettings(GAME_ID, { control });
+
 function ModeSelect({ record, onPick }) {
   const done = record?.progress?.missions ?? {};
   const best = record?.best ?? {};
+  const [showControls, setShowControls] = useState(false);
   return (
     <div className="tr-select game-scroll">
-      <header>
-        <p className="eyebrow">Traffic Rider</p>
-        <h2 className="tr-select__title">A la carretera</h2>
-        <p className="tr-select__text">Esquiva el tráfico, adelanta y llega lejos. Más de 100 km/h suma más puntos.</p>
+      <header className="tr-select__header">
+        <div>
+          <p className="eyebrow">Traffic Rider</p>
+          <h2 className="tr-select__title">A la carretera</h2>
+          <p className="tr-select__text">Esquiva el tráfico, adelanta y llega lejos. Más de 100 km/h suma más puntos.</p>
+        </div>
+        <Button
+          variant="secondary"
+          size="sm"
+          icon={Settings2}
+          onClick={() => setShowControls((v) => !v)}
+          aria-expanded={showControls}
+          aria-controls="tr-controls"
+        >
+          Controles
+        </Button>
       </header>
+      {showControls && (
+        <section id="tr-controls" className="tr-controls" aria-labelledby="tr-controls-title">
+          <h3 id="tr-controls-title" className="tr-select__subtitle">
+            Cómo conducir
+          </h3>
+          <ControlSettings value={controlMethod(record)} onChange={saveControl} />
+        </section>
+      )}
       <button type="button" className="tr-free" onClick={() => onPick(FREE)}>
         <InfinityIcon aria-hidden="true" />
         <span>
@@ -105,7 +130,7 @@ function Ride({ mode, frame, record, onMenu }) {
   const session = useGameSession(GAME_ID);
   const audio = useGameAudio();
   const reduced = useReducedMotion();
-  const touchUI = useMediaQuery('(hover: none), (pointer: coarse)');
+  const touchUI = useTouchUI();
   const lowLandscape = useMediaQuery('(orientation: landscape) and (max-height: 500px)');
   const portraitPhone = useMediaQuery('(orientation: portrait) and (max-width: 599px)');
   const [round, setRound] = useState(0);
@@ -115,6 +140,8 @@ function Ride({ mode, frame, record, onMenu }) {
   const world = useRef(createRide(Date.now()));
   const view = useRef(createRenderState());
   const touch = useRef(NO_INPUT);
+  const analog = useRef(0);
+  const method = controlMethod(record);
   const hudClock = useRef(0);
   const { start, reset: resetSession, finish } = session;
   const bottomInset = touchUI && !lowLandscape ? 140 : 12;
@@ -123,6 +150,9 @@ function Ride({ mode, frame, record, onMenu }) {
 
   const draw = useCallback((dt = 0) => renderRide(ctxRef.current, sizeRef.current, world.current, view.current, insetRef.current, dt), []);
   const { canvasRef, ctxRef, sizeRef } = useCanvas(() => draw(0));
+
+  const drag = useDragSteer({ enabled: touchUI && method === 'swipe' && phase === 'run' && session.isPlaying, deadZone: 8, range: 90 });
+  useTiltSteer(analog, touchUI && method === 'tilt' && phase === 'run' && session.isPlaying);
 
   useInProgress(session.isPlaying || session.isPaused);
   usePauseOnInterrupt(session.pause);
@@ -177,7 +207,10 @@ function Ride({ mode, frame, record, onMenu }) {
         const t = touch.current;
         const input = {
           throttle: (pressed.has('up') || t.up ? 1 : 0) - (pressed.has('down') || t.down ? 1 : 0),
-          steer: (pressed.has('right') || t.right ? 1 : 0) - (pressed.has('left') || t.left ? 1 : 0),
+          steer: Math.max(
+            -1,
+            Math.min(1, (pressed.has('right') || t.right ? 1 : 0) - (pressed.has('left') || t.left ? 1 : 0) + drag.steerRef.current + analog.current),
+          ),
         };
         view.current.reduced = reduced;
         for (const event of step(world.current, input, dt)) {
@@ -243,7 +276,7 @@ function Ride({ mode, frame, record, onMenu }) {
         };
 
   return (
-    <div className={cx('game-stage', 'rider', touchUI && 'has-touch')}>
+    <div className={cx('game-stage', 'rider', touchUI && 'has-touch')} {...(method === 'swipe' ? drag.handlers : {})}>
       <canvas ref={canvasRef} role="img" aria-label={`Carretera vista desde detrás de la moto. Escenario: ${hud.scene}.`} />
       <GameHUD
         onPause={phase === 'run' ? session.togglePause : undefined}
@@ -254,8 +287,22 @@ function Ride({ mode, frame, record, onMenu }) {
           goalItem,
         ]}
       />
-      {touchUI && phase !== 'over' && <DriveControls key={round} inputRef={touch} side={lowLandscape} />}
-      {phase === 'run' && <ControlsHint key={round} touch="Pedales a la derecha · dirección a la izquierda" desktop="↑ acelerar · ↓ frenar · ← → cambiar de carril · Esc pausa" />}
+      {touchUI && phase !== 'over' && <RiderControls key={round} inputRef={touch} method={method} side={lowLandscape} />}
+      {!touchUI && phase !== 'over' && <KeyLegend />}
+      {method === 'swipe' && <DragIndicator indicator={drag.indicator} />}
+      {phase === 'run' && (
+        <ControlsHint
+          key={round}
+          touch={
+            method === 'tilt'
+              ? 'Inclina el teléfono para girar · gas y freno a la derecha'
+              : method === 'swipe'
+                ? 'Desliza sobre la carretera para girar · gas y freno a la derecha'
+                : 'Manillar a la izquierda · gas y freno a la derecha'
+          }
+          desktop="↑ acelerar · ↓ frenar · ← → cambiar de carril · Esc pausa"
+        />
+      )}
       {phase === 'countdown' && portraitPhone && (
         <p className="rotate-hint">
           <Smartphone aria-hidden="true" /> En horizontal verás más carretera
@@ -273,7 +320,19 @@ function Ride({ mode, frame, record, onMenu }) {
           }}
         />
       )}
-      {session.isPaused && phase === 'run' && <PauseMenu onResume={session.resume} onRestart={restart} onExit={frame.exit} />}
+      {session.isPaused && phase === 'run' && (
+        <PauseMenu onResume={session.resume} onRestart={restart} onExit={frame.exit}>
+          <p>El juego está detenido. Nada avanza hasta que continúes.</p>
+          {touchUI && (
+            <details className="tr-pause-controls">
+              <summary>
+                <Settings2 aria-hidden="true" /> Controles
+              </summary>
+              <ControlSettings value={method} onChange={saveControl} />
+            </details>
+          )}
+        </PauseMenu>
+      )}
       {result && (
         <GameResults
           outcome={result.outcome === 'done' ? 'win' : 'lose'}

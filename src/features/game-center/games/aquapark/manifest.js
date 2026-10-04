@@ -11,7 +11,7 @@ export const aquaparkManifest = {
   categories: ['carreras', 'habilidad', 'arcade'],
   Art: AquaparkArt,
   palette: { a: '#1fb6d9', b: '#ff6f91' },
-  facts: [`${CIRCUITS.length} circuitos`, 'Contrarreloj', '3 bots rivales'],
+  facts: [`${CIRCUITS.length} circuitos`, 'Contrarreloj', 'Bots Pro, Regular y Fácil'],
   objective: 'Llegar a la meta del tobogán con el mejor tiempo posible. Cada circuito superado desbloquea el siguiente.',
   howTo: [
     'En las curvas, la fuerza te empuja hacia fuera: gira hacia dentro para mantener la línea.',

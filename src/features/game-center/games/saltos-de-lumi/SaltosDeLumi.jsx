@@ -5,7 +5,7 @@ import { GameHUD } from '../../components/GameHUD.jsx';
 import { PauseMenu } from '../../components/GameOverlay.jsx';
 import { GameResults } from '../../components/GameResults.jsx';
 import { Countdown } from '../../components/Countdown.jsx';
-import { ControlsHint, PlatformControls } from '../../components/TouchControls.jsx';
+import { ControlsHint, PlatformControls, useTouchUI } from '../../components/TouchControls.jsx';
 import { useCanvas } from '../../hooks/useCanvas.js';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useGameSession } from '../../hooks/useGameSession.js';
@@ -94,13 +94,17 @@ function Play({ index, frame, onMenu, onNext }) {
   const session = useGameSession(GAME_ID);
   const audio = useGameAudio();
   const reduced = useReducedMotion();
-  const touchUI = useMediaQuery('(hover: none), (pointer: coarse)');
+  const touchUI = useTouchUI();
   const portraitPhone = useMediaQuery('(orientation: portrait) and (max-width: 599px)');
   const lowLandscape = useMediaQuery('(orientation: landscape) and (max-height: 500px)');
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState('countdown');
   const [hud, setHud] = useState({ coins: 0, lives: 3, time: 0 });
   const [result, setResult] = useState(null);
+  // Al ganar: la vela se enciende (≈1,6 s) y solo después entra el menú.
+  const [lighting, setLighting] = useState(false);
+  const lightTimer = useRef(null);
+  useEffect(() => () => clearTimeout(lightTimer.current), []);
   const world = useRef(createWorld(def));
   const view = useRef(createRenderState());
   const touch = useRef(NO_INPUT);
@@ -127,8 +131,20 @@ function Play({ index, frame, onMenu, onNext }) {
       const w = world.current;
       const time = Math.round(w.t * 100) / 100;
       setPhase('over');
-      setResult({ outcome, time, coins: w.coinCount, deaths: w.deaths, saving: true });
       const won = outcome === 'win';
+      const summary = { outcome, time, coins: w.coinCount, deaths: w.deaths, saving: true };
+      if (won) {
+        view.current.litAt = view.current.time;
+        setLighting(true);
+        clearTimeout(lightTimer.current);
+        lightTimer.current = setTimeout(
+          () => {
+            setLighting(false);
+            setResult((r) => r ?? summary);
+          },
+          reduced ? 400 : 1700,
+        );
+      } else setResult(summary);
       const saved = await finish({
         completed: won,
         marks: won
@@ -144,9 +160,11 @@ function Play({ index, frame, onMenu, onNext }) {
           stomps: (p.stomps ?? 0) + w.stomps,
         }),
       });
+      summary.saving = false;
+      summary.timeMark = saved.marks[`time:${def.id}`];
       setResult((r) => r && { ...r, saving: false, timeMark: saved.marks[`time:${def.id}`] });
     },
-    [finish, def.id],
+    [finish, def.id, reduced],
   );
 
   const keys = useKeyboard({
@@ -190,10 +208,12 @@ function Play({ index, frame, onMenu, onNext }) {
       }
       draw(running || phase === 'over' ? dt : 0);
     },
-    phase === 'countdown' || (phase === 'run' && session.isPlaying),
+    phase === 'countdown' || (phase === 'run' && session.isPlaying) || lighting,
   );
 
   const restart = useCallback(() => {
+    clearTimeout(lightTimer.current);
+    setLighting(false);
     resetSession();
     world.current = createWorld(def);
     view.current = createRenderState();

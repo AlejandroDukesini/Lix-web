@@ -1,5 +1,5 @@
 import { captionFade, constellationTip, distanceRemaining, formatDistance, revealsFor, SCENE_IDS } from './timeline.js';
-import { EYEPIECE, projectToArea } from './Telescope.jsx';
+import { EYEPIECE, projectToArea, RIG_VIEWBOX } from './Telescope.jsx';
 import { EARTH_STRIP } from './Earth.jsx';
 
 /**
@@ -79,6 +79,13 @@ export function applyFrame(nodes, frame, { layout, raw, progress, reduced, total
       Object.assign(node.style, { left: px(area.x), top: px(area.y), width: px(area.width), height: px(area.height) });
     }
     nodes.eyepiece?.style.setProperty('--candle-em', px(frame.iris.targetRadius / 14.5));
+    // Unidades SVG por píxel de pantalla: los rótulos (fechas, notas del telescopio)
+    // conservan un tamaño mínimo legible aunque la ilustración se reduzca mucho.
+    const constellationUnit = 1000 / Math.max(1, Math.min(area.width, area.height) * 0.92);
+    nodes.constellation?.style.setProperty('--svg-px', n3(constellationUnit));
+    nodes.constellation?.toggleAttribute('data-compact', constellationUnit > 2.4);
+    const [, , rigW, rigH] = RIG_VIEWBOX;
+    nodes.rig?.style.setProperty('--svg-px', n3(1 / Math.max(0.001, Math.min(area.width / rigW, area.height / rigH))));
     // La ficha del objeto va donde quepa: a la izquierda del círculo, encima o, si no hay sitio, dentro de la lente.
     const r = frame.iris.targetRadius;
     const spaceLeft = frame.center.x - r;

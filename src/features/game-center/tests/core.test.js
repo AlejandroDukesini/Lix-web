@@ -182,8 +182,8 @@ describe('registro de juegos', () => {
     expect(summary).toMatchObject({ plays: 4, completions: 2, totalTimeMs: 60_000, lastPlayed: { id: 'tunnel-runner' } });
     // 1 nivel de IA (guardado con el id antiguo «novato», que equivale a «Niño») + 2 hitos de distancia.
     expect(summary.milestonesDone).toBe(3);
-    // Fase 1: 3 circuitos + 3 minijuegos + 20 niveles + 5 niveles de IA + 3 hitos; más los de cada juego nuevo.
+    // Fase 1: 6 circuitos + 3 minijuegos + 20 niveles + 5 niveles de IA + 3 hitos; más los de cada juego nuevo.
     const phase2 = GAMES.filter((g) => g.phase >= 2).reduce((sum, g) => sum + g.progress(null).total, 0);
-    expect(summary.milestonesTotal).toBe(3 + 3 + 20 + 5 + 3 + phase2);
+    expect(summary.milestonesTotal).toBe(6 + 3 + 20 + 5 + 3 + phase2);
   });
 });

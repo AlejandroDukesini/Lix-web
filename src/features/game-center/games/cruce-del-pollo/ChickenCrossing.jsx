@@ -4,7 +4,7 @@ import { GameHUD } from '../../components/GameHUD.jsx';
 import { PauseMenu } from '../../components/GameOverlay.jsx';
 import { GameResults } from '../../components/GameResults.jsx';
 import { Countdown } from '../../components/Countdown.jsx';
-import { ControlsHint, DPad, useSwipe } from '../../components/TouchControls.jsx';
+import { ControlsHint, useSwipe } from '../../components/TouchControls.jsx';
 import { useCanvas } from '../../hooks/useCanvas.js';
 import { useGameLoop } from '../../hooks/useGameLoop.js';
 import { useGameSession } from '../../hooks/useGameSession.js';
@@ -14,7 +14,7 @@ import { useGameFrame, useInProgress, usePauseOnInterrupt } from '../../hooks/us
 import { useKeyboard } from '../../hooks/useKeyboard.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { ROUNDS, createRun, requestHop, step } from './engine/chickenEngine.js';
-import { burst, chickenScreenPoint, createRenderState, renderChicken } from './engine/chickenRenderer.js';
+import { IMPACT_SECONDS, burst, chickenScreenPoint, createRenderState, layoutFor, renderChicken } from './engine/chickenRenderer.js';
 import './styles/chicken.css';
 
 const GAME_ID = 'cruce-del-pollo';
@@ -57,6 +57,10 @@ export default function ChickenCrossing() {
   const [result, setResult] = useState(null);
   const world = useRef(createRun(Date.now()));
   const view = useRef(createRenderState());
+  // Secuencia de derrota en curso: el menú espera a que termine el impacto.
+  const [impact, setImpact] = useState(false);
+  const impactTimer = useRef(null);
+  useEffect(() => () => clearTimeout(impactTimer.current), []);
   const { start, reset: resetSession, finish } = session;
 
   const draw = useCallback((dt = 0) => renderChicken(ctxRef.current, sizeRef.current, world.current, view.current, dt), []);
@@ -89,7 +93,20 @@ export default function ChickenCrossing() {
     async (won) => {
       const state = world.current;
       setPhase('over');
-      setResult({ won, cause: state.cause, score: state.score, round: state.round, saving: true });
+      const summary = { won, cause: state.cause, score: state.score, round: state.round, saving: true };
+      if (won) setResult(summary);
+      else {
+        // Golpe → partículas → ~3 s de escena → menú (más corto con movimiento reducido).
+        setImpact(true);
+        clearTimeout(impactTimer.current);
+        impactTimer.current = setTimeout(
+          () => {
+            setImpact(false);
+            setResult((r) => r ?? summary);
+          },
+          (reduced ? 0.8 : IMPACT_SECONDS) * 1000,
+        );
+      }
       const roundsCleared = won ? ROUNDS : state.round - 1;
       const saved = await finish({
         completed: won,
@@ -99,9 +116,12 @@ export default function ChickenCrossing() {
         ],
         progress: (p) => ({ ...p, bestRound: Math.max(p.bestRound ?? 0, roundsCleared), wins: (p.wins ?? 0) + (won ? 1 : 0) }),
       });
+      // Si el menú aún espera al impacto, el resumen ya llevará el récord cuando aparezca.
+      summary.saving = false;
+      summary.mark = saved.marks.score;
       setResult((r) => r && { ...r, saving: false, mark: saved.marks.score });
     },
-    [finish],
+    [finish, reduced],
   );
 
   useGameLoop(
@@ -112,7 +132,7 @@ export default function ChickenCrossing() {
         for (const event of step(world.current, dt)) {
           if (event.type === 'dead') {
             const point = chickenScreenPoint(sizeRef.current, world.current, view.current);
-            burst(view.current, point.x, point.y, event.cause === 'car' ? 'car' : 'water');
+            burst(view.current, point.x, point.y, event.cause === 'car' ? 'car' : 'water', layoutFor(sizeRef.current).cell);
             view.current.deathAt = view.current.time;
             audio.play(event.cause === 'car' ? SFX.splat : SFX.splash);
             end(false);
@@ -131,7 +151,7 @@ export default function ChickenCrossing() {
       }
       draw(running || phase === 'over' ? dt : 0);
     },
-    phase === 'countdown' || playing || (phase === 'over' && view.current.particles.length > 0),
+    phase === 'countdown' || playing || (phase === 'over' && (impact || view.current.particles.length > 0)),
   );
 
   useEffect(() => {
@@ -141,6 +161,8 @@ export default function ChickenCrossing() {
   }, [banner]);
 
   const restart = useCallback(() => {
+    clearTimeout(impactTimer.current);
+    setImpact(false);
     resetSession();
     world.current = createRun(Date.now());
     view.current = createRenderState();
@@ -172,9 +194,13 @@ export default function ChickenCrossing() {
           },
         ]}
       />
-      {phase === 'run' && <DPad onDirection={hop} />}
       {phase === 'run' && (
-        <ControlsHint key={round} icon={Hand} touch="Toca para avanzar · desliza para moverte" desktop="Flechas o WASD para saltar · Esc para pausar" />
+        <ControlsHint
+          key={round}
+          icon={Hand}
+          touch="Desliza ↑ ↓ ← → para moverte · toca para avanzar"
+          desktop="Flechas o WASD para saltar · Esc para pausar"
+        />
       )}
       {banner && (
         <p key={banner.key} className="chicken__banner" role="status">

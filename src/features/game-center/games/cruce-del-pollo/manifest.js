@@ -27,7 +27,6 @@ export const chickenCrossingManifest = {
     touch: [
       ['Toque corto', 'Saltar hacia delante'],
       ['Desliza ↑ ↓ ← →', 'Saltar en esa dirección'],
-      ['Cruceta de la esquina', 'Alternativa con botones'],
       ['Botón de pausa', 'Pausa'],
     ],
   },

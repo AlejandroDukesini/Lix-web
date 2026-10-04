@@ -180,7 +180,7 @@
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
-  transition: transform 0.18s var(--ease-out);
+  transition: transform 0.26s var(--ease-out);
 }
 
 .jm-car.is-dragging {
@@ -190,9 +190,44 @@
 }
 
 .jm-car.is-leaving {
-  transition: transform 0.4s var(--ease-in, ease-in), opacity 0.4s;
+  /* Arranca suave, acelera hacia la salida y solo se desvanece al cruzar el borde. */
+  transition:
+    transform var(--exit-dur, 0.6s) cubic-bezier(0.45, 0, 0.75, 0.6),
+    opacity 0.2s linear calc(var(--exit-dur, 0.6s) - 0.2s);
   opacity: 0;
   z-index: 3;
+}
+
+/* Bloqueado: avanza un poco, choca y rebota a su sitio. */
+.jm-car.is-bumped {
+  z-index: 2;
+  animation: jm-bump 0.42s var(--ease-out);
+}
+
+.jm-car.is-bumped .jm-car__body {
+  outline: 3px solid #ff5a6e;
+  outline-offset: -3px;
+}
+
+@keyframes jm-bump {
+  0% {
+    translate: 0 0;
+  }
+  35% {
+    translate: calc(var(--bx) * 14%) calc(var(--by) * 14%);
+  }
+  50% {
+    translate: calc(var(--bx) * 6%) calc(var(--by) * 6%);
+  }
+  62% {
+    translate: calc(var(--bx) * 10% + var(--by) * 3px) calc(var(--by) * 10% + var(--bx) * 3px);
+  }
+  74% {
+    translate: calc(var(--bx) * 6% - var(--by) * 3px) calc(var(--by) * 6% - var(--bx) * 3px);
+  }
+  100% {
+    translate: 0 0;
+  }
 }
 
 .jm-car__body {

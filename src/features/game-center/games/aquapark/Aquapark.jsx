@@ -108,6 +108,10 @@ function Race({ circuit, onCircuits, onNext, frame }) {
   const [hud, setHud] = useState({ time: 0, position: 4, progress: 0, speed: 0 });
   const [result, setResult] = useState(null);
   const [toast, setToast] = useState(null);
+  // Tras cruzar la meta el flotador sigue hasta la piscina (≈1,4 s) antes del resultado.
+  const [arriving, setArriving] = useState(false);
+  const arriveTimer = useRef(null);
+  useEffect(() => () => clearTimeout(arriveTimer.current), []);
   const reduced = useReducedMotion();
   const race = useRef(createRace(circuit));
   const view = useRef(createAquaView());
@@ -161,6 +165,12 @@ function Race({ circuit, onCircuits, onNext, frame }) {
   useGameLoop(
     (dt) => {
       const running = phase === 'run' && session.statusRef.current === 'playing';
+      if (arriving) {
+        // Deslizamiento final hasta la piscina: sin entrada ni eventos.
+        stepRace(race.current, {}, dt);
+        draw(dt);
+        return;
+      }
       if (running) {
         const pressed = keys.current;
         const left = pressed.has('left') || touch.current.left;
@@ -171,7 +181,15 @@ function Race({ circuit, onCircuits, onNext, frame }) {
         for (const event of stepRace(race.current, input, dt)) {
           if (event.type === 'finish') {
             audio.play(SFX.finish);
-            end();
+            setArriving(true);
+            clearTimeout(arriveTimer.current);
+            arriveTimer.current = setTimeout(
+              () => {
+                setArriving(false);
+                end();
+              },
+              reduced ? 300 : 1400,
+            );
           } else if (event.type === 'checkpoint') {
             setToast({ key: event.section, text: `Tramo ${event.section} de ${event.total} superado` });
           } else {
@@ -188,10 +206,12 @@ function Race({ circuit, onCircuits, onNext, frame }) {
       }
       draw(running ? dt : dt * 0.3);
     },
-    phase === 'countdown' || (phase === 'run' && session.isPlaying),
+    phase === 'countdown' || (phase === 'run' && session.isPlaying) || arriving,
   );
 
   const restart = useCallback(() => {
+    clearTimeout(arriveTimer.current);
+    setArriving(false);
     resetSession();
     race.current = createRace(circuit);
     view.current = createAquaView();
@@ -249,7 +269,7 @@ function Race({ circuit, onCircuits, onNext, frame }) {
           }}
         />
       )}
-      {session.isPaused && phase === 'run' && <PauseMenu onResume={session.resume} onRestart={restart} onExit={frame.exit} />}
+      {session.isPaused && phase === 'run' && !arriving && <PauseMenu onResume={session.resume} onRestart={restart} onExit={frame.exit} />}
       {result && (
         <GameResults
           outcome={position === 1 ? 'win' : 'end'}

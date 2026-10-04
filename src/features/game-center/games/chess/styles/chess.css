@@ -528,3 +528,25 @@
     gap: var(--space-5);
   }
 }
+
+/* Color asignado (sobre todo si salió por sorteo). */
+.chess__assigned {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.chess__assigned-tag {
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--game-a, var(--c-primary)) 22%, transparent);
+  color: var(--accent-text);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

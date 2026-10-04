@@ -1,7 +1,8 @@
-import { Gauge, Layers, Moon, Sparkle, Sun } from 'lucide-react';
+import { Gauge, Layers, Moon, Sparkle, Sun, WandSparkles as Wand } from 'lucide-react';
 import { usePreferences } from '../../../app/providers/PreferencesProvider.jsx';
 import { SegmentedControl } from '../../../components/common/SegmentedControl.jsx';
 import { SettingsSection, useSavedNotice } from '../SettingsSection.jsx';
+import { withThemeTransition } from '../../../utils/themeTransition.js';
 
 /** Miniatura de cada estilo dibujada con CSS, para elegir viendo el resultado. */
 function StylePreview({ variant }) {
@@ -34,7 +35,7 @@ export function AppearanceSection() {
         layout="cards"
         value={style}
         onChange={(value) => {
-          update('appearance', { style: value });
+          withThemeTransition(() => update('appearance', { style: value }));
           notifySaved(value === 'glass' ? 'Estilo Glassmorphism activado' : 'Estilo Maximalismo activado');
         }}
         options={[
@@ -59,7 +60,7 @@ export function AppearanceSection() {
         label="Tema"
         value={theme}
         onChange={(value) => {
-          update('appearance', { theme: value });
+          withThemeTransition(() => update('appearance', { theme: value }));
           notifySaved(value === 'dark' ? 'Tema oscuro activado' : 'Tema claro activado');
         }}
         options={[
@@ -74,9 +75,10 @@ export function AppearanceSection() {
         value={motion}
         onChange={(value) => {
           update('appearance', { motion: value });
-          notifySaved(value === 'reduced' ? 'Animaciones reducidas' : 'Animaciones según el sistema');
+          notifySaved({ full: 'Animaciones activadas', reduced: 'Animaciones reducidas', system: 'Animaciones según el sistema' }[value]);
         }}
         options={[
+          { value: 'full', label: 'Activadas', description: 'Transiciones y efectos siempre, aunque el sistema los tenga apagados.', icon: Wand },
           { value: 'system', label: 'Según el sistema', description: 'Respeta la preferencia de movimiento del dispositivo.', icon: Sparkle },
           { value: 'reduced', label: 'Reducidas', description: 'Sin desplazamientos ni efectos; todo sigue funcionando.', icon: Gauge },
         ]}

@@ -269,3 +269,15 @@ describe('cinco niveles de IA', () => {
     }
   });
 });
+
+describe('color de la partida', () => {
+  it('«Aleatorio» se resuelve a blancas o negras antes de empezar', async () => {
+    const { resolveColor } = await import('../Chess.jsx');
+    const { WHITE, BLACK } = await import('../engine/chessEngine.js');
+    expect(resolveColor('random', () => 0.2)).toBe(WHITE);
+    expect(resolveColor('random', () => 0.8)).toBe(BLACK);
+    expect(resolveColor(BLACK)).toBe(BLACK);
+    expect(resolveColor(WHITE)).toBe(WHITE);
+    expect(resolveColor(undefined)).toBe(WHITE);
+  });
+});

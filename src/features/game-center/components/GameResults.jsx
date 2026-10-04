@@ -26,8 +26,9 @@ export function GameResults({ outcome = 'end', eyebrow, title, message, stats = 
             </Button>
           )}
           {extraActions}
-          <Button variant="ghost" icon={DoorOpen} onClick={onExit}>
-            Volver al Game Center
+          {/* Texto visible corto (cabe en Celular mini); el nombre accesible sigue siendo el completo. */}
+          <Button variant="ghost" icon={DoorOpen} onClick={onExit} aria-label="Volver al Game Center">
+            Game Center
           </Button>
         </>
       }

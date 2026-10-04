@@ -5,7 +5,7 @@ import { Button } from '../../../components/common/Button.jsx';
 import { Badge } from '../../../components/common/Card.jsx';
 import { ConfirmDialog } from '../../../components/common/Dialog.jsx';
 import { useToast } from '../../../components/feedback/ToastProvider.jsx';
-import { parseBackup, serializeBackup } from '../../../services/preferences/preferencesService.js';
+import { MAX_BACKUP_BYTES, parseFullBackup, restoreFullBackup, serializeFullBackup } from '../../../services/backup/backupService.js';
 import { isIndexedDBAvailable } from '../../../services/storage/database.js';
 import { formatBytes, getStorageStatus, requestPersistentStorage } from '../../../services/storage/storageStatus.js';
 import { toISODate } from '../../../utils/dates.js';
@@ -49,30 +49,51 @@ export function DataSection() {
     });
   };
 
-  const exportBackup = () => {
-    downloadText(`un-ano-mas-contigo-${toISODate(new Date())}.json`, serializeBackup(preferences));
-    notifySaved('Copia descargada');
+  const [busy, setBusy] = useState(false);
+
+  const exportBackup = async () => {
+    setBusy(true);
+    try {
+      // Se esperan todas las lecturas (IndexedDB incluido) antes de generar el archivo.
+      const text = await serializeFullBackup({ preferences });
+      downloadText(`un-ano-mas-contigo-${toISODate(new Date())}.json`, text);
+      notifySaved('Copia descargada');
+    } catch (error) {
+      if (import.meta.env.DEV) console.warn('[backup] Exportación fallida', error);
+      toast({ tone: 'error', message: 'No se pudo generar la copia. Inténtalo de nuevo.' });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const readImport = async (event) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (file.size > 512 * 1024) {
+    if (file.size > MAX_BACKUP_BYTES) {
       toast({ tone: 'error', message: 'El archivo es demasiado grande para ser una copia de la app.' });
       return;
     }
     try {
-      setPendingImport(parseBackup(await file.text()));
+      setPendingImport(parseFullBackup(await file.text()));
     } catch (error) {
       toast({ tone: 'error', message: error.message });
     }
   };
 
-  const confirmImport = () => {
-    replace(pendingImport.preferences);
+  const confirmImport = async () => {
+    const plan = pendingImport;
     setPendingImport(null);
-    notifySaved('Copia restaurada');
+    setBusy(true);
+    try {
+      await restoreFullBackup(plan, { replacePreferences: replace });
+      notifySaved('Copia restaurada');
+    } catch (error) {
+      if (import.meta.env.DEV) console.warn('[backup] Restauración fallida', error);
+      toast({ tone: 'error', message: `No se restauró la copia: ${error.message} Tus datos actuales no se modificaron.` });
+    } finally {
+      setBusy(false);
+    }
   };
 
   const confirmReset = () => {
@@ -138,12 +159,12 @@ export function DataSection() {
         copia de vez en cuando.
       </p>
 
-      <SettingsGroup title="Copia de seguridad" description="Un archivo con tus preferencias para guardarlo o pasarlo a otro dispositivo.">
+      <SettingsGroup title="Copia de seguridad" description="Un archivo con tu configuración, estadísticas, récords, niveles y ajustes de cada juego, para guardarlo o pasarlo a otro dispositivo.">
         <div className="settings-actions settings-actions--start">
-          <Button variant="secondary" icon={Download} onClick={exportBackup}>
+          <Button variant="secondary" icon={Download} onClick={exportBackup} disabled={busy}>
             Descargar copia
           </Button>
-          <Button variant="secondary" icon={Upload} onClick={() => fileInput.current?.click()}>
+          <Button variant="secondary" icon={Upload} onClick={() => fileInput.current?.click()} disabled={busy}>
             Restaurar copia
           </Button>
           <input ref={fileInput} type="file" accept="application/json,.json" className="sr-only" tabIndex={-1} onChange={readImport} aria-hidden="true" />
@@ -181,12 +202,26 @@ export function DataSection() {
       <ConfirmDialog
         open={Boolean(pendingImport)}
         title="¿Restaurar esta copia?"
-        description="Reemplazará la configuración actual por la del archivo."
+        description="Reemplazará los datos actuales de este dispositivo por los del archivo."
         confirmLabel="Restaurar"
         tone="primary"
         onConfirm={confirmImport}
         onCancel={() => setPendingImport(null)}
       >
+        {pendingImport && (
+          <ul className="backup-summary">
+            {pendingImport.sections
+              .filter((section) => section.summary)
+              .map((section) => (
+                <li key={section.id}>
+                  <strong>{section.label}:</strong> {section.summary}
+                </li>
+              ))}
+          </ul>
+        )}
+        {pendingImport?.legacy && (
+          <p className="settings-note">Es una copia antigua: solo contiene la configuración. Los datos de juegos actuales se conservan.</p>
+        )}
         {pendingImport?.issues.length > 0 && (
           <p className="settings-note">Algunos valores del archivo no eran válidos y se usarán los predeterminados en su lugar.</p>
         )}

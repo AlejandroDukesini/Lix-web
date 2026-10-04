@@ -310,6 +310,10 @@ function drawProps(ctx, world, view, reduced) {
   // Vela final: se enciende al llegar.
   const { base } = level.goal;
   const lit = world.status === 'won';
+  // Encendido progresivo: la llama nace pequeña, crece y el halo se abre (view.litAt).
+  const since = lit && view.litAt != null ? view.time - view.litAt : 1.6;
+  const grow = reduced ? 1 : Math.min(1, since / 1.1);
+  const ease = 1 - (1 - grow) ** 3;
   ctx.fillStyle = '#f6ecd9';
   roundRect(ctx, base.x + 3, base.y - 18, 10, 34, 2);
   ctx.fill();
@@ -318,14 +322,33 @@ function drawProps(ctx, world, view, reduced) {
   ctx.fillStyle = '#3a2a2a';
   ctx.fillRect(base.x + 7.5, base.y - 22, 1, 4);
   if (lit) {
-    const g = ctx.createRadialGradient(base.x + 8, base.y - 26, 1, base.x + 8, base.y - 26, 40);
-    g.addColorStop(0, 'rgba(255, 190, 90, 0.8)');
+    const fx = base.x + 8;
+    const fy = base.y - 22;
+    const flicker = reduced ? 1 : 1 + Math.sin(t * 18) * 0.06 * grow;
+    const halo = 14 + 46 * ease;
+    const g = ctx.createRadialGradient(fx, fy - 5, 1, fx, fy - 5, halo);
+    g.addColorStop(0, `rgba(255, 190, 90, ${0.85 * ease})`);
     g.addColorStop(1, 'rgba(255, 190, 90, 0)');
     ctx.fillStyle = g;
-    ctx.fillRect(base.x - 32, base.y - 66, 80, 80);
-    ctx.fillStyle = '#ffcf5a';
+    ctx.fillRect(fx - halo, fy - 5 - halo, halo * 2, halo * 2);
+    // Aro de luz que se expande una vez al prender.
+    if (!reduced && since < 1.2) {
+      const k = since / 1.2;
+      ctx.strokeStyle = `rgba(255, 230, 170, ${0.8 * (1 - k)})`;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(fx, fy - 5, 6 + k * 40, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+    // Llama: de una chispa a su tamaño, con núcleo claro.
+    const h = 7 * Math.max(0.15, ease) * flicker;
+    ctx.fillStyle = '#ff9f43';
     ctx.beginPath();
-    ctx.ellipse(base.x + 8, base.y - 27, 3, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(fx, fy - h * 0.75, 3.4 * Math.max(0.3, ease), h, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff3c4';
+    ctx.beginPath();
+    ctx.ellipse(fx, fy - h * 0.55, 1.6 * Math.max(0.3, ease), h * 0.5, 0, 0, Math.PI * 2);
     ctx.fill();
   } else {
     // Una pequeña marca para que se vea la meta desde lejos.
@@ -365,7 +388,9 @@ export function renderLumi(ctx, size, world, view, dt = 0, { reduced = false, in
   // esquinas no tapen a Lumi al principio o al final del nivel.
   const margin = insetX / scale;
   const clampX = (x) => (levelW <= visW ? (levelW - visW) / 2 : Math.max(-margin, Math.min(levelW - visW + margin, x)));
-  const clampY = (y) => (levelH <= visH ? levelH - visH : Math.max(0, Math.min(levelH - visH, y)));
+  // Nivel más bajo que la vista: se centra en vertical (antes quedaba pegado abajo,
+  // sobre los controles, con medio cielo vacío encima).
+  const clampY = (y) => (levelH <= visH ? (levelH - visH) / 2 : Math.max(0, Math.min(levelH - visH, y)));
   if (view.camX === null || world.respawn > 0) {
     view.camX = clampX(targetX);
     view.camY = clampY(targetY);

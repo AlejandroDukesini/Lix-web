@@ -13,7 +13,7 @@ import { useGameAudio } from '../../hooks/useGameAudio.js';
 import { useGameFrame, useInProgress, usePauseOnInterrupt } from '../../hooks/useGameFrame.js';
 import { useKeyboard } from '../../hooks/useKeyboard.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
-import { MILESTONES, createTunnel, scoreOf, sectorName, step } from './engine/tunnelEngine.js';
+import { MILESTONES, createTunnel, scoreOf, step, zoneOf } from './engine/tunnelEngine.js';
 import { createRenderState, renderTunnel } from './engine/tunnelRenderer.js';
 import './styles/tunnel-runner.css';
 
@@ -39,7 +39,7 @@ export default function TunnelRunner() {
   const audio = useGameAudio();
   const [round, setRound] = useState(0);
   const [phase, setPhase] = useState('countdown'); // countdown | run | over
-  const [hud, setHud] = useState({ distance: 0, speed: 0, sector: 0 });
+  const [hud, setHud] = useState({ distance: 0, speed: 0, zone: 0 });
   const [banner, setBanner] = useState(null);
   const [result, setResult] = useState(null);
   const world = useRef(createTunnel(Date.now()));
@@ -67,7 +67,7 @@ export default function TunnelRunner() {
     const state = world.current;
     const distance = scoreOf(state);
     setPhase('over');
-    setResult({ distance, sector: state.sector, passed: state.passed, saving: true });
+    setResult({ distance, zone: state.zone, passed: state.passed, saving: true });
     const saved = await finish({
       completed: false,
       marks: [{ key: 'distance', value: distance, better: 'higher' }],
@@ -93,9 +93,10 @@ export default function TunnelRunner() {
             view.current.flash = 1;
             view.current.shake = 1;
             end();
-          } else if (event.type === 'sector') {
+          } else if (event.type === 'zone') {
+            // Cada 1000 m: nuevo tramo (aspecto del túnel), anunciado sin detener nada.
             audio.play(SFX.sector);
-            setBanner({ sector: event.sector, key: Date.now() });
+            setBanner({ zone: event.zone, key: Date.now() });
           } else if (event.type === 'pass') {
             audio.play(SFX.pass);
           }
@@ -104,7 +105,7 @@ export default function TunnelRunner() {
         if (hudClock.current > 0.1) {
           hudClock.current = 0;
           const s = world.current;
-          setHud({ distance: scoreOf(s), speed: Math.round(s.speed * 3.6), sector: s.sector });
+          setHud({ distance: scoreOf(s), speed: Math.round(s.speed * 3.6), zone: s.zone });
         }
       }
       draw(running ? dt : dt * 0.25);
@@ -123,7 +124,7 @@ export default function TunnelRunner() {
     world.current = createTunnel(Date.now());
     view.current = createRenderState();
     touch.current = { left: false, right: false };
-    setHud({ distance: 0, speed: 0, sector: 0 });
+    setHud({ distance: 0, speed: 0, zone: 0 });
     setResult(null);
     setBanner(null);
     setPhase('countdown');
@@ -144,7 +145,7 @@ export default function TunnelRunner() {
         items={[
           { id: 'distance', label: 'Distancia', value: `${hud.distance.toLocaleString('es')} m` },
           { id: 'speed', label: 'Velocidad', value: `${hud.speed} km/h` },
-          { id: 'sector', label: `Sector ${hud.sector + 1}`, value: sectorName(hud.sector) },
+          { id: 'zone', label: `Tramo ${hud.zone + 1}`, value: zoneOf(hud.zone).name },
           {
             id: 'best',
             label: 'Récord',
@@ -164,7 +165,7 @@ export default function TunnelRunner() {
       )}
       {banner && (
         <p key={banner.key} className="tunnel__banner" role="status">
-          <span>Sector {banner.sector + 1}</span> {sectorName(banner.sector)}
+          <span>{(banner.zone * 1000).toLocaleString('es')} m · Tramo {banner.zone + 1}</span> {zoneOf(banner.zone).name}
         </p>
       )}
       {phase === 'countdown' && (
@@ -194,8 +195,8 @@ export default function TunnelRunner() {
               record: result.mark?.isRecord,
               best: result.mark && !result.mark.isRecord ? `${result.mark.best.toLocaleString('es')} m` : null,
             },
-            { label: 'Sector', value: `${result.sector + 1} · ${sectorName(result.sector)}` },
-            { label: 'Anillos', value: String(result.passed) },
+            { label: 'Tramo', value: `${result.zone + 1} · ${zoneOf(result.zone).name}` },
+            { label: 'Obstáculos', value: String(result.passed) },
           ]}
           onReplay={restart}
           onExit={frame.exit}

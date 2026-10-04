@@ -122,6 +122,29 @@ export async function dbEntries(storeName) {
   return keys.map((key, index) => [key, values[index]]);
 }
 
+/**
+ * Sustituye todo el contenido de un store por `entries` ([clave, valor]) en una
+ * única transacción: o se aplica completo o no se aplica nada (restaurar copias).
+ */
+export async function dbReplaceAll(storeName, entries) {
+  const db = await openDatabase();
+  const tx = db.transaction(storeName, 'readwrite');
+  const store = tx.objectStore(storeName);
+  const done = new Promise((resolve, reject) => {
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error ?? new Error('Transacción cancelada'));
+  });
+  try {
+    store.clear();
+    for (const [key, value] of entries) store.put(value, key);
+  } catch (error) {
+    tx.abort();
+    throw error;
+  }
+  await done;
+}
+
 /** Borra la base de datos completa. Se usa solo en "Borrar todos los datos". */
 export async function deleteDatabase() {
   if (!isIndexedDBAvailable()) return;

@@ -385,12 +385,11 @@
 }
 
 .game-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  padding-block: 2px 6px;
 }
 
 .game-chip {
+  white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
@@ -767,6 +766,8 @@
 }
 
 .game-token svg {
+  aspect-ratio: 1;
+  flex: none;
   grid-row: span 2;
   width: 30px;
   height: 30px;
@@ -822,6 +823,18 @@
   }
   .game-token__value {
     font-size: var(--text-md);
+    /* "12 h 05 min" cabe partiendo la línea; nunca se corta con puntos suspensivos. */
+    white-space: normal;
+    overflow: visible;
+    text-wrap: balance;
+  }
+  /* "Tiempo jugado" en ~85 px: la etiqueta se reparte en dos líneas en vez de salirse. */
+  .game-token__label {
+    white-space: normal;
+    overflow: visible;
+    text-wrap: balance;
+    letter-spacing: 0.03em;
+    line-height: 1.25;
   }
 }
 
@@ -1153,15 +1166,14 @@
   .game-sound {
     padding: var(--space-4);
   }
-  .game-chips {
-    flex-wrap: nowrap;
-    overflow-x: auto;
+  .game-chips-scroller {
     margin-inline: calc(var(--gutter) * -1);
-    padding: 2px var(--gutter);
-    scrollbar-width: none;
+  }
+  .game-chips {
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
   }
   .game-chip {
-    flex: none;
-    min-height: 34px;
+    min-height: 36px;
   }
 }

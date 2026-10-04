@@ -16,7 +16,12 @@ import {
   spacingAt,
   speedAt,
   step,
+  OBSTACLE_TYPES,
+  ZONE_LENGTH,
+  obstacleZ,
+  zoneAt,
 } from '../engine/tunnelEngine.js';
+import { lookAt } from '../engine/tunnelRenderer.js';
 import { createRng } from '../../../services/gameLifecycle.js';
 
 const DT = 1 / 60;
@@ -127,5 +132,73 @@ describe('generación de obstáculos', () => {
     expect(fresh.distance).toBe(0);
     expect(fresh.alive).toBe(true);
     expect(fresh.passed).toBe(0);
+  });
+});
+
+describe('variedad de obstáculos y tramos visuales', () => {
+  const series = (seed, meters) => {
+    const state = createTunnel(seed);
+    while (state.rings.at(-1).z < meters) state.rings.push(nextRing(state));
+    return state.rings;
+  };
+
+  it('aparecen las seis combinaciones de tamaño y velocidad, además de los anillos', () => {
+    const seen = new Set();
+    for (let seed = 1; seed <= 10; seed += 1) for (const o of series(seed, 6000)) seen.add(o.kind === 'ring' ? 'ring' : o.type);
+    for (const type of OBSTACLE_TYPES) expect(seen.has(type.id)).toBe(true);
+    expect(seen.has('ring')).toBe(true);
+  });
+
+  it('cada obstáculo tiene tamaño, velocidad, posición, colisión y dificultad dentro del presupuesto', () => {
+    for (const o of series(3, 6000)) {
+      expect(['small', 'medium', 'large', 'ring']).toContain(o.size);
+      expect(o.approach).toBeGreaterThanOrEqual(0);
+      expect(Number.isFinite(o.center)).toBe(true);
+      expect(o.blocked.filter(Boolean).length).toBeGreaterThan(0);
+      expect(collides(o, o.center)).toBe(false);
+      const type = OBSTACLE_TYPES.find((t) => t.id === o.type);
+      if (type) expect(o.z).toBeGreaterThanOrEqual(type.from);
+    }
+  });
+
+  it('los rápidos se acercan más deprisa pero llegan exactamente a su punto de encuentro', () => {
+    const fast = series(5, 6000).find((o) => o.approach > 0);
+    expect(fast).toBeTruthy();
+    expect(obstacleZ(fast, fast.z - 100)).toBeGreaterThan(fast.z);
+    expect(obstacleZ(fast, fast.z)).toBe(fast.z);
+  });
+
+  it('nunca hay dos obstáculos rápidos seguidos (siempre se ve venir el siguiente)', () => {
+    for (let seed = 1; seed <= 10; seed += 1) {
+      const list = series(seed, 6000);
+      for (let i = 1; i < list.length; i += 1) expect(list[i].approach > 0 && list[i - 1].approach > 0).toBe(false);
+    }
+  });
+
+  it('el autopiloto sobrevive 6 km con todos los tipos (secuencias posibles)', () => {
+    for (let seed = 1; seed <= 8; seed += 1) {
+      const state = createTunnel(seed);
+      while (state.distance < 6000) {
+        step(state, autopilot(state), DT);
+        if (!state.alive) throw new Error(`Semilla ${seed}: choque en ${Math.round(state.distance)} m`);
+      }
+    }
+  });
+
+  it('cada 1000 m cambia de tramo con un fundido gradual y sin cambiar la dificultad de golpe', () => {
+    expect(zoneAt(999)).toBe(0);
+    expect(zoneAt(1000)).toBe(1);
+    const state = createTunnel(9);
+    const events = [];
+    while (state.distance < 1050 && state.alive) events.push(...step(state, autopilot(state), DT));
+    expect(events.some((e) => e.type === 'zone' && e.zone === 1)).toBe(true);
+    const before = lookAt(ZONE_LENGTH - 81);
+    const mid = lookAt(ZONE_LENGTH - 40);
+    const after = lookAt(ZONE_LENGTH + 1);
+    expect(before.t).toBe(0);
+    expect(mid.t).toBeGreaterThan(0.4);
+    expect(mid.t).toBeLessThan(0.6);
+    expect(after.zone.id).not.toBe(before.zone.id);
+    expect(speedAt(1001) - speedAt(999)).toBeLessThan(0.1);
   });
 });

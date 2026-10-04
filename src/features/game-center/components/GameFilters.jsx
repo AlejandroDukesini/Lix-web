@@ -1,6 +1,7 @@
-import { useId } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { cx } from '../../../utils/cx.js';
+import { HorizontalScroller } from '../../../components/common/HorizontalScroller.jsx';
 
 /**
  * Búsqueda local e inmediata + filtro por categoría. No hay ninguna petición:
@@ -8,6 +9,14 @@ import { cx } from '../../../utils/cx.js';
  */
 export function GameFilters({ query, onQuery, category, onCategory, categories, resultCount }) {
   const id = useId();
+  const scroller = useRef(null);
+  const activeChip = useRef(null);
+
+  // La categoría elegida queda a la vista dentro del carrusel (sin mover la página).
+  useEffect(() => {
+    scroller.current?.scrollToItem(activeChip.current);
+  }, [category]);
+
   return (
     <div className="game-filters">
       <div className="game-search">
@@ -32,12 +41,13 @@ export function GameFilters({ query, onQuery, category, onCategory, categories, 
           </button>
         )}
       </div>
-      <div className="game-chips" role="group" aria-label="Filtrar por categoría">
+      <HorizontalScroller ref={scroller} className="game-chips-scroller" trackClassName="game-chips" role="group" label="Filtrar por categoría">
         {[{ id: 'all', label: 'Todos' }, ...categories].map((item) => {
           const Icon = item.icon;
           return (
             <button
               key={item.id}
+              ref={category === item.id ? activeChip : undefined}
               type="button"
               className={cx('game-chip', category === item.id && 'is-active')}
               aria-pressed={category === item.id}
@@ -48,7 +58,7 @@ export function GameFilters({ query, onQuery, category, onCategory, categories, 
             </button>
           );
         })}
-      </div>
+      </HorizontalScroller>
       <p className="sr-only" aria-live="polite">
         {resultCount === 1 ? '1 juego encontrado' : `${resultCount} juegos encontrados`}
       </p>

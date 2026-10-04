@@ -116,7 +116,7 @@ export function ColorsSection() {
             applyPalette({ ...PALETTE_PRESETS.find((p) => p.id === DEFAULT_PALETTE_ID).colors }, 'Colores predeterminados restaurados')
           }
         >
-          Restaurar colores predeterminados
+          Restaurar colores
         </Button>
       </div>
     </SettingsSection>
