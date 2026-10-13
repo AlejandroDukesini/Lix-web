@@ -1,4 +1,4 @@
-import { CalendarHeart, Gamepad2, Heart, Play, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
+import { BookOpenText, CalendarHeart, Gamepad2, Heart, Library, Play, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
 import { usePreferences } from '../../app/providers/PreferencesProvider.jsx';
 import { UPCOMING_MODULES } from '../../app/modules.js';
 import { Button } from '../../components/common/Button.jsx';
@@ -169,6 +169,21 @@ function GamesCard() {
   );
 }
 
+function LibraryCard() {
+  return (
+    <Card as="section" className="stat-card games-card library-card" aria-labelledby="library-title">
+      <Library className="stat-card__icon" aria-hidden="true" />
+      <h2 id="library-title" className="stat-card__title">
+        Nuestra biblioteca
+      </h2>
+      <p className="stat-card__text">Estrellas, crímenes, idiomas y creencias contados como historias. Para leer sin prisa y sin conexión.</p>
+      <Button to="/documentos" icon={BookOpenText} size="sm" variant="secondary">
+        Abrir la biblioteca
+      </Button>
+    </Card>
+  );
+}
+
 function Upcoming() {
   return (
     <section className="upcoming" aria-labelledby="upcoming-title">
@@ -210,6 +225,7 @@ export function HomePage() {
         <NewYearCard />
         <ReplayCard />
         <GamesCard />
+        <LibraryCard />
       </div>
       <Upcoming />
       <p className="home__privacy">

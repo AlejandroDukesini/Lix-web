@@ -138,6 +138,13 @@
   }
 }
 
+/* La biblioteca, quinta tarjeta, ocupa la fila entera en la rejilla de dos columnas. */
+@media (min-width: 680px) and (max-width: 1179px) {
+  .library-card {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (min-width: 1180px) {
   .home__grid {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr);

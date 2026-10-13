@@ -16,6 +16,7 @@ export const STORES = Object.freeze({
   meta: 'meta',
   backups: 'backups',
   games: 'games',
+  library: 'library',
 });
 
 export const DB_MIGRATIONS = [
@@ -28,7 +29,11 @@ export const DB_MIGRATIONS = [
   (db) => {
     db.createObjectStore(STORES.games);
   },
-  // v3 (fase futura), por ejemplo:
+  // v3 — Biblioteca: estado de lectura (favoritos, progreso, marcadores) en la clave `state`.
+  (db) => {
+    db.createObjectStore(STORES.library);
+  },
+  // v4 (fase futura), por ejemplo:
   // (db) => {
   //   const journal = db.createObjectStore('journal', { keyPath: 'id' });
   //   journal.createIndex('byDate', 'date');

@@ -58,7 +58,7 @@ function NavItem({ module, onNavigate, showTeaser = false }) {
   }
   return (
     <li>
-      <NavLink to={module.path} end className={({ isActive }) => cx('nav-item', isActive && 'is-active')} onClick={onNavigate}>
+      <NavLink to={module.path} end={module.path === '/'} className={({ isActive }) => cx('nav-item', isActive && 'is-active')} onClick={onNavigate}>
         <Icon className="nav-item__icon" aria-hidden="true" />
         <span className="nav-item__text">
           <span className="nav-item__label">{module.label}</span>
@@ -107,11 +107,12 @@ export function MobileTopBar() {
 export function BottomNav({ onOpenSpaces, spacesOpen }) {
   const home = MODULES.find((m) => m.id === 'home');
   const games = MODULES.find((m) => m.id === 'games');
+  const library = MODULES.find((m) => m.id === 'documentation');
   const settings = MODULES.find((m) => m.id === 'settings');
   const link = (module, label) => {
     const Icon = module.icon;
     return (
-      <NavLink to={module.path} end className={({ isActive }) => cx('bottom-nav__item', isActive && 'is-active')}>
+      <NavLink to={module.path} end={module.path === '/'} className={({ isActive }) => cx('bottom-nav__item', isActive && 'is-active')}>
         <Icon aria-hidden="true" />
         <span>{label}</span>
       </NavLink>
@@ -122,6 +123,7 @@ export function BottomNav({ onOpenSpaces, spacesOpen }) {
     <nav className="bottom-nav" aria-label="Principal">
       {link(home, 'Inicio')}
       {games.status === 'available' && link(games, 'Juegos')}
+      {library.status === 'available' && link(library, 'Biblioteca')}
       <button
         type="button"
         className={cx('bottom-nav__item', spacesOpen && 'is-active')}

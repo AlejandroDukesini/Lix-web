@@ -13,6 +13,10 @@ const SettingsPage = lazy(() => import('../features/settings/SettingsPage.jsx'))
 const GameCenter = lazy(() => import('../features/game-center/GameCenter.jsx'));
 // Cada juego ocupa toda la pantalla: va fuera del marco general (sin barras de navegación).
 const GamePage = lazy(() => import('../features/game-center/GamePage.jsx'));
+// Biblioteca: el catálogo, el lector y el glosario. Cada documento se descarga aparte al abrirlo.
+const LibraryPage = lazy(() => import('../features/library/LibraryPage.jsx'));
+const ReaderPage = lazy(() => import('../features/library/ReaderPage.jsx'));
+const GlossaryPage = lazy(() => import('../features/library/GlossaryPage.jsx'));
 
 function PageFallback() {
   return (
@@ -74,6 +78,30 @@ function AppRoutes() {
           element={
             <Suspense fallback={<PageFallback />}>
               <GameCenter />
+            </Suspense>
+          }
+        />
+        <Route
+          path="documentos"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <LibraryPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="documentos/glosario"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <GlossaryPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="documentos/:docId"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <ReaderPage />
             </Suspense>
           }
         />

@@ -28,6 +28,7 @@ import {
   restoreGameData,
   sanitizeGameData,
 } from '../../features/game-center/services/gameStorage.js';
+import { exportLibraryData, restoreLibraryData, sanitizeLibraryState } from '../../features/library/services/libraryStorage.js';
 
 export const BACKUP_FORMAT = 'un-ano-mas-contigo/backup';
 export const LEGACY_PREFERENCES_FORMAT = 'un-ano-mas-contigo/preferences';
@@ -66,6 +67,17 @@ export const BACKUP_SOURCES = [
       const records = Object.values(value.records);
       const plays = records.reduce((sum, record) => sum + record.plays, 0);
       return `${plural(records.length, 'juego', 'juegos')} · ${plural(plays, 'partida', 'partidas')}, récords, niveles y ajustes`;
+    },
+  },
+  {
+    id: 'library',
+    label: 'Biblioteca',
+    read: () => exportLibraryData(),
+    sanitize: (raw) => sanitizeLibraryState(raw),
+    restore: (value) => restoreLibraryData(value),
+    summarize: (value) => {
+      const read = Object.values(value.progress).filter((p) => p.finishedAt).length;
+      return `${plural(read, 'lectura terminada', 'lecturas terminadas')} · ${plural(value.favorites.length, 'favorito', 'favoritos')} · ${plural(value.bookmarks.length, 'marcador', 'marcadores')}`;
     },
   },
   {

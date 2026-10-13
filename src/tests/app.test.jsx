@@ -154,13 +154,16 @@ describe('inicio y navegación', () => {
     expect(screen.getByRole('heading', { name: /Rumbo a|Feliz/ })).toBeInTheDocument();
 
     const soon = screen.getAllByText('Próximamente');
-    expect(soon).toHaveLength(4);
+    expect(soon).toHaveLength(3);
     for (const label of ['Finanzas', 'Calendario']) {
       expect(screen.queryByRole('link', { name: new RegExp(label) })).toBeNull();
     }
     // Juegos ya está disponible: navegación lateral, barra inferior y tarjeta del inicio.
     expect(screen.getAllByRole('link', { name: /Juegos/ }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole('link', { name: 'Entrar al Game Center' })).toHaveAttribute('href', '#/juegos');
+    // La biblioteca también: navegación y tarjeta del inicio.
+    expect(screen.getAllByRole('link', { name: /Biblioteca/ }).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByRole('link', { name: 'Abrir la biblioteca' })).toHaveAttribute('href', '#/documentos');
   });
 
   it('sin fecha configurada no muestra contador de días', async () => {

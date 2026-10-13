@@ -42,7 +42,7 @@ function customPreferences() {
 describe('copia de seguridad completa', () => {
   it('registra cada fuente persistente una sola vez', () => {
     const ids = BACKUP_SOURCES.map((s) => s.id);
-    expect(ids).toEqual(expect.arrayContaining(['preferences', 'games', 'meta']));
+    expect(ids).toEqual(expect.arrayContaining(['preferences', 'games', 'library', 'meta']));
     expect(new Set(ids).size).toBe(ids.length);
   });
 
@@ -71,7 +71,7 @@ describe('copia de seguridad completa', () => {
     let applied = null;
     const context = { replacePreferences: (prefs) => (applied = prefs) };
     const plan = parseFullBackup(text);
-    expect(plan.sections.map((s) => s.id)).toEqual(['preferences', 'games', 'meta']);
+    expect(plan.sections.map((s) => s.id)).toEqual(['preferences', 'games', 'library', 'meta']);
     expect(plan.sections.find((s) => s.id === 'games').summary).toMatch(/3 juegos · 3 partidas/);
 
     await restoreFullBackup(plan, context);

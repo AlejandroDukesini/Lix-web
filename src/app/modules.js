@@ -29,10 +29,10 @@ export const MODULES = [
   {
     id: 'documentation',
     path: '/documentos',
-    label: 'Documentación',
+    label: 'Biblioteca',
     icon: Library,
-    status: 'soon',
-    teaser: 'Una biblioteca para leer, buscar y guardar lo que queramos conservar.',
+    status: 'available',
+    teaser: 'Historias que enseñan: cosmos, criminalística, idiomas y creencias, sin conexión.',
   },
   {
     id: 'journal',
