@@ -1,0 +1,233 @@
+/* Stellarium — observatorio nocturno: paneles de cristal oscuro sobre el cielo. */
+
+.st {
+  background: #05060f;
+  cursor: grab;
+}
+
+.st:active {
+  cursor: grabbing;
+}
+
+.st .game-hud {
+  color: #f1f0ff;
+}
+
+.st-logbtn {
+  pointer-events: auto;
+}
+
+.st-toolbar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + var(--space-3));
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  max-width: calc(100% - 2 * var(--space-3));
+  padding: 6px;
+  border-radius: var(--radius-pill);
+  background: rgb(10 12 30 / 0.72);
+  border: 1px solid rgb(170 180 255 / 0.25);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  transform: translateX(-50%);
+  overflow-x: auto;
+  cursor: default;
+}
+
+.st-toolbar .icon-btn {
+  color: #e8e8ff;
+  flex: none;
+}
+
+.st-toolbar .icon-btn.is-on {
+  background: rgb(255 214 140 / 0.22);
+  color: #ffe2a0;
+}
+
+.st-toolbar__sep {
+  width: 1px;
+  height: 24px;
+  background: rgb(170 180 255 / 0.3);
+  flex: none;
+}
+
+.st-notice {
+  position: absolute;
+  top: calc(var(--space-3) + 124px);
+  left: 50%;
+  z-index: 5;
+  display: grid;
+  gap: 2px;
+  width: min(92%, 26rem);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  background: rgb(20 18 45 / 0.86);
+  border: 1px solid rgb(255 214 140 / 0.45);
+  color: #fff;
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: hint-in var(--dur-slow) var(--ease-out) both;
+}
+
+.st-notice strong {
+  color: #ffe2a0;
+}
+
+.st-notice span {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+
+.st-card,
+.st-day {
+  position: absolute;
+  left: calc(var(--safe-left) + var(--space-3));
+  bottom: calc(var(--safe-bottom) + var(--space-3) + 64px);
+  z-index: 4;
+  display: grid;
+  gap: var(--space-2);
+  width: min(calc(100% - 2 * var(--space-3)), 22rem);
+  max-height: 52dvh;
+  overflow-y: auto;
+  padding: var(--space-4);
+  border-radius: var(--gc-radius-lg);
+  background: rgb(12 14 34 / 0.88);
+  border: 1px solid rgb(170 180 255 / 0.28);
+  color: #ecebff;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  cursor: default;
+}
+
+.st-day {
+  left: auto;
+  right: calc(var(--safe-right) + var(--space-3));
+  border-color: rgb(255 214 140 / 0.45);
+}
+
+.st-card.is-personal {
+  border-color: rgb(255 170 200 / 0.55);
+}
+
+.st-card header,
+.st-day header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+}
+
+.st-card .eyebrow,
+.st-day .eyebrow {
+  color: #ffd68c;
+}
+
+.st-card h3,
+.st-day h3 {
+  grid-column: 1;
+  font-size: var(--text-xl);
+  color: #fff;
+}
+
+.st-card header .icon-btn,
+.st-day header .icon-btn {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  color: #e8e8ff;
+}
+
+.st-card p,
+.st-day p {
+  font-size: var(--text-sm);
+  color: #d6d5f2;
+}
+
+.st-card dl {
+  display: grid;
+  gap: 4px;
+  font-size: var(--text-sm);
+}
+
+.st-card dl > div {
+  display: grid;
+  grid-template-columns: 7.5rem 1fr;
+  gap: var(--space-2);
+}
+
+.st-card dt {
+  color: #a9a8d0;
+}
+
+.st-card dd {
+  margin: 0;
+}
+
+.st-card .btn,
+.st-day .btn {
+  justify-self: start;
+}
+
+.st-day__note {
+  font-size: var(--text-xs) !important;
+  opacity: 0.75;
+}
+
+@media (max-width: 640px) {
+  .st-day {
+    left: calc(var(--safe-left) + var(--space-3));
+  }
+}
+
+/* Bitácora (dentro del diálogo, con los colores del tema) */
+.st-log {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.st-log__intro {
+  color: var(--text-muted);
+}
+
+.st-log h3 {
+  font-size: var(--text-lg);
+  margin-top: var(--space-2);
+}
+
+.st-log ul {
+  display: grid;
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.st-log li {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--gc-radius-md);
+  border: 1px dashed var(--surface-border);
+}
+
+.st-log li.is-found {
+  border-style: solid;
+  background: color-mix(in oklab, var(--game-a) 12%, transparent);
+}
+
+.st-log li > span {
+  font-size: 1.2em;
+  color: var(--game-a);
+}
+
+.st-log li div {
+  display: grid;
+  min-width: 0;
+}
+
+.st-log li small {
+  color: var(--text-muted);
+}

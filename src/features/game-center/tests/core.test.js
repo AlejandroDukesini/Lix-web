@@ -130,12 +130,14 @@ describe('almacenamiento de juegos', () => {
 
 const PHASE_2_IDS = ['cruce-del-pollo', 'resolver-casos', 'sudokus', 'aparcar', 'despejar'];
 const PHASE_3_IDS = ['hexastack', 'traffic-rider', 'frente-abierto', 'saltos-de-lumi'];
+const PHASE_4_IDS = ['reino-de-ladrillos', 'bloques', 'lava-y-agua', 'stellarium', 'heladeria', 'pizzeria', 'pasteleria'];
 
 describe('registro de juegos', () => {
-  it('tiene los juegos de las Fases 1, 2 y 3, con manifiesto completo', () => {
+  it('tiene los juegos de las Fases 1 a 4, con manifiesto completo', () => {
     expect(GAMES.filter((g) => g.phase === 1).map((g) => g.id)).toEqual(['aquapark', 'io-games', 'logic-grid', 'chess', 'tunnel-runner']);
     expect(GAMES.filter((g) => g.phase === 2).map((g) => g.id)).toEqual(PHASE_2_IDS);
     expect(GAMES.filter((g) => g.phase === 3).map((g) => g.id)).toEqual(PHASE_3_IDS);
+    expect(GAMES.filter((g) => g.phase === 4).map((g) => g.id)).toEqual(PHASE_4_IDS);
     expect(new Set(GAMES.map((g) => g.id)).size).toBe(GAMES.length);
     const categoryIds = CATEGORIES.map((c) => c.id);
     for (const game of GAMES) {
@@ -154,10 +156,9 @@ describe('registro de juegos', () => {
     expect(findGame('no-existe')).toBeNull();
   });
 
-  it('las fases futuras solo son planificación (sin componente ni carga)', () => {
-    expect(ROADMAP.map((p) => p.phase)).toEqual([4]);
+  it('la hoja de ruta solo es planificación (hoy vacía: la fase 4 está implementada)', () => {
+    expect(ROADMAP).toEqual([]);
     const planned = ROADMAP.flatMap((p) => p.games);
-    expect(planned.length).toBeGreaterThan(0);
     for (const game of planned) {
       expect(game.load).toBeUndefined();
       expect(findGame(game.id)).toBeNull();
@@ -167,7 +168,7 @@ describe('registro de juegos', () => {
   it('busca por nombre y categoría, sin distinguir tildes ni mayúsculas', () => {
     const titles = (query, category) => filterGames(GAMES, { query, category }, categoryLabel).map((g) => g.title);
     expect(titles('AJEDREZ')).toEqual(['Ajedrez']);
-    expect(titles('logica')).toEqual(['Cubrir el espacio', 'Ajedrez', 'Resolver casos', 'Sudokus', 'Despejar el estacionamiento', 'HexaStack']);
+    expect(titles('logica')).toEqual(['Cubrir el espacio', 'Ajedrez', 'Resolver casos', 'Sudokus', 'Despejar el estacionamiento', 'HexaStack', 'Bloques que caen', 'Lava y Agua']);
     expect(titles('', 'carreras')).toEqual(['Aquapark', 'Tunnel Runner', 'Aparcar el carro', 'Traffic Rider']);
     expect(titles('tunnel', 'logica')).toEqual([]);
     expect(titles('zzz')).toEqual([]);

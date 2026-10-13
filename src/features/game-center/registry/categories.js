@@ -2,7 +2,7 @@
  * Categorías del Game Center. Un juego puede pertenecer a varias.
  * Una categoría sin juegos disponibles no aparece en los filtros (sí en la hoja de ruta).
  */
-import { Brain, Compass, Crown, Flag, Gem, Joystick, Telescope, Zap } from 'lucide-react';
+import { Brain, ChefHat, Compass, Crown, Flag, Gem, Joystick, Telescope, Zap } from 'lucide-react';
 
 export const CATEGORIES = Object.freeze([
   { id: 'aventura', label: 'Aventura', icon: Compass },
@@ -13,6 +13,7 @@ export const CATEGORIES = Object.freeze([
   { id: 'arcade', label: 'Arcade', icon: Joystick },
   { id: 'clasicos', label: 'Clásicos', icon: Gem },
   { id: 'exploracion', label: 'Exploración', icon: Telescope },
+  { id: 'cocina', label: 'Cocina', icon: ChefHat },
 ]);
 
 export const categoryById = (id) => CATEGORIES.find((category) => category.id === id) ?? null;

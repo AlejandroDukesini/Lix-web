@@ -176,7 +176,7 @@ export default function GameCenter() {
         <SoundSettings settings={settings} onChange={updateSettings} />
       </section>
 
-      <Roadmap />
+      {ROADMAP.length > 0 && <Roadmap />}
 
       <p className="home__privacy">
         <ShieldCheck aria-hidden="true" />

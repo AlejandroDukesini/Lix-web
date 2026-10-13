@@ -1,23 +1,13 @@
 /**
- * Hoja de ruta del Game Center (fase 4; las fases 1 a 3 ya están implementadas).
+ * Hoja de ruta del Game Center: juegos planificados que todavía no se pueden jugar.
  *
- * Son solo planificación: no tienen componente ni ruta, y la biblioteca los
- * muestra como "próximas incorporaciones" sin ningún botón de jugar.
- * Cuando llegue su fase, cada uno se convertirá en una carpeta en games/ con su
- * manifest.js y se añadirá a GAMES en gameRegistry.js (ver README).
+ * Las fases 1 a 4 están implementadas, así que hoy está vacía y la biblioteca no
+ * muestra la sección «Próximas incorporaciones». Para planificar un juego nuevo:
+ *   { phase, title, games: [{ id, title, note, categories }] }
+ * Son solo planificación: sin componente ni ruta. Cuando llegue su fase, cada uno
+ * se convierte en una carpeta en games/ con su manifest.js (ver README).
  *
  * Todos serán implementaciones originales: sin personajes, nombres comerciales,
  * música, niveles ni recursos de franquicias existentes.
  */
-export const ROADMAP = Object.freeze([
-  {
-    phase: 4,
-    title: 'Juegos adicionales',
-    games: [
-      { id: 'bloques', title: 'Bloques que caen', note: 'Clásico de encajar piezas, con piezas y reglas propias.', categories: ['clasicos', 'logica'] },
-      { id: 'stellarium', title: 'Stellarium', note: 'Explorar el cielo nocturno y sus constelaciones.', categories: ['exploracion'] },
-      { id: 'lava-y-agua', title: 'Lava and Aqua', note: 'Cuadrículas donde hay que encontrar rutas seguras entre la lava.', categories: ['logica', 'aventura'] },
-      { id: 'cocina', title: 'Cocina de pedidos', note: 'Helados, pasteles y pizzas según lo que pidan los clientes.', categories: ['habilidad'] },
-    ],
-  },
-]);
+export const ROADMAP = Object.freeze([]);

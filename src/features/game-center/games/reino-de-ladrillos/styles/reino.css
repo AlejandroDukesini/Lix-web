@@ -1,0 +1,130 @@
+/* Reino de Ladrillos — píxeles grandes, cielo claro y ladrillo cálido. */
+
+.rl-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.rl-select__title {
+  font-size: var(--text-3xl);
+}
+
+.rl-select__text {
+  color: var(--text-muted);
+  max-width: 64ch;
+}
+
+.rl-select__best {
+  margin-top: var(--space-2);
+  font-weight: 700;
+}
+
+.rl-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.rl-level {
+  --swatch: #5fcf5a;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.rl-level:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.rl-level.is-subsuelo {
+  --swatch: #5b6f99;
+}
+.rl-level.is-copas {
+  --swatch: #ff9f7a;
+}
+.rl-level.is-castillo {
+  --swatch: #e8441a;
+}
+
+.rl-level__n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 40px;
+  border-radius: 6px;
+  background: var(--swatch);
+  box-shadow: inset 0 -4px 0 rgb(0 0 0 / 0.25), inset 0 3px 0 rgb(255 255 255 / 0.3);
+  color: #1a1020;
+  font-weight: 800;
+}
+
+.rl-level__body {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.rl-level__body small {
+  color: var(--text-subtle);
+}
+
+.rl-level > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-subtle);
+}
+
+.rl canvas {
+  image-rendering: pixelated;
+}
+
+.rl-intro {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  width: min(90%, 30rem);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--gc-radius-md);
+  background: rgb(10 8 20 / 0.62);
+  color: #fff;
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.rl-intro span {
+  font-size: var(--text-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.rl-intro strong {
+  font-size: var(--text-xl);
+}
+
+.rl-intro small {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}

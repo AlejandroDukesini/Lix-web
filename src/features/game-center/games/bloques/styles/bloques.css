@@ -1,0 +1,140 @@
+/* Bloques que caen — una ventana al cielo nocturno. */
+
+.bq-select {
+  width: min(100%, 880px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.bq-select__title {
+  font-size: var(--text-3xl);
+}
+
+.bq-select__text {
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.bq-modes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: var(--space-4);
+}
+
+.bq-mode {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--gc-radius-lg);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background:
+    radial-gradient(120% 90% at 100% 0%, color-mix(in oklab, var(--game-a) 18%, transparent), transparent 60%),
+    var(--surface);
+  box-shadow: var(--surface-shadow);
+}
+
+.bq-mode h3 {
+  font-size: var(--text-xl);
+}
+
+.bq-mode p {
+  color: var(--text-muted);
+}
+
+.bq-mode__icon {
+  width: 28px;
+  height: 28px;
+  color: var(--game-a);
+}
+
+.bq-mode p.bq-mode__best {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bq-mode .btn {
+  justify-self: start;
+}
+
+.bq-goals h3 {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-2);
+}
+
+.bq-goals ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.bq-goals li {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--gc-radius-md);
+  border: 1px dashed var(--surface-border);
+  color: var(--text-muted);
+}
+
+.bq-goals li.is-done {
+  border-style: solid;
+  color: var(--text);
+  background: color-mix(in oklab, var(--game-b) 14%, transparent);
+}
+
+/* Controles táctiles: dos filas abajo, botones de 56 px. */
+.bq-pad {
+  position: absolute;
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+  bottom: calc(var(--safe-bottom) + var(--space-2));
+  z-index: 4;
+  display: grid;
+  gap: var(--space-2);
+  pointer-events: none;
+}
+
+.bq-pad__row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.bq-btn.hold-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+}
+
+.bq-btn.hold-btn svg {
+  width: 26px;
+  height: 26px;
+}
+
+.bq-btn--drop.hold-btn {
+  background: rgb(94 230 255 / 0.22);
+  border-color: rgb(140 240 255 / 0.7);
+}
+
+.bq-btn--small.hold-btn {
+  background: rgb(255 209 102 / 0.18);
+}
+
+.tap-btn:active {
+  transform: scale(0.92);
+  background: rgb(255 255 255 / 0.28);
+}
+
+@media (max-width: 360px) {
+  .bq-pad__row {
+    gap: var(--space-2);
+  }
+  .bq-btn.hold-btn {
+    width: 50px;
+    height: 50px;
+  }
+}

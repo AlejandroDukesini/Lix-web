@@ -34,6 +34,11 @@ import { hexastackManifest } from '../games/hexastack/manifest.js';
 import { trafficRiderManifest } from '../games/traffic-rider/manifest.js';
 import { frenteAbiertoManifest } from '../games/frente-abierto/manifest.js';
 import { saltosDeLumiManifest } from '../games/saltos-de-lumi/manifest.js';
+import { reinoDeLadrillosManifest } from '../games/reino-de-ladrillos/manifest.js';
+import { bloquesManifest } from '../games/bloques/manifest.js';
+import { lavaYAguaManifest } from '../games/lava-y-agua/manifest.js';
+import { stellariumManifest } from '../games/stellarium/manifest.js';
+import { heladeriaManifest, pasteleriaManifest, pizzeriaManifest } from '../games/cocina/manifest.js';
 
 const MANIFESTS = [
   aquaparkManifest,
@@ -52,6 +57,14 @@ const MANIFESTS = [
   trafficRiderManifest,
   frenteAbiertoManifest,
   saltosDeLumiManifest,
+  // Fase 4
+  reinoDeLadrillosManifest,
+  bloquesManifest,
+  lavaYAguaManifest,
+  stellariumManifest,
+  heladeriaManifest,
+  pizzeriaManifest,
+  pasteleriaManifest,
 ];
 
 export const GAMES = Object.freeze(

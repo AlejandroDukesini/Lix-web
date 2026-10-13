@@ -19,7 +19,7 @@ juegos, documentos, diario, calendario y finanzas.
 | **Game Center — Fase 1**: Aquapark, Arena .io (3 minijuegos), Cubrir el espacio, Ajedrez, Tunnel Runner | ✅ Funcional (ver [Game Center](#game-center)) |
 | **Game Center — Fase 2**: Pollo pasando la calle sangriento, Resolver casos, Sudokus, Aparcar el carro, Despejar el estacionamiento | ✅ Funcional |
 | **Game Center — Fase 3**: HexaStack, Traffic Rider, Frente Abierto (inspirado en Open Front), Saltos de Lumi (plataformas originales) | ✅ Funcional |
-| Game Center — Fase 4 (4 juegos) | 🗺️ Planificados en la hoja de ruta; sin implementar |
+| **Game Center — Fase 4**: Reino de Ladrillos (homenaje al plataformas clásico), Bloques que caen (encajar piezas), Lava y Agua, Stellarium (observatorio), Heladería, Pizzería y Pastelería | ✅ Funcional |
 | Documentación, Diario y notas, Calendario, Finanzas | ⏳ Próximas fases (solo reservados, sin datos ficticios) |
 
 ### La presentación: «Bitácora de observación»
@@ -199,7 +199,7 @@ fuera del marco, como la presentación). Todo en `src/features/game-center/`.
 game-center/
   GameCenter.jsx   biblioteca: marquesina, destacado, recientes, búsqueda, filtros, estadísticas, hoja de ruta
   GamePage.jsx     marco de partida: barra superior, presentación previa, ayuda, salida con confirmación, audio
-  registry/        gameRegistry.js (lista de manifiestos; cada uno declara su fase), categories.js, roadmap.js (fase 4)
+  registry/        gameRegistry.js (lista de manifiestos; cada uno declara su fase), categories.js, roadmap.js (hoy vacía)
   online/          onlineSources.js (proveedores y fuentes online verificadas, lista permitida)
   services/        gameStorage.js (IndexedDB), gameLifecycle.js (estados, formato, RNG con semilla), gameAudio.js
   hooks/           useGameSession, useGameLoop, useKeyboard, useCanvas, useGameStatistics, useGameFrame, useGameAudio
@@ -207,6 +207,9 @@ game-center/
                    Countdown, TouchControls (botones mantenidos, joystick, cruceta, deslizamientos, conducción,
                    plataformas con dos dedos)
   games/<id>/      manifest.js, componente del juego, Art (SVG original), engine/, styles/, tests/
+  games/cocina/    excepción deliberada: tres juegos (heladeria, pizzeria, pasteleria) que comparten motor de pedidos
+                   (engine/orders.js), recetas declarativas (recipes/), dibujos (components/FoodVisuals.jsx) y un
+                   único componente (CookingGame.jsx); cada uno tiene su manifiesto y sus propias estadísticas
   styles/          game-center.css (biblioteca), game-screen.css (marco, HUD, overlays, controles táctiles)
 ```
 
@@ -234,6 +237,11 @@ prueba comprueba que no quedan fotogramas programados).
 | **Traffic Rider** | Moto en carretera pseudo-3D de 4 carriles: aceleración progresiva, frenada, tráfico que sigue al de delante y deja siempre 2 carriles libres, adelantamientos (ajustados a más de 100 km/h valen más). Escenario cambia cada 2,5 km. Carrera libre y 6 misiones (distancia, adelantamientos, contrarreloj, velocidad sostenida…). | ↑ acelerar, ↓ frenar, ← → carril; táctil: dirección a la izquierda y pedales a la derecha, mantenidos | récord de distancia y puntos, misiones, adelantamientos |
 | **Frente Abierto** (inspirado en Open Front) | Estrategia territorial **por turnos** en una isla hexagonal generada por semilla: refuerzos (territorios ÷ 3, mínimo 3, + 2 por ciudad), mover y atacar a vecinos (cada territorio actúa una vez por turno), sin dados: el resultado se ve **antes** de confirmar. Fortalezas ×1,5. IA local con 3 niveles de comportamiento distinto; sus jugadas se ven una a una. Tutorial guiado, partida rápida (mapa S/M/L, 1–3 rivales, dificultad) y 5 escenarios en orden. | Clic/toque territorio → destino marcado → cantidad (− / + / Todas) → Atacar/Mover; Tab + Intro | victorias y derrotas por dificultad, escenarios, tutorial, mejor número de turnos |
 | **Saltos de Lumi** (plataformas originales) | Lumi, una chispa de luz, recorre 8 niveles originales (pradera, bosque, cueva, nubes, noche) hasta encender la vela final. Paso fijo de 1/60 s, salto variable, margen tras el borde (*coyote time*), pulsación anticipada, plataformas finas y móviles (que te llevan), muelles, sombras que se pisan, polillas, zarzas, faroles de control y 3 vidas por nivel. | ← → / A D, Espacio/↑/W (mantener = más alto); táctil: almohadilla ‹ › en la que se desliza el pulgar + botón de salto, **con dos dedos a la vez** | niveles superados, mejor tiempo y chispas por nivel |
+| **Reino de Ladrillos** (homenaje original al plataformas de los 8 bits) | Desplazamiento lateral con cámara que solo avanza, 4 niveles (pradera, subterráneo, copas de árboles, castillo de lava). Paso fijo de 1/60 s, salto variable, *coyote time*, bloques con estrella (moneda o corazón), ladrillos que se rompen siendo grande, crecer/encoger con invulnerabilidad, gorgojos que se pisan, caracoles cuyo caparazón se patea y arrasa, columnas, lava, banderas de control, mástil con bonificación por altura y por tiempo, reloj, 100 monedas = 1 vida, vidas/monedas/puntos que pasan de nivel. Gráficos, personajes y sonidos propios. | ← → / A D, Espacio/↑/W; táctil: almohadilla ‹ › + botón de salto con dos dedos | niveles superados, mejor tiempo por nivel, récord de puntos por partida |
+| **Bloques que caen** (clásico de encajar piezas) | Tablero 10 × 20 (+2 ocultas), 7 piezas en bolsas de 7, rotación SRS con patadas de pared, sombra, reserva, 3 siguientes, retardo de fijación 0,5 s (15 renovaciones), caída suave/instantánea, puntuación 100/300/500/800 × nivel, ×1,5 por cuatro seguidas, combos, gravedad por nivel. Maratón de 150 líneas (nivel inicial 1/5/10) y contrarreloj de 40. | ← → (repetición), ↑/X y Z girar, ↓, Espacio, C/Mayús, R; táctil: tocar = girar, arrastrar = mover casilla a casilla, deslizar rápido abajo = soltar, y botonera | récord de puntos, líneas y nivel; mejor tiempo de contrarreloj; 5 hitos |
+| **Lava y Agua** (inspirado en Lava and Aqua) | Por turnos: tras cada paso (o espera) la lava y el agua avanzan una casilla; lava + agua = piedra pisable; palancas que abren compuertas; lava espesa (1 de cada 2 turnos); la lava que cubre la salida también hace perder. Deshacer ilimitado (también tras perder). 12 niveles en 4 grupos, cada uno demostrado con un solucionador BFS. | Flechas/WASD, Espacio esperar, Z deshacer, R; táctil: deslizar, tocar una casilla vecina, cruceta y reloj | niveles, estrellas (3 = mínimo de turnos) y mejores turnos por nivel |
+| **Stellarium** (observatorio, inspirado en el planetario libre) | Esfera celeste en proyección estereográfica con 130 estrellas reales (J2000, magnitud, distancia, color espectral), 21 constelaciones, Vía Láctea en su plano galáctico real, cuadrícula ecuatorial y eclíptica, 3 objetos de cielo profundo, ocular por debajo de 24°. Una constelación se registra al centrarla entera en la retícula; bitácora con pistas. «El cielo de nuestro día»: posición del Sol (y su constelación del zodiaco) y fase de la Luna calculadas para la fecha de inicio configurada. El asterismo «Nosotros» reutiliza la figura de la presentación y se presenta como personal, fuera de catálogo. | Arrastrar/flechas, rueda/pellizcar/+ −, clic o toque para la ficha | descubrimientos (25), estrellas observadas, última vista e interruptores |
+| **Heladería / Pizzería / Pastelería** (inspirados en los minijuegos de cocina de Purble Place) | Motor común: pedidos generados por nivel a partir de recetas declarativas (opción única, secuencia ordenada, conjunto, ingredientes por mitades y horno en tiempo real), comanda escrita y dibujada, preparación por pasos con vista previa, evaluación elemento a elemento (correcto / casi / incorrecto / falta / sobra, con icono y texto), precisión, puntos + bono de rapidez. 3 niveles: Aprendiz (4 pedidos, sin reloj), Cocinero (5, 90 s) y Chef (6, 60 s), que se desbloquean en orden. | Teclas 1-9 y ← →, Tab/Intro; táctil: pestañas y botones grandes | estrellas por nivel, récord de puntos y precisión, pedidos y perfectos |
 
 **Niveles con solución demostrada:** los niveles de la Fase 2 no se dan por buenos a ojo. `scripts/generate-sudokus.mjs`
 genera el banco de Sudokus (solución única y dificultad medida); `scripts/plan-parking.mjs` busca con el motor real
@@ -248,7 +256,9 @@ piloto que recorre 6 km en 5 semillas y cumple cada misión; en Frente Abierto s
 con diversidad por casilla) una forma de llegar a la vela **sin perder ninguna vida** y guarda la secuencia en
 `levels/solutions.js`; las pruebas la reproducen fotograma a fotograma en los 8 niveles.
 
-**Añadir un juego (fase 4):** crear `games/<id>/` con `manifest.js` (campos en la cabecera de
+Fase 4: `scripts/plan-ladrillos.mjs` demuestra los 4 niveles de Reino de Ladrillos con el motor real (búsqueda en haz, sin perder vidas; las pruebas reproducen las soluciones). Lava y Agua: los niveles salieron de un generador filtrado por el solucionador (solución con exactamente su `par`, el camino «a ciegas» pierde y cada mecánica es imprescindible en su grupo). Stellarium: cálculos del Sol y la Luna validados con el equinoccio, el solsticio y las lunas nueva y llena de 2025.
+
+**Añadir un juego:** crear `games/<id>/` con `manifest.js` (campos en la cabecera de
 `registry/gameRegistry.js`), el componente por defecto (usando `useGameSession` y los componentes compartidos), su `Art`
 SVG original, su motor y sus pruebas; añadir el manifiesto a `MANIFESTS` y quitarlo de `registry/roadmap.js`. No hace
 falta tocar rutas, biblioteca, estadísticas ni almacenamiento. Regla para todos: implementaciones originales, sin
@@ -388,8 +398,18 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
   se abre en local sin iframe con su opción online correcta (o el aviso), tutorial de Frente Abierto jugado desde la
   interfaz (refuerzos, previsión antes de confirmar, turno de la IA) y niveles bloqueados de Lumi; controles de
   plataformas con dos punteros a la vez.
-- `npm run test:e2e` incluye además: Game Center y los **catorce** juegos **sin conexión**, la IA de ajedrez respondiendo
-  sin red desde su Worker precacheado, catorce juegos disponibles, enlaces online oficiales de las Fases 2 y 3, fases futuras sin enlaces, sin desplazamiento
+- **Fase 4** (incluido en `npm test`): Bloques (bolsas de 7, movimiento, colisiones, patadas de pared, fijación con
+  retardo y límite, 1-4 líneas y puntuación, nivel y gravedad, reserva, fin por bloqueo y por fijación arriba,
+  contrarreloj), Lava y Agua (flujo, piedra, lava espesa, compuertas, derrota por lava y por salida cubierta, deshacer,
+  y los 12 niveles con su `par` exacto, camino «a ciegas» perdedor y mecánica imprescindible), cocina (pedidos válidos
+  por nivel, determinismo, dificultad creciente, construcción, evaluación de cada tipo de paso, horno, puntos, turno
+  superado/no superado, desbloqueo), Reino de Ladrillos (aceleración, gravedad, salto variable, paredes, cámara,
+  bloques, corazón, pisotón, daño, caparazón, vacío/lava/checkpoint, sin vidas, reloj, 1 vida por 100 monedas, mástil,
+  determinismo y las 4 soluciones reproducidas) y Stellarium (catálogo, proyección, arrastre, aumento, selección,
+  identificación de las 21 figuras, Sol/Luna con efemérides de 2025, plano galáctico). Interfaz: los 7 juegos se abren
+  en local, nivel de Lava y Agua ganado con teclado, pedido perfecto en la Heladería, bitácora y «cielo de nuestro día».
+- `npm run test:e2e` incluye además: Game Center y los **veintiún** juegos **sin conexión**, la IA de ajedrez respondiendo
+  sin red desde su Worker precacheado, veintiún juegos disponibles, enlaces online oficiales de las Fases 2 y 3, sin hoja de ruta pendiente, sin desplazamiento
   horizontal y **casillas de ajedrez de al menos 28 px** en los 7 tamaños (incluido el móvil en horizontal).
 - `npm test` — pruebas de la Fase 1 (Vitest + Testing Library + fake-indexeddb): fechas, contraste, validación, migraciones
   (incluida v1 → v2), letra de la vela, persistencia, datos corruptos, almacenamiento bloqueado, copia en IndexedDB,
@@ -398,7 +418,7 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
   mensaje final); recorrido completo del viaje con escenario sticky simulado (avanzar, retroceder, saltos bruscos,
   revelación, final operable solo cuando se ve), sin permisos de micrófono/cámara, saltar, repetir sin cambiar preferencias,
   configuración y rutas.
-- `npm run test:e2e` — **74 comprobaciones** en Edge/Chrome real. El viaje completo con scroll real se recorre en
+- `npm run test:e2e` — **81 comprobaciones** en Edge/Chrome real. El viaje completo con scroll real se recorre en
   8 tamaños (375×812, 360×640, 812×375 apaisado, 768×1024, 1280×720, 1366×600, 1440×900 y 1920×1080) comprobando en
   cada capítulo: escenario pegado a la pantalla, un único texto visible, dentro de la pantalla y fuera de la zona de
   la ilustración, constelación completa, telescopio revelado, iris y ocular, vela con «A», «Otro año juntos», tarjeta
@@ -442,9 +462,8 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
 
 > No se han implementado módulos nuevos ni pantallas de relleno: los puntos de extensión ya existen y se describen aquí.
 
-- **Game Center, fase 4** (en `registry/roadmap.js`, visibles como «Próxima incorporación», sin botón de jugar;
-  las Fases 2 y 3 ya están implementadas): bloques que caen (original), Stellarium, Lava and Aqua, cocina de pedidos
-  (helados, pasteles y pizzas). Ver «Añadir un juego» en [Game Center](#game-center).
+- **Game Center:** las fases 1 a 4 están implementadas (21 juegos) y `registry/roadmap.js` está vacía, así que la
+  biblioteca no muestra «Próximas incorporaciones». Ver «Añadir un juego» en [Game Center](#game-center).
 - **Documentación (20+):** documentos locales (Markdown/JSON) en `src/features/documentation/content/`, con
   categorías, índice de búsqueda generado en local y lector; renderizado sin `dangerouslySetInnerHTML`.
 - **Diario, notas y recordatorios:** stores `journal`, `notes`, `reminders` con índices por fecha y categoría, listos

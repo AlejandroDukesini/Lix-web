@@ -1,0 +1,313 @@
+/* Lava y Agua — basalto oscuro, lava que respira, agua que brilla y piedra que se agrieta. */
+
+.lv-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.lv-select__title {
+  font-size: var(--text-3xl);
+}
+
+.lv-select__text {
+  color: var(--text-muted);
+  max-width: 62ch;
+}
+
+.lv-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.lv-level {
+  --swatch: #ff6a2b;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.lv-level:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.lv-level.is-agua {
+  --swatch: #3fa7ff;
+}
+.lv-level.is-compuerta {
+  --swatch: #9aa3b8;
+}
+.lv-level.is-espesa {
+  --swatch: #b8361b;
+}
+
+.lv-level__n {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ffd27a, var(--swatch));
+  color: #2a1208;
+  font-weight: 800;
+}
+
+.lv-level__body {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.lv-level__body small {
+  color: var(--text-subtle);
+  letter-spacing: 0.08em;
+}
+
+.lv-level > svg {
+  width: 20px;
+  height: 20px;
+  color: var(--text-subtle);
+}
+
+/* ---------- Partida ---------- */
+.lv-play {
+  container: lv-play / inline-size;
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+}
+
+.lv-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+.lv-status {
+  max-width: 42rem;
+  min-height: 2.6em;
+  text-align: center;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-wrap: balance;
+}
+
+.lv-status.is-warn {
+  color: var(--danger);
+}
+
+.lv-status.is-warn::before {
+  content: '⚠ ';
+}
+
+.lv-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.lv-board-wrap {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.lv-board {
+  /* Celda: lo que quepa a lo ancho y a lo alto (dejando sitio a HUD, textos y controles), máx. 56 px. */
+  --cell: min(calc((100cqw - 8px) / var(--cols)), calc((100dvh - 360px) / var(--rows)), 56px);
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell));
+  grid-template-rows: repeat(var(--rows), var(--cell));
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--gc-radius-md);
+  background: #120d10;
+  box-shadow:
+    0 24px 60px -30px rgb(255 90 30 / 0.6),
+    inset 0 0 0 1px rgb(255 255 255 / 0.06);
+}
+
+.lv-play.has-touch .lv-board {
+  --cell: min(calc((100cqw - 8px) / var(--cols)), calc((100dvh - 520px) / var(--rows)), 52px);
+}
+
+.lv-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+  min-width: 18px;
+  min-height: 18px;
+}
+
+.lv-cell.is-wall {
+  background: linear-gradient(160deg, #3a3036, #241c21);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.35);
+}
+
+.lv-cell.is-floor {
+  background: #2c2328;
+}
+
+.lv-cell.is-adjacent {
+  cursor: pointer;
+  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.12);
+}
+
+.lv-cell.is-lava {
+  background:
+    radial-gradient(circle at 30% 30%, #ffe08a 0 12%, transparent 30%),
+    radial-gradient(circle at 70% 65%, #ffb347 0 10%, transparent 28%),
+    linear-gradient(135deg, #ff7a1a, #d6301a);
+  box-shadow: 0 0 12px rgb(255 100 30 / 0.55);
+  animation: lv-lava 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes lv-lava {
+  to {
+    filter: brightness(1.18) saturate(1.1);
+  }
+}
+
+.lv-cell.is-water {
+  background:
+    radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.5) 0 6%, transparent 20%),
+    linear-gradient(160deg, #6cc6ff, #1f6fd1);
+}
+
+.lv-cell.is-stone {
+  background:
+    linear-gradient(115deg, transparent 46%, rgb(0 0 0 / 0.35) 47% 50%, transparent 51%),
+    linear-gradient(35deg, transparent 60%, rgb(0 0 0 / 0.3) 61% 63%, transparent 64%),
+    linear-gradient(160deg, #8b8f99, #5c606b);
+}
+
+.lv-cell.is-gate {
+  background: repeating-linear-gradient(90deg, #6d7484 0 5px, #3d424f 5px 9px);
+}
+
+.lv-gate,
+.lv-lever {
+  font-style: normal;
+  font-weight: 800;
+  font-size: calc(var(--cell) * 0.36);
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+
+.lv-cell.is-switch::after,
+.lv-cell.is-switch-on::after {
+  content: '';
+  position: absolute;
+  inset: 22%;
+  border-radius: 50%;
+  border: 3px solid #c9ced9;
+}
+
+.lv-cell.is-switch-on::after {
+  border-color: #7cf0b2;
+  background: rgb(124 240 178 / 0.25);
+}
+
+.lv-lever {
+  position: absolute;
+  top: 1px;
+  left: 4px;
+  font-size: calc(var(--cell) * 0.26);
+}
+
+.lv-cell.is-exit::before {
+  content: '';
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fffbe0 0 22%, #9be7ff 40%, transparent 72%);
+  box-shadow: 0 0 14px #9be7ff;
+}
+
+.lv-player {
+  position: relative;
+  z-index: 1;
+  width: 62%;
+  height: 62%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ffffff, #ffe7a6 45%, #ff9fc6);
+  box-shadow: 0 0 0 3px rgb(20 10 20 / 0.6), 0 0 16px rgb(255 220 160 / 0.8);
+  transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.lv-player.is-lost {
+  background: radial-gradient(circle at 35% 30%, #888, #444);
+  box-shadow: none;
+}
+
+/* Cruceta táctil con botón de esperar en el centro-izquierda. */
+.lv-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 60px);
+  grid-template-rows: repeat(2, 60px);
+  grid-template-areas:
+    'wait up .'
+    'left down right';
+  gap: var(--space-2);
+}
+
+.lv-btn.hold-btn {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  color: var(--text);
+  border-color: var(--surface-border);
+  background: var(--surface);
+}
+
+.lv-btn.hold-btn svg {
+  width: 26px;
+  height: 26px;
+}
+
+.lv-btn--wait {
+  grid-area: wait;
+}
+.lv-btn--up {
+  grid-area: up;
+}
+.lv-btn--left {
+  grid-area: left;
+}
+.lv-btn--down {
+  grid-area: down;
+}
+.lv-btn--right {
+  grid-area: right;
+}
+
+[data-motion='reduced'] .lv-cell.is-lava {
+  animation: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-cell.is-lava {
+    animation: none;
+  }
+}

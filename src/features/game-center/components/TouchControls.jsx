@@ -37,6 +37,30 @@ export function HoldButton({ label, icon: Icon, onChange, className }) {
   );
 }
 
+/**
+ * Botón de acción instantánea (girar, soltar, guardar): actúa al apoyar el dedo,
+ * sin esperar al `click` (que en móvil llega más tarde). Con teclado actúa en el
+ * clic normal (detail 0), así que nunca se dispara dos veces.
+ */
+export function TapButton({ label, icon: Icon, onPress, className, children }) {
+  return (
+    <button
+      type="button"
+      className={cx('hold-btn', 'tap-btn', className)}
+      aria-label={label}
+      onPointerDown={(event) => {
+        event.preventDefault();
+        onPress();
+      }}
+      onClick={(event) => event.detail === 0 && onPress()}
+      onContextMenu={(event) => event.preventDefault()}
+    >
+      {Icon && <Icon aria-hidden="true" />}
+      {children}
+    </button>
+  );
+}
+
 /** Par de botones izquierda/derecha que escribe en `inputRef.current.{left,right}`. */
 export function SteerButtons({ inputRef, className }) {
   return (

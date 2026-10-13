@@ -39,10 +39,9 @@ describe('Game Center: biblioteca', () => {
     for (const { title } of GAMES) {
       expect(screen.getByRole('link', { name: `Jugar a ${title}` })).toHaveAttribute('href', expect.stringContaining('#/juegos/'));
     }
-    const roadmap = screen.getByRole('region', { name: 'Lo que llegará a la sala' });
-    expect(within(roadmap).getAllByText('Próxima incorporación')).toHaveLength(ROADMAP.flatMap((p) => p.games).length);
-    expect(within(roadmap).queryAllByRole('link')).toHaveLength(0);
-    expect(within(roadmap).queryAllByRole('button')).toHaveLength(0);
+    // Con la hoja de ruta vacía no se muestra la sección de próximas incorporaciones.
+    expect(ROADMAP).toHaveLength(0);
+    expect(screen.queryByRole('region', { name: 'Lo que llegará a la sala' })).toBeNull();
   });
 
   it('busca al instante y muestra un estado vacío', async () => {
