@@ -5,6 +5,7 @@ import { Button } from '../../components/common/Button.jsx';
 import { normalizeText, slugify, GLOSSARY_HEADING } from './engine/markdown.js';
 import { findShelf } from './registry/shelves.js';
 import { GLOSSARY } from './registry/catalog.js';
+import { useReadingSurface } from './hooks/useReadingSurface.js';
 import './styles/library.css';
 
 const CONCEPTS_SECTION = slugify(GLOSSARY_HEADING);
@@ -15,6 +16,7 @@ const initial = (term) => normalizeText(term).charAt(0).toUpperCase();
 /** Ruta /documentos/glosario — todos los conceptos importantes de la biblioteca. */
 export default function GlossaryPage() {
   const id = useId();
+  useReadingSurface();
   const [query, setQuery] = useState('');
 
   const groups = useMemo(() => {

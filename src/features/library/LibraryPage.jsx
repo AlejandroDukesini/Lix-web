@@ -11,6 +11,7 @@ import { DIFFICULTIES, SHELVES } from './registry/shelves.js';
 import { DOCUMENTS, GLOSSARY, documentsOf, findDocument, searchDocuments, totalMinutes } from './registry/catalog.js';
 import { lastOpened, useLibraryState } from './hooks/useLibraryState.js';
 import { DocumentList } from './components/DocumentList.jsx';
+import { useReadingSurface } from './hooks/useReadingSurface.js';
 import './styles/library.css';
 
 function hoursLabel(minutes) {
@@ -229,6 +230,7 @@ function SavedForLater({ state }) {
 /** Ruta /documentos — catálogo de la biblioteca. */
 export default function LibraryPage() {
   const { preferences } = usePreferences();
+  useReadingSurface();
   const { state } = useLibraryState();
   const [query, setQuery] = useState('');
   const [shelf, setShelf] = useState('all');

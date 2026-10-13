@@ -1149,3 +1149,23 @@
 .lib-filters .segmented {
   max-width: 560px;
 }
+
+/* Mientras se lee, las formas del fondo maximalista se atenúan (useReadingSurface). */
+:root[data-reading] .ambient__shapes {
+  opacity: 0.18;
+  transition: opacity var(--dur-slow) var(--ease-out);
+}
+
+/* En móvil, las tablas comparativas (idiomas, religiones) se compactan para caber sin desplazarse. */
+@media (max-width: 599px) {
+  .md-table table {
+    font-size: 0.84em;
+  }
+  .md-table th,
+  .md-table td {
+    padding: 0.5em 0.5em;
+  }
+  .md-table th {
+    white-space: normal;
+  }
+}

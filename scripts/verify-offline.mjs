@@ -9,6 +9,7 @@
  *  - El Service Worker precachea y la app funciona SIN conexión (incluida la ruta diferida de Configuración).
  *  - Ninguna petición sale del origen local y no hay errores en consola (incluidas violaciones de CSP).
  *  - El Game Center y sus veintiún juegos (fases 1 a 4) funcionan sin conexión (incluida la IA de ajedrez en su Worker).
+ *  - La biblioteca (catálogo, lector, glosario y favoritos) funciona sin conexión y se lee bien en los cuatro estilos.
  *  - No hay desplazamiento horizontal en móvil (iPhone XS) ni en escritorio.
  *
  * Uso: npm run test:e2e   (capturas en test-results/screenshots; SCREENSHOT_DIR para cambiarlo)
@@ -18,6 +19,10 @@ import path from 'node:path';
 import { preview } from 'vite';
 import { chromium } from 'playwright-core';
 import { SCENE_BOUNDS, SCENE_IDS } from '../src/features/presentation/story/timeline.js';
+import { buildLibraryIndex } from './vite-plugin-library.js';
+
+const LIBRARY = buildLibraryIndex();
+const firstOfShelf = (shelf) => LIBRARY.filter((d) => d.category === shelf).sort((a, b) => a.path.localeCompare(b.path) || a.order - b.order)[0];
 
 const SHOTS = process.env.SCREENSHOT_DIR ?? path.resolve('test-results/screenshots');
 mkdirSync(SHOTS, { recursive: true });
@@ -318,6 +323,34 @@ try {
   check('Sin conexión: la IA de ajedrez responde (Web Worker precacheado)', (await page.locator('.chess__moves li').first().textContent()).length > 4);
   await page.screenshot({ path: `${SHOTS}/m10-chess-offline.png` });
 
+  // Biblioteca sin conexión: catálogo, un capítulo de cada estante (cada uno es un recurso aparte), glosario y favoritos.
+  await page.goto(`${baseUrl}#/documentos`);
+  await page.getByRole('heading', { level: 1, name: 'Historias que enseñan' }).waitFor({ timeout: 8000 });
+  check(`Sin conexión: la biblioteca muestra sus ${LIBRARY.length} capítulos`, (await page.locator('.lib-doc').count()) === LIBRARY.length);
+  check('Biblioteca móvil: sin desplazamiento horizontal', await noHorizontalScroll(page));
+  await page.screenshot({ path: `${SHOTS}/m11-library.png` });
+  const libraryProblems = [];
+  for (const shelf of ['cosmos', 'criminalistica', 'idiomas', 'creencias']) {
+    const doc = firstOfShelf(shelf);
+    await page.goto(`${baseUrl}#/documentos/${doc.id}`);
+    await page.locator('.reader-body h2').first().waitFor({ timeout: 8000 });
+    const text = await page.locator('.reader-body').innerText();
+    const headings = await page.locator('.reader-body h2').count();
+    if (text.length < 12000 || headings !== doc.sections.length) libraryProblems.push(`${doc.id}: ${text.length} caracteres, ${headings} secciones`);
+    if (!(await noHorizontalScroll(page))) libraryProblems.push(`${doc.id}: desplazamiento horizontal`);
+  }
+  check('Sin conexión: un capítulo completo de cada estante se lee entero', libraryProblems.length === 0, libraryProblems.join(' | '));
+  await page.getByRole('button', { name: 'Añadir a favoritos' }).click();
+  // Se espera a que la interfaz confirme el guardado (escritura en IndexedDB) antes de recargar.
+  await page.getByRole('button', { name: 'En favoritos' }).waitFor({ timeout: 8000 });
+  await page.reload();
+  await page.getByRole('button', { name: 'En favoritos' }).waitFor({ timeout: 8000 });
+  check('Sin conexión: los favoritos de la biblioteca persisten tras recargar', true);
+  await page.screenshot({ path: `${SHOTS}/m12-reader.png` });
+  await page.goto(`${baseUrl}#/documentos/glosario`);
+  await page.getByRole('heading', { level: 1, name: 'Conceptos importantes' }).waitFor({ timeout: 8000 });
+  check('Sin conexión: el glosario se abre', (await page.locator('.glossary__term').count()) === LIBRARY.reduce((n, d) => n + d.glossary.length, 0));
+
   await page.goto(`${baseUrl}#/presentacion`);
   await page.getByRole('heading', { level: 1, name: 'Hay millones de estrellas en el universo...' }).waitFor({ timeout: 8000 });
   check('Sin conexión: la presentación se puede reproducir', true);
@@ -415,6 +448,33 @@ try {
   check('Game Center: veintiún juegos disponibles (fases 1 a 4)', (await deskPage.getByRole('link', { name: /^Jugar a / }).count()) === 21);
   check('Game Center: sin hoja de ruta pendiente ni enlaces a juegos inexistentes', (await deskPage.locator('.gc-roadmap').count()) === 0);
   check('Game Center escritorio sin desplazamiento horizontal', await noHorizontalScroll(deskPage));
+
+  // Biblioteca en escritorio, en los cuatro estilos: catálogo y lector sin desplazamiento horizontal, índice lateral visible.
+  const libraryCombos = [['glass', 'dark'], ['glass', 'light'], ['maximal', 'dark'], ['maximal', 'light']];
+  const readerDoc = firstOfShelf('cosmos');
+  for (const [style, theme] of libraryCombos) {
+    await deskPage.evaluate(
+      ([s, t]) => {
+        const prefs = JSON.parse(localStorage.getItem('uamc:preferences'));
+        prefs.appearance.style = s;
+        prefs.appearance.theme = t;
+        localStorage.setItem('uamc:preferences', JSON.stringify(prefs));
+      },
+      [style, theme],
+    );
+    await deskPage.goto(`${baseUrl}#/documentos`);
+    await deskPage.reload();
+    await deskPage.getByRole('heading', { level: 1, name: 'Historias que enseñan' }).waitFor();
+    await deskPage.waitForTimeout(600);
+    await deskPage.screenshot({ path: `${SHOTS}/d-library-${style}-${theme}.png` });
+    const catalogOk = await noHorizontalScroll(deskPage);
+    await deskPage.goto(`${baseUrl}#/documentos/${readerDoc.id}`);
+    await deskPage.locator('.reader-body h2').first().waitFor();
+    await deskPage.waitForTimeout(600);
+    await deskPage.screenshot({ path: `${SHOTS}/d-reader-${style}-${theme}.png` });
+    const tocVisible = await deskPage.getByRole('navigation', { name: 'Índice del documento' }).isVisible();
+    check(`Biblioteca escritorio ${style}/${theme}: sin desplazamiento horizontal e índice visible`, catalogOk && (await noHorizontalScroll(deskPage)) && tocVisible);
+  }
 
   // Modo online de Aquapark: enlace a la página oficial verificada, en otra pestaña, sin iframe ni carga externa.
   await deskPage.goto(`${baseUrl}#/juegos/aquapark`);

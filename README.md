@@ -20,7 +20,8 @@ juegos, documentos, diario, calendario y finanzas.
 | **Game Center — Fase 2**: Pollo pasando la calle sangriento, Resolver casos, Sudokus, Aparcar el carro, Despejar el estacionamiento | ✅ Funcional |
 | **Game Center — Fase 3**: HexaStack, Traffic Rider, Frente Abierto (inspirado en Open Front), Saltos de Lumi (plataformas originales) | ✅ Funcional |
 | **Game Center — Fase 4**: Reino de Ladrillos (homenaje al plataformas clásico), Bloques que caen (encajar piezas), Lava y Agua, Stellarium (observatorio), Heladería, Pizzería y Pastelería | ✅ Funcional |
-| Documentación, Diario y notas, Calendario, Finanzas | ⏳ Próximas fases (solo reservados, sin datos ficticios) |
+| **Biblioteca**: 4 estantes y 60 capítulos narrativos (cosmos y física, criminalística, idiomas, religiones), lector con índice, favoritos, marcadores, progreso, glosario y frases para escuchar | ✅ Funcional (ver [Biblioteca](#biblioteca)) |
+| Diario y notas, Calendario, Finanzas | ⏳ Próximas fases (solo reservados, sin datos ficticios) |
 
 ### La presentación: «Bitácora de observación»
 
@@ -136,6 +137,7 @@ public/
   icons/                   Iconos PWA (generados por scripts/generate-icons.mjs)
 scripts/
   vite-plugin-offline.js   Inyecta la CSP y genera la precarga + versión del Service Worker
+  vite-plugin-library.js   Construye el índice de la biblioteca (virtual:library-index) desde los .md
   generate-icons.mjs       SVG → PNG (192, 512, maskable, apple-touch-icon, favicon)
   verify-offline.mjs       E2E en navegador real
 src/
@@ -163,6 +165,11 @@ src/
                            EyepieceView.jsx   iris, retícula, enfoque, ficha y la vela
     home/                  HomePage
     settings/              SettingsPage + una sección por archivo
+    library/               Biblioteca: LibraryPage, ReaderPage, GlossaryPage
+      content/<estante>/   Un .md por capítulo (cosmos, criminalistica, idiomas, creencias)
+      engine/markdown.js   Formato de los documentos: parser puro (lo usan el plugin y el lector)
+      registry/            shelves.js (estantes y recorridos), catalog.js (catálogo, búsqueda, glosario)
+      services/            libraryStorage (favoritos, progreso, marcadores, tamaño de texto)
   hooks/                   useMediaQuery, useReducedMotion, useNow, usePwa
   services/
     storage/               safeLocalStorage, database (IndexedDB + migraciones), storageStatus
@@ -318,6 +325,52 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
 
 **Dependencias nuevas:** ninguna. El motor de ajedrez, la IA y los demás motores son código propio.
 
+## Biblioteca
+
+Ruta `#/documentos` (catálogo), `#/documentos/:id` (lector) y `#/documentos/glosario`. Es una biblioteca de
+**conocimiento contado como literatura**: cada capítulo empieza con una escena o un caso real, explica el tema con
+personajes históricos, analogías y datos, distingue lo establecido de lo dudoso y termina con un cierre narrativo,
+**conceptos importantes** y **fuentes y lecturas**.
+
+| Estante | Recorridos | Capítulos |
+| --- | --- | --- |
+| Astronomía, cosmología y física | primeros observadores · revolución astronómica · universo observable · origen y evolución · leyes de la naturaleza · grandes preguntas | 25 |
+| Criminalística e investigación forense | orígenes del método · escena y evidencias · laboratorio · razonar con pruebas | 11 |
+| Idiomas: español, inglés y alemán | raíces y sonidos · primeros pasos · gramática · matices y lecturas (A1–C1) | 10 |
+| Religiones, mitologías y tradiciones espirituales | mitologías antiguas · tradiciones abrahámicas · Asia · preguntas de fondo | 14 |
+
+Total: **60 capítulos, ≈173 000 palabras** (entre 2 500 y 3 500 palabras cada uno, unos 13–18 minutos de lectura).
+Cada estante muestra al final su lista de temas **«En preparación»** (`planned` en `registry/shelves.js`), sin enlace.
+
+**Cómo funciona**
+
+- **Contenido = archivos.** Cada capítulo es `src/features/library/content/<estante>/NN-nombre.md` con una cabecera
+  (`id`, `title`, `category`, `path`, `order`, `difficulty`, `description`, `keywords`, `related`). Añadir un capítulo
+  es añadir su archivo: no hay que tocar ningún registro.
+- **Índice en el build.** `scripts/vite-plugin-library.js` lee los `.md` y expone `virtual:library-index` (metadatos,
+  palabras, minutos, secciones y glosario, sin el texto). El catálogo, la búsqueda (sin tildes, por título, descripción,
+  secciones, palabras clave y conceptos) y el glosario funcionan sin cargar ningún documento.
+- **Un recurso por capítulo.** Cada `.md` se importa con `import.meta.glob(..., '?raw')`: es un chunk aparte que se
+  descarga al abrirlo y que el Service Worker precachea (offline completo, sin API remota).
+- **Formato** (`engine/markdown.js`): Markdown con extensiones: recuadros `:::recreacion` (marca la ficción literaria
+  frente a los hechos), `:::dato`, `:::analogia`, `:::incierto`, `:::gramatica`, `:::nota`, `:::ejercicio` (respuesta
+  oculta tras `???`), tablas, citas, pausas de escena y frases para escuchar `[[de|Guten Morgen]]` (es, en, de). Se
+  convierte en un árbol de bloques que React pinta: **nunca HTML como texto**, y los enlaces solo pueden ser `http(s)`.
+- **Lector:** índice (desplegable en móvil, lateral fijo desde 1240 px con la sección actual resaltada), barra y
+  guardado de progreso (al pausar el desplazamiento y al salir; «leído» al llegar al final), «Seguir donde lo dejé»,
+  marcador por sección, favoritos, tamaño de texto (5 pasos), anterior/siguiente en el estante y lecturas relacionadas.
+  En el estilo Maximalismo, las formas del fondo se atenúan mientras se lee (`data-reading`).
+- **Escuchar:** las frases en otro idioma usan las voces instaladas en el dispositivo (Web Speech API, se prefieren las
+  locales); si el dispositivo no tiene voz para ese idioma, el botón no aparece.
+
+**Rigor.** Las recreaciones literarias van siempre en su recuadro; las cuestiones abiertas, en «Lo que todavía no
+sabemos»; en religión se separa lo que cree cada tradición, lo que narran sus textos y lo que establece la historia.
+Las fuentes citadas son libros, artículos e instituciones reales; cuando no había certeza sobre una edición en español
+se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 500 palabras, introducción, 6 secciones,
+4 conceptos, 3 fuentes y relacionados existentes.
+
+---
+
 ## Persistencia local
 
 | Dónde | Qué | Clave |
@@ -325,6 +378,7 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
 | localStorage | Preferencias completas (JSON validado, con `schemaVersion`, hoy **v2**) | `uamc:preferences` |
 | IndexedDB `un-ano-mas-contigo` | `backups/preferences` (copia) y `meta/firstOpenedAt` (primera apertura de la app; **no** es la fecha de la relación) | — |
 | IndexedDB, store `games` (migración **v2**) | Un registro por juego (`version`, partidas, terminadas, tiempo, último acceso, mejores marcas, progreso, ajustes) y `__center__` (sonido y volumen) | id del juego |
+| IndexedDB, store `library` (migración **v3**) | Favoritos, progreso por capítulo (porcentaje, sección, fechas, leído), marcadores por sección y tamaño de texto; validado al leerse e incluido en la copia de seguridad completa (sección `library`) | `state` |
 
 - **Game Center:** cada registro se valida al leerse (`normalizeRecord`); las escrituras de un mismo juego se encolan
   para no pisarse; un récord solo se anuncia si supera la marca ya guardada. Sin IndexedDB funciona en memoria. No toca
@@ -398,6 +452,12 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
   se abre en local sin iframe con su opción online correcta (o el aviso), tutorial de Frente Abierto jugado desde la
   interfaz (refuerzos, previsión antes de confirmar, turno de la IA) y niveles bloqueados de Lumi; controles de
   plataformas con dos punteros a la vez.
+- **Biblioteca** (incluido en `npm test`): formato (cabecera, ids únicos sin tildes, texto en línea anidado, frases para
+  escuchar, enlaces solo `http(s)`, recuadros, ejercicios, tablas, glosario y recuento de palabras sin la bibliografía);
+  **calidad de cada uno de los 60 capítulos** (extensión, estructura, conceptos, fuentes, relacionados); persistencia
+  (favoritos, marcadores, tamaño, «leído» que no se pierde, escrituras simultáneas, datos dañados, copia de seguridad);
+  e interfaz (entrar desde el inicio, ex libris, búsqueda sin tildes, filtros por estante y dificultad, «Seguir leyendo»,
+  lector con índice, favorito, marcador y tamaño, recreaciones marcadas, documento inexistente, glosario con enlaces).
 - **Fase 4** (incluido en `npm test`): Bloques (bolsas de 7, movimiento, colisiones, patadas de pared, fijación con
   retardo y límite, 1-4 líneas y puntuación, nivel y gravedad, reserva, fin por bloqueo y por fijación arriba,
   contrarreloj), Lava y Agua (flujo, piedra, lava espesa, compuertas, derrota por lava y por salida cubierta, deshacer,
@@ -418,7 +478,9 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
   mensaje final); recorrido completo del viaje con escenario sticky simulado (avanzar, retroceder, saltos bruscos,
   revelación, final operable solo cuando se ve), sin permisos de micrófono/cámara, saltar, repetir sin cambiar preferencias,
   configuración y rutas.
-- `npm run test:e2e` — **81 comprobaciones** en Edge/Chrome real. El viaje completo con scroll real se recorre en
+- `npm run test:e2e` — **90 comprobaciones** (las nuevas: biblioteca sin conexión con sus 60 capítulos, un capítulo
+  completo de cada estante, favoritos tras recargar, glosario, y catálogo y lector en los 4 estilos sin desplazamiento
+  horizontal) en Edge/Chrome real. El viaje completo con scroll real se recorre en
   8 tamaños (375×812, 360×640, 812×375 apaisado, 768×1024, 1280×720, 1366×600, 1440×900 y 1920×1080) comprobando en
   cada capítulo: escenario pegado a la pantalla, un único texto visible, dentro de la pantalla y fuera de la zona de
   la ilustración, constelación completa, telescopio revelado, iris y ocular, vela con «A», «Otro año juntos», tarjeta
@@ -434,6 +496,10 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
 
 ## Limitaciones conocidas
 
+- **Biblioteca:** los textos se escribieron con fuentes conocidas, pero no han pasado por la revisión de especialistas
+  de cada área, y las fuentes no se consultaron en línea durante la redacción. Las voces para escuchar dependen del
+  sistema: en Windows/Edge suelen existir para español e inglés, y para alemán solo si está instalado el paquete de
+  idioma. Las tablas muy anchas se desplazan dentro de su marco en móviles estrechos.
 - La instalación y el Service Worker requieren `localhost` o HTTPS; `file://` no está soportado por los navegadores.
 - En iPhone la instalación es manual (Safari → Añadir a pantalla de inicio). **No se ha probado en un iPhone físico**:
   solo con emulación de iPhone XS en Chromium. Conviene validar en el dispositivo real el desplazamiento con la barra
@@ -464,8 +530,8 @@ biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo 
 
 - **Game Center:** las fases 1 a 4 están implementadas (21 juegos) y `registry/roadmap.js` está vacía, así que la
   biblioteca no muestra «Próximas incorporaciones». Ver «Añadir un juego» en [Game Center](#game-center).
-- **Documentación (20+):** documentos locales (Markdown/JSON) en `src/features/documentation/content/`, con
-  categorías, índice de búsqueda generado en local y lector; renderizado sin `dangerouslySetInnerHTML`.
+- **Biblioteca:** implementada (60 capítulos). Para ampliarla, añadir `.md` en `content/<estante>/` (y, si hace
+  falta, un recorrido en `registry/shelves.js`); los temas pendientes de cada estante están en su lista `planned`.
 - **Diario, notas y recordatorios:** stores `journal`, `notes`, `reminders` con índices por fecha y categoría, listos
   para enlazarse con el calendario.
 - **Calendario:** consumirá `preferences.calendar.weekStartsOn` (ya configurable) y las fechas de los registros.

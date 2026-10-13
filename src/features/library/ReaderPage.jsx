@@ -23,6 +23,7 @@ import { useLibraryState } from './hooks/useLibraryState.js';
 import { FONT_SCALES, saveProgress, setFontScale, toggleBookmark, toggleFavorite } from './services/libraryStorage.js';
 import { Blocks, Inline } from './components/MarkdownView.jsx';
 import { DocumentList } from './components/DocumentList.jsx';
+import { useReadingSurface } from './hooks/useReadingSurface.js';
 import './styles/library.css';
 
 const SAVE_DELAY = 1200;
@@ -143,6 +144,7 @@ export default function ReaderPage() {
 function Reader({ doc }) {
   const [params] = useSearchParams();
   const target = params.get('seccion');
+  useReadingSurface();
   const { blocks, error } = useDocumentSource(doc.id);
   const { state, ready } = useLibraryState();
   const articleRef = useRef(null);
