@@ -962,3 +962,33 @@ input[type='time'].field__control {
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
+
+.backup-choice {
+  list-style: none;
+  padding-left: 0;
+}
+
+.backup-choice label,
+.backup-mode label {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+.backup-choice input,
+.backup-mode input {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  flex: none;
+  accent-color: var(--c-primary);
+}
+
+.backup-mode {
+  display: grid;
+  gap: var(--space-3);
+  border: 0;
+  padding: 0;
+  margin: 0;
+}

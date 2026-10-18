@@ -79,3 +79,24 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(request.mode === 'navigate' ? handleNavigation(request) : handleAsset(request));
 });
+
+// Recordatorios: al pulsar una notificación se enfoca la app (o se abre) en la pantalla del aviso.
+// Las notificaciones las crea la propia app mientras está abierta; no hay servidor de avisos (push).
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const path = typeof event.notification.data?.url === 'string' && event.notification.data.url.startsWith('/') ? event.notification.data.url : '/';
+  const target = `${SHELL_URL}#${path}`;
+  event.waitUntil(
+    (async () => {
+      const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      for (const client of windows) {
+        if (client.url.startsWith(SHELL_URL) && 'focus' in client) {
+          await client.focus();
+          if ('navigate' in client) await client.navigate(target).catch(() => {});
+          return;
+        }
+      }
+      await self.clients.openWindow(target);
+    })(),
+  );
+});

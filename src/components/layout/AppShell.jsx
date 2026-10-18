@@ -1,8 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { AmbientBackground } from './AmbientBackground.jsx';
 import { BottomNav, MobileTopBar, Sidebar, SpacesSheet } from '../navigation/Navigation.jsx';
 import { AppNotices } from '../feedback/AppNotices.jsx';
+
+// Recordatorios del calendario y de pagos: se cargan aparte para no pesar en el arranque.
+// En las pruebas unitarias no se monta (sus temporizadores tocarían la base de datos entre pruebas);
+// su lógica se prueba por separado (reminders/schedule.js).
+const ReminderRunner = lazy(() => import('../../features/organizer/reminders/ReminderRunner.jsx').then((m) => ({ default: m.ReminderRunner })));
+const RUN_REMINDERS = import.meta.env.MODE !== 'test';
 
 /**
  * Estructura de las pantallas principales.
@@ -40,6 +46,11 @@ export function AppShell() {
       <BottomNav spacesOpen={spacesOpen} onOpenSpaces={() => setSpacesOpen(true)} />
       <SpacesSheet open={spacesOpen} onClose={() => setSpacesOpen(false)} />
       <AppNotices />
+      {RUN_REMINDERS && (
+        <Suspense fallback={null}>
+          <ReminderRunner />
+        </Suspense>
+      )}
     </div>
   );
 }

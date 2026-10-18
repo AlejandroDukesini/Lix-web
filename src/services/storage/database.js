@@ -6,8 +6,9 @@
  * `onupgradeneeded` y aquí se aplican solo las migraciones pendientes, en orden.
  * Nunca se edita una migración ya publicada: los cambios se añaden al final.
  *
- * Cada módulo futuro (diario, notas, recordatorios, calendario, finanzas,
- * juegos) tendrá su propio object store para mantener sus datos separados.
+ * Juegos y biblioteca tienen su propio store. La organización personal (finanzas,
+ * calendario, notas, diario y diario emocional) comparte el store `organizer` para
+ * que una operación que toca varias entidades se guarde en una sola transacción.
  */
 
 export const DB_NAME = 'un-ano-mas-contigo';
@@ -17,6 +18,8 @@ export const STORES = Object.freeze({
   backups: 'backups',
   games: 'games',
   library: 'library',
+  organizer: 'organizer',
+  attachments: 'attachments',
 });
 
 export const DB_MIGRATIONS = [
@@ -33,11 +36,12 @@ export const DB_MIGRATIONS = [
   (db) => {
     db.createObjectStore(STORES.library);
   },
-  // v4 (fase futura), por ejemplo:
-  // (db) => {
-  //   const journal = db.createObjectStore('journal', { keyPath: 'id' });
-  //   journal.createIndex('byDate', 'date');
-  // },
+  // v4 — Organización personal (finanzas, calendario, notas, diario y diario emocional): un registro
+  // por entidad (clave = id) en `organizer`, y los archivos adjuntos aparte en `attachments`.
+  (db) => {
+    db.createObjectStore(STORES.organizer);
+    db.createObjectStore(STORES.attachments);
+  },
 ];
 
 export const DB_VERSION = DB_MIGRATIONS.length;
@@ -127,6 +131,12 @@ export async function dbEntries(storeName) {
   return keys.map((key, index) => [key, values[index]]);
 }
 
+/** Solo las claves de un store (sin leer los valores, que pueden ser archivos grandes). */
+export async function dbKeys(storeName) {
+  const db = await openDatabase();
+  return promisify(db.transaction(storeName, 'readonly').objectStore(storeName).getAllKeys());
+}
+
 /**
  * Sustituye todo el contenido de un store por `entries` ([clave, valor]) en una
  * única transacción: o se aplica completo o no se aplica nada (restaurar copias).
@@ -143,6 +153,33 @@ export async function dbReplaceAll(storeName, entries) {
   try {
     store.clear();
     for (const [key, value] of entries) store.put(value, key);
+  } catch (error) {
+    tx.abort();
+    throw error;
+  }
+  await done;
+}
+
+/**
+ * Escribe y borra varias claves de varios stores en UNA transacción: o se aplica
+ * todo o nada. `ops` = [{ store, key, value }] (value === undefined → borrar).
+ */
+export async function dbWriteMany(ops) {
+  if (!ops.length) return;
+  const db = await openDatabase();
+  const stores = [...new Set(ops.map((op) => op.store))];
+  const tx = db.transaction(stores, 'readwrite');
+  const done = new Promise((resolve, reject) => {
+    tx.oncomplete = resolve;
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error ?? new Error('Transacción cancelada'));
+  });
+  try {
+    for (const op of ops) {
+      const store = tx.objectStore(op.store);
+      if (op.value === undefined) store.delete(op.key);
+      else store.put(op.value, op.key);
+    }
   } catch (error) {
     tx.abort();
     throw error;

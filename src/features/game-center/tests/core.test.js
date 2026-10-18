@@ -57,7 +57,8 @@ describe('ciclo de vida', () => {
 
 describe('almacenamiento de juegos', () => {
   it('usa su propio store en la base de datos de la app (migración v2)', async () => {
-    expect(DB_VERSION).toBe(3);
+    // v3 biblioteca, v4 organización personal: el store de juegos (v2) se conserva.
+    expect(DB_VERSION).toBe(4);
     await recordGameStart('chess');
     const raw = await dbGet(STORES.games, 'chess');
     expect(raw).toMatchObject({ version: 1, gameId: 'chess', plays: 1 });

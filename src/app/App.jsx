@@ -17,6 +17,13 @@ const GamePage = lazy(() => import('../features/game-center/GamePage.jsx'));
 const LibraryPage = lazy(() => import('../features/library/LibraryPage.jsx'));
 const ReaderPage = lazy(() => import('../features/library/ReaderPage.jsx'));
 const GlossaryPage = lazy(() => import('../features/library/GlossaryPage.jsx'));
+// Organización personal: cada módulo es un chunk aparte (también precacheado para uso sin conexión).
+const FinancePage = lazy(() => import('../features/organizer/finance/FinancePage.jsx'));
+const PlannerPage = lazy(() => import('../features/organizer/planner/PlannerPage.jsx'));
+const NotesPage = lazy(() => import('../features/organizer/notes/NotesPage.jsx'));
+const JournalPage = lazy(() => import('../features/organizer/journal/JournalPage.jsx'));
+const EmotionsPage = lazy(() => import('../features/organizer/emotions/EmotionsPage.jsx'));
+const DashboardPage = lazy(() => import('../features/organizer/dashboard/DashboardPage.jsx'));
 
 function PageFallback() {
   return (
@@ -102,6 +109,54 @@ function AppRoutes() {
           element={
             <Suspense fallback={<PageFallback />}>
               <ReaderPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="organizar"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <DashboardPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="calendario/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <PlannerPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="notas/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <NotesPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="diario/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <JournalPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="emociones/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <EmotionsPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="finanzas/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <FinancePage />
             </Suspense>
           }
         />

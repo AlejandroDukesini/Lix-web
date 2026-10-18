@@ -1,0 +1,466 @@
+/* Calendario, tareas y universidad. */
+
+/* ---------- Elemento de agenda ---------- */
+.org-agenda-item {
+  display: grid;
+  grid-template-columns: minmax(4.5rem, auto) minmax(0, 1fr);
+  grid-template-areas:
+    'time title'
+    'time meta';
+  gap: 2px var(--space-3);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--field-radius);
+  border: var(--surface-border-width) solid var(--surface-border);
+  border-left: 5px solid var(--item-color, var(--c-primary));
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+[data-style='maximal'] .org-agenda-item {
+  border-left-width: 8px;
+  box-shadow: 3px 3px 0 0 var(--surface-border);
+}
+
+.org-agenda-item:hover {
+  background: color-mix(in oklab, var(--item-color, var(--c-primary)) 10%, var(--surface));
+}
+
+.org-agenda-item:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.org-agenda-item__time {
+  grid-area: time;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.org-agenda-item__title {
+  grid-area: title;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.org-agenda-item__meta {
+  grid-area: meta;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.org-agenda-item.is-compact {
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    'time'
+    'title';
+  padding: var(--space-2) var(--space-3);
+}
+
+.org-agenda-item--task,
+.org-agenda-item--payment {
+  border-left-style: dashed;
+}
+
+.org-agenda-item.is-done .org-agenda-item__title,
+.org-done {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.org-agenda-item.is-cancelled {
+  opacity: 0.6;
+}
+
+.org-agenda-item.is-cancelled .org-agenda-item__title {
+  text-decoration: line-through;
+}
+
+.org-agenda-item.is-overdue .org-agenda-item__meta {
+  color: var(--danger);
+}
+
+.org-group-title.is-today {
+  color: var(--primary-text);
+}
+
+/* ---------- Mes ---------- */
+.org-month {
+  display: grid;
+  gap: 2px;
+  border-radius: var(--surface-radius);
+  overflow: hidden;
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--border);
+}
+
+.org-month__head,
+.org-month__week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 2px;
+}
+
+.org-month__weekday {
+  padding: var(--space-2) 0;
+  text-align: center;
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--surface-solid);
+}
+
+.org-month__day {
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  min-height: clamp(52px, 11vw, 112px);
+  min-width: 0;
+  padding: var(--space-1);
+  border: 0;
+  background: var(--surface-solid);
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.org-month__day:hover {
+  background: color-mix(in oklab, var(--hover) 100%, var(--surface-solid));
+}
+
+.org-month__day:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: -3px;
+}
+
+.org-month__day.is-outside {
+  color: var(--text-subtle);
+  background: color-mix(in oklab, var(--surface-solid) 85%, var(--bg));
+}
+
+.org-month__day.is-selected {
+  box-shadow: inset 0 0 0 2px var(--c-primary);
+}
+
+.org-month__number {
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.org-month__day.is-today .org-month__number {
+  background: var(--c-primary);
+  color: var(--c-on-primary);
+}
+
+.org-month__items {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.org-month__item {
+  display: block;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: color-mix(in oklab, var(--item-color) 24%, transparent);
+  border-left: 3px solid var(--item-color);
+}
+
+.org-month__item.is-done {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.org-month__more {
+  font-size: var(--text-2xs);
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+/* En pantallas estrechas el texto no cabe: cada elemento es un punto de color. */
+@media (max-width: 599px) {
+  .org-month__items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .org-month__item {
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    font-size: 0;
+    background: var(--item-color);
+  }
+  .org-month__more {
+    font-size: 9px;
+  }
+}
+
+.org-dayboard {
+  display: grid;
+  gap: var(--space-3);
+}
+
+/* ---------- Semana ---------- */
+.org-week {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 1100px) {
+  .org-week {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .org-week .org-agenda-item {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      'time'
+      'title'
+      'meta';
+    padding: var(--space-2);
+  }
+}
+
+.org-week__day {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--field-radius);
+  border: 1px solid var(--border);
+  min-width: 0;
+}
+
+.org-week__day.is-today {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 1px var(--c-primary);
+}
+
+.org-week__title {
+  font-size: var(--text-md);
+}
+
+.org-week__title span {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ---------- Detalle ---------- */
+.org-item {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.org-item__when {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+
+.org-item__actions {
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--border);
+}
+
+.org-pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.org-related {
+  display: grid;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+
+.org-related__title {
+  font-size: var(--text-md);
+}
+
+.org-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 0;
+  background: none;
+  padding: var(--space-1) 0;
+  color: var(--primary-text);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.org-scope {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* ---------- Tareas ---------- */
+.org-task {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  border-left: 4px solid var(--item-color, transparent);
+}
+
+.org-task__check,
+.org-subtasks input[type='checkbox'] {
+  width: 22px;
+  height: 22px;
+  margin-top: 2px;
+  accent-color: var(--c-primary);
+}
+
+.org-task__body {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.org-subtasks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.org-subtasks li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.org-subtasks--inline li label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.org-subtasks--inline input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.org-inline-add {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.org-inline-add > input {
+  flex: 1 1 220px;
+}
+
+.org-count {
+  display: inline-block;
+  min-width: 1.5em;
+  padding: 0 0.4em;
+  border-radius: var(--radius-pill);
+  background: var(--hover);
+  font-size: var(--text-xs);
+}
+
+/* ---------- Universidad ---------- */
+.org-timetable {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+}
+
+.org-timetable__day {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--field-radius);
+  border: 1px solid var(--border);
+}
+
+.org-timetable__day h3 {
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.org-timetable__day ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-2);
+}
+
+.org-timetable__day li {
+  display: grid;
+  gap: 1px;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border-left: 4px solid var(--item-color);
+  background: color-mix(in oklab, var(--item-color) 12%, transparent);
+}
+
+.org-timetable__time {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.org-timetable__name {
+  font-weight: 700;
+}
+
+.org-subject {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  border-top: 5px solid var(--badge-color);
+}
+
+.org-subject__title {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  min-width: 0;
+}
+
+.org-slot {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 110px), 1fr)) auto;
+  align-items: end;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}

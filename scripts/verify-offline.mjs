@@ -10,6 +10,8 @@
  *  - Ninguna petición sale del origen local y no hay errores en consola (incluidas violaciones de CSP).
  *  - El Game Center y sus veintiún juegos (fases 1 a 4) funcionan sin conexión (incluida la IA de ajedrez en su Worker).
  *  - La biblioteca (catálogo, lector, glosario y favoritos) funciona sin conexión y se lee bien en los cuatro estilos.
+ *  - La organización personal (panel, finanzas, calendario, notas, diario y diario emocional) se abre sin
+ *    conexión, guarda en IndexedDB y conserva los datos tras recargar; sin desplazamiento horizontal.
  *  - No hay desplazamiento horizontal en móvil (iPhone XS) ni en escritorio.
  *
  * Uso: npm run test:e2e   (capturas en test-results/screenshots; SCREENSHOT_DIR para cambiarlo)
@@ -351,6 +353,54 @@ try {
   await page.getByRole('heading', { level: 1, name: 'Conceptos importantes' }).waitFor({ timeout: 8000 });
   check('Sin conexión: el glosario se abre', (await page.locator('.glossary__term').count()) === LIBRARY.reduce((n, d) => n + d.glossary.length, 0));
 
+  // Organización personal sin conexión: cada espacio se abre (carga diferida desde la caché) y cabe en el móvil.
+  const organizerPages = [
+    ['organizar', 'Organización'],
+    ['finanzas', 'Finanzas'],
+    ['calendario', 'Calendario'],
+    ['notas', 'Notas'],
+    ['diario', 'Diario'],
+    ['emociones', 'Diario emocional'],
+  ];
+  const organizerProblems = [];
+  for (const [route, title] of organizerPages) {
+    await page.goto(`${baseUrl}#/${route}`);
+    await page.getByRole('heading', { level: 1, name: title, exact: true }).waitFor({ timeout: 8000 });
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${SHOTS}/m-org-${route}.png`, fullPage: true });
+    if (!(await noHorizontalScroll(page))) organizerProblems.push(`${route}: desplazamiento horizontal`);
+  }
+  check('Sin conexión: los seis espacios de organización se abren sin desplazamiento horizontal', organizerProblems.length === 0, organizerProblems.join(' | '));
+
+  // Crear datos sin conexión y comprobar que siguen ahí tras recargar.
+  await page.goto(`${baseUrl}#/notas/nueva`);
+  await page.getByLabel('Título', { exact: true }).fill('Nota escrita sin conexión');
+  await page.getByText('Guardado', { exact: true }).waitFor({ timeout: 8000 });
+  await page.goto(`${baseUrl}#/calendario/tareas`);
+  await page.getByLabel('Tarea rápida').fill('Tarea sin conexión');
+  await page.getByLabel('Tarea rápida').press('Enter');
+  await page.getByText('Tarea sin conexión').waitFor({ timeout: 8000 });
+  await page.goto(`${baseUrl}#/emociones`);
+  const emotionForm = page.getByRole('form', { name: 'Nuevo registro emocional' });
+  await emotionForm.getByRole('group', { name: '¿Qué sientes principalmente?' }).getByRole('button', { name: 'Calma' }).click();
+  await emotionForm.getByRole('button', { name: 'Guardar registro' }).click();
+  await page.getByRole('region', { name: 'Hoy' }).getByText('Calma').waitFor({ timeout: 8000 });
+  await page.reload();
+  await page.getByRole('region', { name: 'Hoy' }).getByText('Calma').waitFor({ timeout: 8000 });
+  await page.goto(`${baseUrl}#/notas`);
+  const notePersisted = await page
+    .getByText('Nota escrita sin conexión')
+    .waitFor({ timeout: 8000 })
+    .then(() => true)
+    .catch(() => false);
+  await page.goto(`${baseUrl}#/calendario/tareas`);
+  await page.getByText('Tarea sin conexión').waitFor({ timeout: 8000 });
+  check('Sin conexión: nota, tarea y registro emocional se guardan y siguen tras recargar', notePersisted);
+  await page.goto(`${baseUrl}#/calendario`);
+  await page.getByRole('heading', { level: 1, name: 'Calendario', exact: true }).waitFor({ timeout: 8000 });
+  await page.screenshot({ path: `${SHOTS}/m-org-calendario-mes.png`, fullPage: true });
+  check('Calendario móvil: el mes cabe sin desplazamiento horizontal', await noHorizontalScroll(page));
+
   await page.goto(`${baseUrl}#/presentacion`);
   await page.getByRole('heading', { level: 1, name: 'Hay millones de estrellas en el universo...' }).waitFor({ timeout: 8000 });
   check('Sin conexión: la presentación se puede reproducir', true);
@@ -433,12 +483,36 @@ try {
   await deskPage.waitForTimeout(800);
   await deskPage.screenshot({ path: `${SHOTS}/d-settings.png`, fullPage: true });
 
-  // Los módulos futuros no son enlaces navegables; Juegos sí.
-  const soonLinks = await deskPage.locator('a[href*="finanzas"], a[href*="diario"], a[href*="calendario"]').count();
-  check('Módulos futuros sin enlaces a pantallas inexistentes', soonLinks === 0);
-  await deskPage.goto(`${baseUrl}#/finanzas`);
+  // Todos los espacios son enlaces reales; una ruta desconocida vuelve al inicio.
+  const organizerLinks = await deskPage.locator('.sidebar a[href="#/finanzas"], .sidebar a[href="#/diario"], .sidebar a[href="#/calendario"], .sidebar a[href="#/organizar"]').count();
+  check('Organización: los espacios aparecen en la navegación lateral', organizerLinks === 4);
+  await deskPage.goto(`${baseUrl}#/no-existe`);
   await deskPage.locator('#home-title').waitFor();
-  check('Ruta de módulo futuro redirige al inicio', true);
+  check('Ruta desconocida redirige al inicio', true);
+
+  // Organización en escritorio, en los cuatro estilos: sin desplazamiento horizontal.
+  const orgDeskProblems = [];
+  for (const [style, theme] of [['glass', 'dark'], ['glass', 'light'], ['maximal', 'dark'], ['maximal', 'light']]) {
+    await deskPage.evaluate(
+      ([st, th]) => {
+        const prefs = JSON.parse(localStorage.getItem('uamc:preferences'));
+        prefs.appearance.style = st;
+        prefs.appearance.theme = th;
+        localStorage.setItem('uamc:preferences', JSON.stringify(prefs));
+      },
+      [style, theme],
+    );
+    for (const [route, title] of [['organizar', 'Organización'], ['finanzas', 'Finanzas'], ['calendario', 'Calendario'], ['notas', 'Notas'], ['diario', 'Diario'], ['emociones', 'Diario emocional']]) {
+      await deskPage.goto(`${baseUrl}#/${route}`);
+      await deskPage.reload();
+      await deskPage.getByRole('heading', { level: 1, name: title, exact: true }).waitFor();
+      await deskPage.waitForTimeout(500);
+      if (style === 'glass' && theme === 'dark') await deskPage.screenshot({ path: `${SHOTS}/d-org-${route}.png`, fullPage: true });
+      else if (route === 'organizar' || route === 'finanzas') await deskPage.screenshot({ path: `${SHOTS}/d-org-${route}-${style}-${theme}.png`, fullPage: true });
+      if (!(await noHorizontalScroll(deskPage))) orgDeskProblems.push(`${route} ${style}/${theme}`);
+    }
+  }
+  check('Organización escritorio: seis espacios × cuatro estilos sin desplazamiento horizontal', orgDeskProblems.length === 0, orgDeskProblems.join(' | '));
 
   // Game Center en escritorio: biblioteca sin desplazamiento horizontal y fases futuras sin enlaces.
   await deskPage.goto(`${baseUrl}#/juegos`);

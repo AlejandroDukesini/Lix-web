@@ -49,7 +49,7 @@ describe('copia de seguridad completa', () => {
   it('exporta los registros reales de los juegos, no solo la configuración', async () => {
     await playSomeGames();
     const backup = await createBackup({ preferences: customPreferences() }, NOW);
-    expect(backup).toMatchObject({ format: BACKUP_FORMAT, schemaVersion: 2, createdAt: NOW.toISOString() });
+    expect(backup).toMatchObject({ format: BACKUP_FORMAT, schemaVersion: 3, createdAt: NOW.toISOString() });
     expect(backup.sections.preferences.appearance.theme).toBe('light');
     expect(backup.sections.games.records.sudokus).toMatchObject({ plays: 1, completions: 1, best: { 'time:facil': 118_000 } });
     expect(backup.sections.games.records['saltos-de-lumi'].progress).toEqual({ unlocked: 4, stars: { 1: 3, 2: 2 } });
@@ -71,7 +71,7 @@ describe('copia de seguridad completa', () => {
     let applied = null;
     const context = { replacePreferences: (prefs) => (applied = prefs) };
     const plan = parseFullBackup(text);
-    expect(plan.sections.map((s) => s.id)).toEqual(['preferences', 'games', 'library', 'meta']);
+    expect(plan.sections.map((s) => s.id)).toEqual(expect.arrayContaining(['preferences', 'games', 'library', 'meta', 'organizer:finance', 'organizer:emotions', 'attachments']));
     expect(plan.sections.find((s) => s.id === 'games').summary).toMatch(/3 juegos · 3 partidas/);
 
     await restoreFullBackup(plan, context);

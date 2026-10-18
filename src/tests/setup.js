@@ -6,6 +6,8 @@ import { __resetForTests } from '../services/storage/safeLocalStorage.js';
 import { __resetDatabaseForTests, DB_NAME } from '../services/storage/database.js';
 import { __resetGameStorageForTests } from '../features/game-center/services/gameStorage.js';
 import { __resetLibraryStorageForTests } from '../features/library/services/libraryStorage.js';
+import { __resetOrganizerForTests } from '../features/organizer/data/store.js';
+import { __resetPrivacyForTests } from '../features/organizer/shared/privacy.js';
 
 /*
  * jsdom no implementa algunas APIs del navegador. Se simulan aquí con el
@@ -41,6 +43,8 @@ afterEach(async () => {
   __resetDatabaseForTests();
   __resetGameStorageForTests();
   __resetLibraryStorageForTests();
+  __resetOrganizerForTests();
+  __resetPrivacyForTests();
   await new Promise((resolve) => {
     const request = indexedDB.deleteDatabase(DB_NAME);
     request.onsuccess = request.onerror = request.onblocked = () => resolve();

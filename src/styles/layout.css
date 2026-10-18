@@ -397,6 +397,16 @@
   border: 2px solid var(--surface-border);
 }
 
+.nav-group {
+  margin: var(--space-4) 0 var(--space-1);
+  padding: 0 var(--space-4);
+  font-size: var(--text-2xs);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
 .nav-list--sheet .nav-item {
   align-items: flex-start;
   padding-block: var(--space-3);

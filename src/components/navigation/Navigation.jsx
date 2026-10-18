@@ -75,11 +75,21 @@ export function Sidebar() {
         <Brand />
       </div>
       <nav aria-label="Principal" className="sidebar__nav">
-        <ul className="nav-list">
-          {MODULES.filter((m) => m.id !== 'settings').map((module) => (
-            <NavItem key={module.id} module={module} />
-          ))}
-        </ul>
+        <div className="sidebar__groups">
+          <ul className="nav-list">
+            {MODULES.filter((m) => m.id !== 'settings' && !m.group).map((module) => (
+              <NavItem key={module.id} module={module} />
+            ))}
+          </ul>
+          <p className="nav-group" id="nav-group-organizer">
+            Organización
+          </p>
+          <ul className="nav-list" aria-labelledby="nav-group-organizer">
+            {MODULES.filter((m) => m.group === 'organizer').map((module) => (
+              <NavItem key={module.id} module={module} />
+            ))}
+          </ul>
+        </div>
         <ul className="nav-list nav-list--bottom">
           <NavItem module={MODULES.find((m) => m.id === 'settings')} />
         </ul>
@@ -107,7 +117,7 @@ export function MobileTopBar() {
 export function BottomNav({ onOpenSpaces, spacesOpen }) {
   const home = MODULES.find((m) => m.id === 'home');
   const games = MODULES.find((m) => m.id === 'games');
-  const library = MODULES.find((m) => m.id === 'documentation');
+  const organizer = MODULES.find((m) => m.id === 'organizer');
   const settings = MODULES.find((m) => m.id === 'settings');
   const link = (module, label) => {
     const Icon = module.icon;
@@ -122,8 +132,8 @@ export function BottomNav({ onOpenSpaces, spacesOpen }) {
   return (
     <nav className="bottom-nav" aria-label="Principal">
       {link(home, 'Inicio')}
+      {organizer.status === 'available' && link(organizer, 'Organizar')}
       {games.status === 'available' && link(games, 'Juegos')}
-      {library.status === 'available' && link(library, 'Biblioteca')}
       <button
         type="button"
         className={cx('bottom-nav__item', spacesOpen && 'is-active')}
@@ -145,12 +155,18 @@ export function SpacesSheet({ open, onClose }) {
       open={open}
       onClose={onClose}
       title="Nuestros espacios"
-      description="Así se irá llenando la app. Los que dicen «Pronto» llegarán en las próximas fases."
+      description="Todo lo que hay en la app. Cada espacio guarda sus datos solo en este dispositivo."
       className="dialog--sheet"
     >
       <nav aria-label="Todos los espacios">
         <ul className="nav-list nav-list--sheet">
-          {MODULES.map((module) => (
+          {MODULES.filter((m) => !m.group).map((module) => (
+            <NavItem key={module.id} module={module} onNavigate={onClose} showTeaser />
+          ))}
+        </ul>
+        <p className="nav-group">Organización</p>
+        <ul className="nav-list nav-list--sheet">
+          {MODULES.filter((m) => m.group === 'organizer').map((module) => (
             <NavItem key={module.id} module={module} onNavigate={onClose} showTeaser />
           ))}
         </ul>

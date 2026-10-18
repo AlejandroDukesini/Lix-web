@@ -16,7 +16,7 @@ export function CalendarSection() {
       id="calendario"
       icon={CalendarDays}
       title="Calendario"
-      description="Preferencia que usará el calendario cuando llegue en una próxima fase."
+      description="Primer día de la semana en el calendario, en las vistas semanales de finanzas y en los resúmenes."
     >
       <SegmentedControl
         label="La semana empieza el"

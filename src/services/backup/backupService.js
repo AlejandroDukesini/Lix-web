@@ -29,12 +29,20 @@ import {
   sanitizeGameData,
 } from '../../features/game-center/services/gameStorage.js';
 import { exportLibraryData, restoreLibraryData, sanitizeLibraryState } from '../../features/library/services/libraryStorage.js';
+import { compareWithCurrent, ensureLoaded, exportModule, restoreModule, sanitizeModule } from '../../features/organizer/data/store.js';
+import { ENTITIES, MODULES as ORGANIZER_MODULES } from '../../features/organizer/data/entities.js';
+import { exportAttachments, restoreAttachments, sanitizeAttachments } from '../../features/organizer/data/attachments.js';
 
 export const BACKUP_FORMAT = 'un-ano-mas-contigo/backup';
 export const LEGACY_PREFERENCES_FORMAT = 'un-ano-mas-contigo/preferences';
-export const BACKUP_SCHEMA_VERSION = 2;
-/** Una copia real ocupa unos pocos KB; 5 MB deja margen para módulos futuros. */
-export const MAX_BACKUP_BYTES = 5 * 1024 * 1024;
+/**
+ * v3: secciones de la organización personal (una por módulo) y adjuntos; la copia puede
+ * ser selectiva, así que la configuración ya no es obligatoria. Se siguen aceptando v2.
+ */
+export const BACKUP_SCHEMA_VERSION = 3;
+/** Sin adjuntos una copia ocupa KB; con fotos y comprobantes (3 MB cada uno) puede crecer. */
+export const MAX_BACKUP_BYTES = 80 * 1024 * 1024;
+const SNAPSHOT_KEY = 'pre-restore';
 
 const appVersion = typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : null;
 
@@ -80,6 +88,31 @@ export const BACKUP_SOURCES = [
       return `${plural(read, 'lectura terminada', 'lecturas terminadas')} · ${plural(value.favorites.length, 'favorito', 'favoritos')} · ${plural(value.bookmarks.length, 'marcador', 'marcadores')}`;
     },
   },
+  ...Object.keys(ORGANIZER_MODULES).map((module) => ({
+    id: `organizer:${module}`,
+    label: ORGANIZER_MODULES[module],
+    organizer: module,
+    mergeable: true,
+    read: () => exportModule(module),
+    sanitize: (raw) => sanitizeModule(module, raw),
+    restore: (value, context) => restoreModule(module, value, context.mode === 'merge' ? 'merge' : 'replace'),
+    summarize: (value) => {
+      const counts = new Map();
+      for (const record of value.records) if (!ENTITIES[record.kind].singleton) counts.set(record.kind, (counts.get(record.kind) ?? 0) + 1);
+      const parts = [...counts].map(([kind, n]) => plural(n, ENTITIES[kind].label, ENTITIES[kind].plural));
+      return parts.length ? parts.join(' · ') : 'Solo ajustes';
+    },
+  })),
+  {
+    id: 'attachments',
+    label: 'Archivos adjuntos',
+    mergeable: true,
+    read: () => exportAttachments(),
+    sanitize: (raw) => sanitizeAttachments(raw),
+    // Los adjuntos solo se añaden: nunca se borran los que ya hay en este dispositivo.
+    restore: (value) => restoreAttachments(value),
+    summarize: (value) => (value.files.length ? plural(value.files.length, 'archivo', 'archivos') : null),
+  },
   {
     id: 'meta',
     label: 'Instalación',
@@ -98,10 +131,16 @@ export const BACKUP_SOURCES = [
   },
 ];
 
-/** Reúne todas las fuentes. `context.preferences` = preferencias actuales de la interfaz. */
+/**
+ * Reúne las fuentes. `context.preferences` = preferencias actuales de la interfaz.
+ * `context.include` (opcional) = ids de las secciones a exportar (copia selectiva).
+ */
 export async function createBackup(context, now = new Date()) {
   const sections = {};
-  for (const source of BACKUP_SOURCES) sections[source.id] = await source.read(context);
+  for (const source of BACKUP_SOURCES) {
+    if (context.include && source.id !== 'meta' && !context.include.includes(source.id)) continue;
+    sections[source.id] = await source.read(context);
+  }
   return {
     format: BACKUP_FORMAT,
     schemaVersion: BACKUP_SCHEMA_VERSION,
@@ -127,6 +166,9 @@ function migrateBackup(parsed) {
     throw new Error('Esta copia se creó con una versión más reciente de la app. Actualízala para restaurarla.');
   }
   if (!isPlainObject(parsed.sections)) throw new Error('La copia no tiene secciones de datos.');
+  if (!Object.keys(parsed.sections).some((id) => BACKUP_SOURCES.some((source) => source.id === id && id !== 'meta'))) {
+    throw new Error('La copia no contiene datos que esta app sepa leer.');
+  }
   return { createdAt: parsed.createdAt ?? null, schemaVersion: parsed.schemaVersion, sections: parsed.sections };
 }
 
@@ -149,7 +191,8 @@ export function parseFullBackup(text) {
   const issues = [];
   for (const source of BACKUP_SOURCES) {
     if (!(source.id in backup.sections)) {
-      if (source.required) throw new Error(`A la copia le falta la sección "${source.label}".`);
+      // Desde la v3 las copias pueden ser selectivas: solo las v2 deben traer la configuración.
+      if (source.required && backup.schemaVersion < 3) throw new Error(`A la copia le falta la sección "${source.label}".`);
       continue;
     }
     const result = source.sanitize(backup.sections[source.id]);
@@ -158,18 +201,52 @@ export function parseFullBackup(text) {
       continue;
     }
     issues.push(...result.issues);
-    sections.push({ id: source.id, label: source.label, value: result.value, summary: source.summarize(result.value) });
+    sections.push({
+      id: source.id,
+      label: source.label,
+      value: result.value,
+      summary: source.summarize(result.value),
+      mergeable: Boolean(source.mergeable),
+      organizer: source.organizer ?? null,
+    });
   }
   return { createdAt: backup.createdAt, schemaVersion: backup.schemaVersion, sections, issues, legacy: backup.schemaVersion < 2 };
 }
 
 /**
- * Aplica un plan ya validado. Primero los datos de IndexedDB (transacción
- * atómica) y al final las preferencias: si algo falla antes, la configuración
- * actual no se toca. `context.replacePreferences(prefs)` la aplica en la interfaz.
+ * Para la vista previa: cuántos registros de cada sección de la organización son nuevos
+ * y cuántos ya existen aquí (mismo id), y de esos cuántos son más recientes en la copia.
+ */
+export async function compareBackup(plan) {
+  await ensureLoaded();
+  const out = {};
+  for (const section of plan.sections) if (section.organizer) out[section.id] = compareWithCurrent(section.value);
+  return out;
+}
+
+/** Guarda una copia completa del estado actual antes de restaurar (para poder deshacer). */
+export async function saveSafetySnapshot(context, now = new Date()) {
+  const text = await serializeFullBackup({ preferences: context.preferences }, now);
+  await dbPut(STORES.backups, SNAPSHOT_KEY, { createdAt: now.toISOString(), text });
+}
+
+export async function readSafetySnapshot() {
+  const snapshot = await dbGet(STORES.backups, SNAPSHOT_KEY).catch(() => null);
+  return snapshot && typeof snapshot.text === 'string' ? snapshot : null;
+}
+
+/**
+ * Aplica un plan ya validado. Primero los datos de IndexedDB y al final las
+ * preferencias: si algo falla antes, la configuración actual no se toca.
+ *   context.replacePreferences(prefs) → aplica la configuración en la interfaz
+ *   context.selected  (opcional) → ids de las secciones a restaurar
+ *   context.mode      'replace' | 'merge' → solo afecta a las secciones combinables
+ *   context.snapshot  true → antes guarda el estado actual para «Deshacer»
  */
 export async function restoreFullBackup(plan, context) {
-  const ordered = [...plan.sections].sort((a, b) => (a.id === 'preferences') - (b.id === 'preferences'));
+  const chosen = plan.sections.filter((s) => !context.selected || context.selected.includes(s.id) || s.id === 'meta');
+  if (context.snapshot) await saveSafetySnapshot(context);
+  const ordered = [...chosen].sort((a, b) => (a.id === 'preferences') - (b.id === 'preferences'));
   const restored = [];
   for (const section of ordered) {
     const source = BACKUP_SOURCES.find((s) => s.id === section.id);
@@ -177,4 +254,13 @@ export async function restoreFullBackup(plan, context) {
     restored.push(section.id);
   }
   return { restored };
+}
+
+/** Deshace la última restauración: vuelve a dejar los datos exactamente como estaban. */
+export async function undoLastRestore(context) {
+  const snapshot = await readSafetySnapshot();
+  if (!snapshot) throw new Error('No hay ninguna restauración que deshacer.');
+  const plan = parseFullBackup(snapshot.text);
+  await restoreFullBackup(plan, { ...context, mode: 'replace', snapshot: false, selected: undefined });
+  return snapshot.createdAt;
 }

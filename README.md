@@ -2,7 +2,7 @@
 
 Un regalo digital de Año Nuevo: una aplicación **privada**, **instalable** y **100 % local** (sin servidores, sin
 nube, sin Internet después de la primera carga) que irá creciendo por fases hasta convertirse en nuestro espacio:
-juegos, documentos, diario, calendario y finanzas.
+juegos, documentos, diario, calendario y finanzas (ya todos disponibles).
 
 ---
 
@@ -21,7 +21,7 @@ juegos, documentos, diario, calendario y finanzas.
 | **Game Center — Fase 3**: HexaStack, Traffic Rider, Frente Abierto (inspirado en Open Front), Saltos de Lumi (plataformas originales) | ✅ Funcional |
 | **Game Center — Fase 4**: Reino de Ladrillos (homenaje al plataformas clásico), Bloques que caen (encajar piezas), Lava y Agua, Stellarium (observatorio), Heladería, Pizzería y Pastelería | ✅ Funcional |
 | **Biblioteca**: 4 estantes y 60 capítulos narrativos (cosmos y física, criminalística, idiomas, religiones), lector con índice, favoritos, marcadores, progreso, glosario y frases para escuchar | ✅ Funcional (ver [Biblioteca](#biblioteca)) |
-| Diario y notas, Calendario, Finanzas | ⏳ Próximas fases (solo reservados, sin datos ficticios) |
+| **Organización personal**: panel del día, Finanzas, Calendario (universidad, tareas, recordatorios), Notas, Diario y Diario emocional, con PIN opcional y copias selectivas | ✅ Funcional (ver [Organización personal](#organización-personal)) |
 
 ### La presentación: «Bitácora de observación»
 
@@ -170,6 +170,13 @@ src/
       engine/markdown.js   Formato de los documentos: parser puro (lo usan el plugin y el lector)
       registry/            shelves.js (estantes y recorridos), catalog.js (catálogo, búsqueda, glosario)
       services/            libraryStorage (favoritos, progreso, marcadores, tamaño de texto)
+    organizer/             Organización personal (ver la sección propia)
+      data/                entities (catálogo y relaciones), store (IndexedDB, transacciones), fields, recurrence,
+                           tags, csv, attachments, seeds, hooks
+      shared/              UI común (campos, formularios, borrado con integridad, gráficos), markdown seguro,
+                           editor con guardado automático, papelera, PIN de privacidad
+      finance/ planner/ notes/ journal/ emotions/ dashboard/ reminders/
+      tests/               lógica pura, almacén, copias e interfaz de cada módulo
   hooks/                   useMediaQuery, useReducedMotion, useNow, usePwa
   services/
     storage/               safeLocalStorage, database (IndexedDB + migraciones), storageStatus
@@ -371,6 +378,41 @@ se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 5
 
 ---
 
+## Organización personal
+
+Seis espacios agrupados en la navegación bajo «Organización». Todo se calcula a partir de los registros reales:
+no hay cifras guardadas aparte ni datos de ejemplo.
+
+| Ruta | Qué hace |
+| --- | --- |
+| `#/organizar` | Panel del día configurable (qué bloques y en qué orden): hoy, clases y entregas, tareas, finanzas, pagos próximos, metas, escritura rápida y actividad reciente. |
+| `#/finanzas` | Resumen por día/semana/mes/año con comparación; movimientos (CRUD, gasto rápido, filtros, orden, búsqueda, duplicar, cancelar, historial de cambios, comprobantes); cuentas (efectivo, banco, billetera, tarjeta de crédito con cupo, corte y pago, ahorro; archivar; conciliar saldo); presupuestos con avisos; metas de ahorro; pagos programados (suscripciones, matrícula, servicios, cuotas, ingresos fijos); informes con CSV e impresión a PDF; categorías y subcategorías; importación CSV con vista previa, validación y duplicados. |
+| `#/calendario` | Mes, semana, día, agenda y pasados; búsqueda y filtros por tipo, categoría y prioridad; eventos con repetición, recordatorios, conflictos avisados (no bloqueados) y edición «solo esta / esta y las siguientes / toda la serie»; tareas con subtareas; universidad (materias con horario, docente y salón; trabajos, exámenes, parciales, exposiciones, entregas y lecturas); categorías y ajustes. |
+| `#/notas` | Notas en Markdown con guardado automático, recuperación de borradores, modo lectura con casillas marcables, carpetas (3 niveles), colecciones, categorías, etiquetas, fijadas, favoritas, archivo y papelera. |
+| `#/diario` | Entradas (varias por día) con fecha del acontecimiento, borrador/publicada, fotos, vínculos con eventos/notas/tareas, preguntas y plantillas opcionales, «En un día como hoy», calendario de entradas y resumen mensual/anual. |
+| `#/emociones` | Registro (emoción principal y secundarias, intensidad 1–5 o 1–10, ánimo, contexto, factores, necesidades, estrategias, reflexión guiada opcional, notas privadas), historial con calendario emocional y filtros, gráficos explicados (sin inferir causas), ejercicios de respiración y anclaje sin conexión, emociones personalizables, exportar y borrar todo. |
+
+**Reglas contables** (`finance/ledger.js`): saldo = saldo inicial + ingresos − gastos ± transferencias, solo
+movimientos completados; una transferencia nunca es ingreso ni gasto; la compra con tarjeta es el gasto y su pago es
+una transferencia (no se cuenta dos veces); un aporte a una meta es una transferencia marcada (el dinero no se
+duplica); cada ocurrencia de un pago programado genera como mucho un movimiento; los totales usan la moneda principal
+(no hay conversión de divisas). Importes en enteros (centavos).
+
+**Modelo de datos** (`organizer/data/entities.js`): cada tipo declara sus campos validados y sus relaciones con la
+política al borrar el destino: `restrict` (se ofrece archivar o reasignar), `unlink` (se conserva sin vínculo),
+`cascade` (se enumera en la confirmación) o `reparent` (carpetas). El diálogo de borrado muestra el plan antes de
+ejecutarlo; nada dependiente se borra en silencio. Cada escritura es una transacción atómica de IndexedDB; varias
+pestañas se sincronizan con BroadcastChannel.
+
+**Recordatorios:** avisos dentro de la app y, con permiso, notificaciones del sistema. Solo funcionan con la app
+abierta (no hay servidor push); al abrirla se muestran los de las últimas 12 horas. Opción para ocultar los detalles.
+El diario emocional nunca genera notificaciones.
+
+**Privacidad:** PIN opcional (Configuración → Privacidad) para el diario y el diario emocional, con bloqueo por
+inactividad. Se guarda solo un hash PBKDF2-SHA-256 con sal. **No es cifrado**: es una barrera frente a miradas
+casuales y así se explica en la interfaz. El Markdown nunca se interpreta como HTML y los enlaces solo pueden ser
+`http(s)`/`mailto`.
+
 ## Persistencia local
 
 | Dónde | Qué | Clave |
@@ -379,6 +421,10 @@ se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 5
 | IndexedDB `un-ano-mas-contigo` | `backups/preferences` (copia) y `meta/firstOpenedAt` (primera apertura de la app; **no** es la fecha de la relación) | — |
 | IndexedDB, store `games` (migración **v2**) | Un registro por juego (`version`, partidas, terminadas, tiempo, último acceso, mejores marcas, progreso, ajustes) y `__center__` (sonido y volumen) | id del juego |
 | IndexedDB, store `library` (migración **v3**) | Favoritos, progreso por capítulo (porcentaje, sección, fechas, leído), marcadores por sección y tamaño de texto; validado al leerse e incluido en la copia de seguridad completa (sección `library`) | `state` |
+| IndexedDB, store `organizer` (migración **v4**) | Todos los registros de la organización: `{ id, kind, createdAt, updatedAt, rev, …campos }` (más `history` en los movimientos). Los ajustes son registros únicos (`financeSettings`, `privacySettings`…) | id |
+| IndexedDB, store `attachments` (migración **v4**) | Adjuntos (imágenes y PDF ≤ 3 MB) como ArrayBuffer; los huérfanos de más de un día se limpian al abrir | id |
+| IndexedDB, `backups/pre-restore` | Instantánea completa guardada justo antes de restaurar una copia («Deshacer la última restauración») | — |
+| localStorage `uamc:draft:<id>`, `uamc:reminders:*` | Borradores de notas y diario aún sin guardar; avisos ya mostrados | — |
 
 - **Game Center:** cada registro se valida al leerse (`normalizeRecord`); las escrituras de un mismo juego se encolan
   para no pisarse; un récord solo se anuncia si supera la marca ya guardada. Sin IndexedDB funciona en memoria. No toca
@@ -397,6 +443,10 @@ se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 5
   si mostrar la presentación.
 - **Migraciones:** preferencias en `services/preferences/migrations.js`; base de datos en
   `services/storage/database.js` (`DB_MIGRATIONS`, una función por versión, nunca se edita una ya publicada).
+- **Copias (formato v3):** se puede elegir qué secciones exportar; al restaurar hay vista previa (nuevos / ya
+  existentes / más recientes en la copia), elección de secciones y modo **Combinar** (añade y conserva la versión más
+  reciente; no borra) o **Reemplazar** (el módulo queda como en la copia). Antes de aplicar se guarda una instantánea
+  para deshacer. Los adjuntos viajan en base64. Las copias v1 y v2 se siguen aceptando.
 - **Copias:** *Configuración → Datos* permite descargar y restaurar un archivo JSON, pedir almacenamiento persistente,
   restablecer la configuración (conserva el estado de la presentación, con «Deshacer») y **borrar todo** (confirmación
   escribiendo `BORRAR`).
@@ -478,7 +528,17 @@ se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 5
   mensaje final); recorrido completo del viaje con escenario sticky simulado (avanzar, retroceder, saltos bruscos,
   revelación, final operable solo cuando se ve), sin permisos de micrófono/cámara, saltar, repetir sin cambiar preferencias,
   configuración y rutas.
-- `npm run test:e2e` — **90 comprobaciones** (las nuevas: biblioteca sin conexión con sus 60 capítulos, un capítulo
+- **Organización** (incluido en `npm test`, `src/features/organizer/tests/`): validación y relaciones de cada
+  entidad, transacciones atómicas, escrituras concurrentes, integridad al borrar (restringir, desvincular, cascada,
+  carpetas), historial; importes y libro contable (transferencias, tarjetas, metas, presupuestos, períodos);
+  repeticiones (31 de cada mes, días de la semana, número de veces) y series («solo esta / siguientes / toda»);
+  pagos sin duplicados; CSV (exportar, vista previa, errores, duplicados, importar); agenda y conflictos;
+  recordatorios; Markdown sin XSS; etiquetas; papelera; guardado automático, borrador recuperado y cambios externos;
+  PIN; estadísticas del diario y del diario emocional; copias (ida y vuelta, combinar, selectiva, deshacer, adjuntos);
+  e interfaz de los seis espacios con recarga real.
+- `npm run test:e2e` — **94 comprobaciones** (además: los seis espacios de organización sin conexión y sin
+  desplazamiento horizontal en móvil, nota/tarea/registro emocional creados sin conexión que siguen tras recargar, y
+  los seis espacios en los cuatro estilos de escritorio). Antes eran **90 comprobaciones** (las nuevas: biblioteca sin conexión con sus 60 capítulos, un capítulo
   completo de cada estante, favoritos tras recargar, glosario, y catálogo y lector en los 4 estilos sin desplazamiento
   horizontal) en Edge/Chrome real. El viaje completo con scroll real se recorre en
   8 tamaños (375×812, 360×640, 812×375 apaisado, 768×1024, 1280×720, 1366×600, 1440×900 y 1920×1080) comprobando en
@@ -500,6 +560,10 @@ se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 5
   de cada área, y las fuentes no se consultaron en línea durante la redacción. Las voces para escuchar dependen del
   sistema: en Windows/Edge suelen existir para español e inglés, y para alemán solo si está instalado el paquete de
   idioma. Las tablas muy anchas se desplazan dentro de su marco en móviles estrechos.
+- **Organización:** los recordatorios no llegan con la app cerrada (no hay servidor de notificaciones) y en iPhone
+  las notificaciones requieren la app instalada; el PIN no cifra los datos; no hay conversión entre monedas (las
+  transferencias deben ser entre cuentas de la misma moneda); los adjuntos se limitan a 3 MB por archivo; la
+  importación CSV lee hasta 5.000 filas; los informes en PDF usan la impresión del navegador.
 - La instalación y el Service Worker requieren `localhost` o HTTPS; `file://` no está soportado por los navegadores.
 - En iPhone la instalación es manual (Safari → Añadir a pantalla de inicio). **No se ha probado en un iPhone físico**:
   solo con emulación de iPhone XS en Chromium. Conviene validar en el dispositivo real el desplazamiento con la barra
@@ -526,16 +590,15 @@ se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 5
 
 ## Próximas fases
 
-> No se han implementado módulos nuevos ni pantallas de relleno: los puntos de extensión ya existen y se describen aquí.
+> Todos los espacios previstos están implementados. Estos son los puntos de extensión para ampliarlos.
 
 - **Game Center:** las fases 1 a 4 están implementadas (21 juegos) y `registry/roadmap.js` está vacía, así que la
   biblioteca no muestra «Próximas incorporaciones». Ver «Añadir un juego» en [Game Center](#game-center).
 - **Biblioteca:** implementada (60 capítulos). Para ampliarla, añadir `.md` en `content/<estante>/` (y, si hace
   falta, un recorrido en `registry/shelves.js`); los temas pendientes de cada estante están en su lista `planned`.
-- **Diario, notas y recordatorios:** stores `journal`, `notes`, `reminders` con índices por fecha y categoría, listos
-  para enlazarse con el calendario.
-- **Calendario:** consumirá `preferences.calendar.weekStartsOn` (ya configurable) y las fechas de los registros.
-- **Finanzas:** store propio y separado del resto.
+- **Organización personal:** implementada. Para un tipo de registro nuevo: declararlo en
+  `organizer/data/entities.js` (campos, relaciones y módulo); las copias, el borrado con integridad y la validación lo
+  incluyen solos.
 
 Para activar cualquiera: crear su carpeta en `src/features/`, cambiar su `status` a `'available'` en
 `src/app/modules.js`, añadir su ruta en `App.jsx` y, si guarda datos, una migración en `DB_MIGRATIONS`.

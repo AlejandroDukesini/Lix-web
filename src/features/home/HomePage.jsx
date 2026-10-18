@@ -1,4 +1,4 @@
-import { BookOpenText, CalendarHeart, Gamepad2, Heart, Library, Play, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
+import { BookOpenText, CalendarHeart, Feather, Gamepad2, Heart, LayoutDashboard, Library, Play, Settings2, ShieldCheck, Sparkles } from 'lucide-react';
 import { usePreferences } from '../../app/providers/PreferencesProvider.jsx';
 import { UPCOMING_MODULES } from '../../app/modules.js';
 import { Button } from '../../components/common/Button.jsx';
@@ -184,7 +184,28 @@ function LibraryCard() {
   );
 }
 
+function OrganizerCard() {
+  return (
+    <Card as="section" className="stat-card games-card organizer-card" aria-labelledby="organizer-title">
+      <LayoutDashboard className="stat-card__icon" aria-hidden="true" />
+      <h2 id="organizer-title" className="stat-card__title">
+        Mi organización
+      </h2>
+      <p className="stat-card__text">Clases, tareas, pagos, notas y diarios. Todo se queda en este dispositivo.</p>
+      <div className="hero__actions">
+        <Button to="/organizar" icon={LayoutDashboard} size="sm">
+          Ver mi día
+        </Button>
+        <Button to="/diario/nueva" icon={Feather} size="sm" variant="secondary">
+          Escribir en el diario
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 function Upcoming() {
+  if (!UPCOMING_MODULES.length) return null;
   return (
     <section className="upcoming" aria-labelledby="upcoming-title">
       <SectionHeader
@@ -226,6 +247,7 @@ export function HomePage() {
         <ReplayCard />
         <GamesCard />
         <LibraryCard />
+        <OrganizerCard />
       </div>
       <Upcoming />
       <p className="home__privacy">

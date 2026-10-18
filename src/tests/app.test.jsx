@@ -1,10 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { App } from '../app/App.jsx';
 import { createDefaultPreferences } from '../services/preferences/defaults.js';
 import { backupPreferences, PREFERENCES_KEY } from '../services/preferences/preferencesService.js';
 import { SCENE_IDS, scrollForScene, STORY_LENGTH } from '../features/presentation/story/timeline.js';
+
+// Configuración se carga bajo demanda: con la suite en paralelo, su primera importación puede superar la espera de 8 s.
+beforeAll(() => import('../features/settings/SettingsPage.jsx'), 120_000);
 
 function storePreferences(mutate = () => {}) {
   const prefs = createDefaultPreferences();
@@ -147,23 +150,33 @@ describe('primer inicio: el viaje astral', () => {
 });
 
 describe('inicio y navegación', () => {
-  it('muestra el saludo, los contadores y los módulos futuros sin enlaces', async () => {
+  it('muestra el saludo, los contadores y los accesos a todos los espacios', async () => {
     storePreferences();
     render(<App />);
     expect(await screen.findByText(/Buenos días|Buenas tardes|Buenas noches/)).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /Rumbo a|Feliz/ })).toBeInTheDocument();
 
-    const soon = screen.getAllByText('Próximamente');
-    expect(soon).toHaveLength(3);
-    for (const label of ['Finanzas', 'Calendario']) {
-      expect(screen.queryByRole('link', { name: new RegExp(label) })).toBeNull();
-    }
+    // Ya no queda ningún espacio «Próximamente».
+    expect(screen.queryByText('Próximamente')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Espacios que llegarán pronto' })).toBeNull();
     // Juegos ya está disponible: navegación lateral, barra inferior y tarjeta del inicio.
     expect(screen.getAllByRole('link', { name: /Juegos/ }).length).toBeGreaterThanOrEqual(2);
     expect(screen.getByRole('link', { name: 'Entrar al Game Center' })).toHaveAttribute('href', '#/juegos');
-    // La biblioteca también: navegación y tarjeta del inicio.
-    expect(screen.getAllByRole('link', { name: /Biblioteca/ }).length).toBeGreaterThanOrEqual(2);
+    // La biblioteca también: navegación lateral (en móvil, dentro de «Espacios») y tarjeta del inicio.
+    expect(screen.getAllByRole('link', { name: /Biblioteca/ }).length).toBeGreaterThanOrEqual(1);
     expect(screen.getByRole('link', { name: 'Abrir la biblioteca' })).toHaveAttribute('href', '#/documentos');
+    // Organización: los seis espacios en la navegación y la tarjeta del inicio.
+    for (const [label, href] of [
+      ['Organización', '#/organizar'],
+      ['Calendario', '#/calendario'],
+      ['Finanzas', '#/finanzas'],
+      ['Notas', '#/notas'],
+      ['Diario', '#/diario'],
+      ['Diario emocional', '#/emociones'],
+    ]) {
+      expect(screen.getAllByRole('link', { name: label }).some((a) => a.getAttribute('href') === href)).toBe(true);
+    }
+    expect(screen.getByRole('link', { name: 'Ver mi día' })).toHaveAttribute('href', '#/organizar');
   });
 
   it('sin fecha configurada no muestra contador de días', async () => {
@@ -177,7 +190,7 @@ describe('inicio y navegación', () => {
 
   it('una ruta inexistente vuelve al inicio', async () => {
     storePreferences();
-    window.location.hash = '#/finanzas';
+    window.location.hash = '#/no-existe';
     render(<App />);
     expect(await screen.findByRole('heading', { level: 1, name: /Mi niña/ })).toBeInTheDocument();
   });

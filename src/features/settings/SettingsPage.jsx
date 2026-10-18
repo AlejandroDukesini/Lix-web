@@ -8,6 +8,7 @@ import { CalendarSection } from './sections/CalendarSection.jsx';
 import { DatesSection } from './sections/DatesSection.jsx';
 import { InstallSection } from './sections/InstallSection.jsx';
 import { DataSection } from './sections/DataSection.jsx';
+import { PrivacySection } from './sections/PrivacySection.jsx';
 import { HorizontalScroller } from '../../components/common/HorizontalScroller.jsx';
 import { cx } from '../../utils/cx.js';
 import './settings.css';
@@ -20,6 +21,7 @@ const SECTIONS = [
   { id: 'calendario', label: 'Calendario' },
   { id: 'fechas', label: 'Fecha y hora' },
   { id: 'instalacion', label: 'Instalación' },
+  { id: 'privacidad', label: 'Privacidad' },
   { id: 'datos', label: 'Datos' },
 ];
 
@@ -119,6 +121,7 @@ export default function SettingsPage() {
           <CalendarSection />
           <DatesSection />
           <InstallSection />
+          <PrivacySection />
           <DataSection />
         </div>
       </div>

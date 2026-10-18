@@ -1,0 +1,173 @@
+/* Diario emocional. */
+
+.org-emotion-picker {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.org-emotion-group {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.org-emotion-group__label {
+  font-size: var(--text-xs);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+}
+
+.org-emotion-chip.is-active {
+  font-weight: 800;
+  box-shadow: 0 0 0 2px var(--chip-color);
+}
+
+.org-range {
+  width: 100%;
+  accent-color: var(--c-primary);
+  min-height: var(--tap);
+}
+
+.org-range__labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--text-xs);
+  color: var(--text-subtle);
+}
+
+.org-log {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  border-left: 4px solid var(--item-color);
+}
+
+.org-log__intensity {
+  display: flex;
+  align-items: flex-end;
+  width: 8px;
+  height: 44px;
+  border-radius: var(--radius-pill);
+  background: var(--track);
+  overflow: hidden;
+}
+
+.org-log__intensity span {
+  display: block;
+  width: 100%;
+  background: var(--item-color);
+  border-radius: inherit;
+}
+
+.org-log__text {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+
+/* Calendario emocional: fondo según el tono predominante (con su leyenda y texto). */
+.org-month--emotions .tone--pleasant,
+.org-tone-swatch.tone--pleasant {
+  background: color-mix(in oklab, #e9b949 28%, var(--surface-solid));
+}
+
+.org-month--emotions .tone--unpleasant,
+.org-tone-swatch.tone--unpleasant {
+  background: color-mix(in oklab, #5b7db1 30%, var(--surface-solid));
+}
+
+.org-month--emotions .tone--mixed,
+.org-tone-swatch.tone--mixed {
+  background: color-mix(in oklab, #a78bfa 28%, var(--surface-solid));
+}
+
+.org-month--emotions .tone--neutral,
+.org-tone-swatch.tone--neutral {
+  background: color-mix(in oklab, #9a9a9a 26%, var(--surface-solid));
+}
+
+.org-tone-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.org-tone-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+}
+
+.org-tone-dots span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px var(--surface-solid);
+}
+
+/* Bienestar */
+.org-breathing {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.org-breathing__circle {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, color-mix(in oklab, var(--c-primary) 55%, white), var(--c-secondary));
+  transform: scale(var(--breath-scale, 0.7));
+  opacity: 0.85;
+}
+
+.org-breathing__circle.is-animated {
+  transition: transform var(--breath-duration) ease-in-out;
+}
+
+.org-breathing__phase {
+  font-size: var(--text-xl);
+  font-weight: 800;
+  min-height: 1.5em;
+}
+
+.org-grounding {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: 0;
+  list-style: none;
+}
+
+.org-grounding li {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--field-radius);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.org-grounding li strong {
+  font-size: var(--text-xl);
+  margin-right: var(--space-2);
+  color: var(--text);
+}
+
+.org-grounding li.is-current {
+  border-color: var(--c-primary);
+  background: var(--selected);
+  color: var(--text);
+}
+
+.org-grounding li.is-done {
+  opacity: 0.6;
+}
+
+.org-care {
+  display: grid;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+}

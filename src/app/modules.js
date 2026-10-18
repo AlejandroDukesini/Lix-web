@@ -8,7 +8,7 @@
  *   3. Añade su <Route> en AppRoutes (App.jsx), con lazy() para cargarlo bajo demanda.
  * Un módulo 'soon' nunca genera una ruta: no es posible navegar a una pantalla inexistente.
  */
-import { CalendarHeart, Gamepad2, House, Library, NotebookPen, Settings, Wallet } from 'lucide-react';
+import { CalendarHeart, Gamepad2, HeartPulse, House, LayoutDashboard, Library, NotebookPen, Settings, StickyNote, Wallet } from 'lucide-react';
 
 export const MODULES = [
   {
@@ -35,28 +35,58 @@ export const MODULES = [
     teaser: 'Historias que enseñan: cosmos, criminalística, idiomas y creencias, sin conexión.',
   },
   {
-    id: 'journal',
-    path: '/diario',
-    label: 'Diario y notas',
-    icon: NotebookPen,
-    status: 'soon',
-    teaser: 'Un diario, notas rápidas y recordatorios que se quedan solo aquí.',
+    id: 'organizer',
+    path: '/organizar',
+    label: 'Organización',
+    icon: LayoutDashboard,
+    status: 'available',
+    group: 'organizer',
+    teaser: 'Tu día de un vistazo: clases, tareas, pagos y accesos rápidos.',
   },
   {
     id: 'calendar',
     path: '/calendario',
     label: 'Calendario',
     icon: CalendarHeart,
-    status: 'soon',
-    teaser: 'Nuestras fechas, planes y recordatorios, todos en un mismo lugar.',
+    status: 'available',
+    group: 'organizer',
+    teaser: 'Eventos, universidad, tareas y recordatorios en un mismo lugar.',
   },
   {
     id: 'finance',
     path: '/finanzas',
     label: 'Finanzas',
     icon: Wallet,
-    status: 'soon',
-    teaser: 'Un espacio para organizar gastos, metas y ahorros con calma.',
+    status: 'available',
+    group: 'organizer',
+    teaser: 'Cuentas, gastos, presupuestos, metas y pagos, con calma.',
+  },
+  {
+    id: 'notes',
+    path: '/notas',
+    label: 'Notas',
+    icon: StickyNote,
+    status: 'available',
+    group: 'organizer',
+    teaser: 'Un bloc de notas libre, con carpetas, etiquetas y papelera.',
+  },
+  {
+    id: 'journal',
+    path: '/diario',
+    label: 'Diario',
+    icon: NotebookPen,
+    status: 'available',
+    group: 'organizer',
+    teaser: 'Lo que vives, pensado y escrito a tu ritmo.',
+  },
+  {
+    id: 'emotions',
+    path: '/emociones',
+    label: 'Diario emocional',
+    icon: HeartPulse,
+    status: 'available',
+    group: 'organizer',
+    teaser: 'Reconocer lo que sientes y verlo con el tiempo, sin juicios.',
   },
   {
     id: 'settings',
