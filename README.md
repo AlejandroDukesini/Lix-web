@@ -20,6 +20,7 @@ juegos, documentos, diario, calendario y finanzas (ya todos disponibles).
 | **Game Center — Fase 2**: Pollo pasando la calle sangriento, Resolver casos, Sudokus, Aparcar el carro, Despejar el estacionamiento | ✅ Funcional |
 | **Game Center — Fase 3**: HexaStack, Traffic Rider, Frente Abierto (inspirado en Open Front), Saltos de Lumi (plataformas originales) | ✅ Funcional |
 | **Game Center — Fase 4**: Reino de Ladrillos (homenaje al plataformas clásico), Bloques que caen (encajar piezas), Lava y Agua, Stellarium (observatorio), Heladería, Pizzería y Pastelería | ✅ Funcional |
+| **Game Center — Rediseño visual (v1.1.0)**: arte, iluminación, animaciones y rendimiento móvil nuevos en los 21 juegos, sin cambiar sus reglas | ✅ Funcional (ver [Rediseño visual](#rediseño-visual-v110)) |
 | **Biblioteca**: 4 estantes y 60 capítulos narrativos (cosmos y física, criminalística, idiomas, religiones), lector con índice, favoritos, marcadores, progreso, glosario y frases para escuchar | ✅ Funcional (ver [Biblioteca](#biblioteca)) |
 | **Organización personal**: panel del día, Finanzas, Calendario (universidad, tareas, recordatorios), Notas, Diario y Diario emocional, con PIN opcional y copias selectivas | ✅ Funcional (ver [Organización personal](#organización-personal)) |
 
@@ -217,6 +218,8 @@ game-center/
   online/          onlineSources.js (proveedores y fuentes online verificadas, lista permitida)
   services/        gameStorage.js (IndexedDB), gameLifecycle.js (estados, formato, RNG con semilla), gameAudio.js
   hooks/           useGameSession, useGameLoop, useKeyboard, useCanvas, useGameStatistics, useGameFrame, useGameAudio
+  render/          utilidades de dibujo compartidas por los juegos en lienzo: paint.js (formas, semillas, color),
+                   sprites.js (caché de sprites), particles.js (reserva fija de partículas), quality.js (DPR y calidad)
   components/      GameCard, GameLibrary, GameFilters, GameDetails, GameHUD, GameOverlay (pausa), GameResults,
                    Countdown, TouchControls (botones mantenidos, joystick, cruceta, deslizamientos, conducción,
                    plataformas con dos dedos)
@@ -331,6 +334,64 @@ herramientas que «extraen» URLs de inserción de CrazyGames no son oficiales y
 biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo se crea tras una interacción.
 
 **Dependencias nuevas:** ninguna. El motor de ajedrez, la IA y los demás motores son código propio.
+
+### Rediseño visual (v1.1.0)
+
+Una pasada de arte y rendimiento sobre los 21 juegos que solo toca **lo que se ve durante la partida**. Las reglas,
+los controles, las colisiones, la puntuación y el guardado siguen igual (las pruebas de motor no cambiaron). Inicio,
+biblioteca de juegos, navegación, configuración y almacenamiento quedan fuera.
+
+**Motor por juego.** No se añadió ningún motor ni dependencia (ni PixiJS): cada juego conserva la técnica que mejor le
+encaja.
+
+| Técnica | Juegos | Por qué |
+| --- | --- | --- |
+| Canvas 2D | Aquapark, Arena .io, Tunnel Runner, Pollo, Traffic Rider, Aparcar, Saltos de Lumi, Reino de Ladrillos, Bloques, Stellarium | Escenas que se redibujan a 60 fps con muchos objetos: un lienzo con sprites cacheados es lo más barato |
+| DOM + SVG + CSS | Ajedrez, Sudokus, Cubrir el espacio, Lava y Agua, Frente Abierto, Resolver casos, Despejar, HexaStack, Heladería, Pizzería, Pastelería | Tableros por turnos: se redibujan solo al cambiar el estado, y conservan la accesibilidad (foco, lectores de pantalla) |
+
+**Utilidades compartidas (`game-center/render/`):**
+
+- `sprites.js`: `createSpriteCache(limit)` pinta cada sprite (coche, estrella, nebulosa, bloque…) **una sola vez** en un
+  lienzo fuera de pantalla a la resolución real, y después solo lo copia (`blit`, `blitRotated`). Tiene un límite de
+  entradas y se vacía al salir del juego.
+- `particles.js`: una reserva de partículas de tamaño fijo que se reciclan, sin crear objetos durante la partida.
+- `quality.js`: `initialQuality()` detecta la gama (núcleos y memoria del navegador), `maxDprFor()` limita la
+  densidad de píxeles del lienzo (1,5 en gama baja, 2 en el resto) y `createQualityMonitor()` baja los efectos
+  opcionales si los fotogramas se alargan. `hooks/useCanvas.js` aplica el límite a todos los lienzos.
+- `paint.js`: rectángulos redondeados, color HSL y un generador con semilla (mulberry32), para que los detalles
+  «aleatorios» (grietas, vetas, estrellas) salgan siempre iguales y no parpadeen.
+
+**Qué cambió en cada juego (resumen):**
+
+- **Lienzo:** iluminación con degradados cacheados por tamaño de pantalla, sombras de contacto, sprites con volumen y
+  efectos de partículas reciclados. Reino de Ladrillos se redibujó en pixel art propio (`engine/pixelArt.js`) y Arena
+  .io comparte sus dibujos en `modes/ioArt.js`. Stellarium pinta las estrellas con halos del color de su tipo
+  espectral (destellos en cruz en las más brillantes), la Vía Láctea como bruma y las galaxias y nebulosas con
+  sprites; antes creaba varios degradados en cada fotograma.
+- **Ajedrez:** tablero de arce y nogal, piezas de estilo Staunton en marfil y ébano, jugada que se desliza desde su
+  casilla de origen y anillo en las capturas.
+- **Sudokus:** papel de pasatiempos; enunciado impreso y respuestas en tinta azul; destello dorado al completar una fila,
+  columna o bloque.
+- **Cubrir el espacio:** cada movimiento queda pintado como una pincelada continua; muros con relieve; destinos con
+  flecha de dirección.
+- **Lava y Agua:** cueva de basalto, lava con costra y núcleo que late, agua con ondas, piedra nueva con grietas
+  incandescentes y vapor, personaje que se desliza y aviso del turno en que avanza la lava espesa.
+- **Frente Abierto:** isla con mar y costa, casillas con canto, fichas de tropas legibles sobre cualquier color, iconos de
+  ciudad, fortaleza y capital, y borde animado en los objetivos de ataque.
+- **Resolver casos:** los 6 escenarios redibujados en perspectiva, con luz, sombras y mobiliario bajo cada punto de
+  interés (los datos de los casos no cambiaron).
+- **Despejar, HexaStack y cocina:** coches nuevos (`components/CarArt.jsx`), fichas hexagonales con volumen y comida
+  dibujada con más detalle.
+
+**Principios:** las animaciones se disparan solo con cambios reales del estado (claves de React o comparación con el
+estado anterior), nunca en bucle sin motivo. El movimiento reducido (preferencia del sistema o de la app) las desactiva
+con la regla global de `styles/base.css`. Cada juego conserva un solo bucle `requestAnimationFrame`, que se cancela al
+desmontarlo.
+
+**Cómo se validó:** `npm run check` (748 pruebas unitarias y de interfaz, build y 94 comprobaciones E2E offline) y
+capturas de los 21 juegos en un móvil emulado de 390×844 con DPR 2 en Edge, sin errores de consola. **No se ha probado
+en teléfonos físicos, ni se han medido los fps antes y después**: la mejora de rendimiento se deduce de que se
+dibuja menos en cada fotograma, no de una medición.
 
 ## Biblioteca
 
@@ -583,6 +644,10 @@ casuales y así se explica en la interfaz. El Markdown nunca se interpreta como 
   horizontal los controles quedan en las esquinas sobre el nivel (semitransparentes); en vertical se ve menos nivel a
   lo ancho (la pantalla sugiere girar). La multitáctil se ha comprobado con eventos táctiles reales de Chromium (CDP)
   y en jsdom, **no en un teléfono físico**.
+- **Rediseño visual (v1.1.0):** validado con emulación móvil en Edge, sin fps medidos y sin teléfonos físicos. Quedan
+  solapes menores: en Lava y Agua, la ayuda de controles tapa la pista del nivel en el turno 0; en Cubrir el espacio,
+  el aviso de movimiento no válido se superpone a la línea de la regla; en el caso del faro, «Perchero» y «Bolsillo»
+  se tocan (sus posiciones vienen de los datos del caso); en Stellarium, Betelgeuse se superpone al rótulo ORIÓN.
 - **Viaje astral en móviles muy bajos** (≈360×640): en el capítulo VII la vela se reduce bastante para caber sobre
   la tarjeta final. La transición del alto dinámico de la barra de Safari solo se ha emulado, no probado en iOS real.
 
