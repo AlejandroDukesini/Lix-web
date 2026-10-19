@@ -17,7 +17,7 @@ import { useMediaQuery } from '../../../../hooks/useMediaQuery.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { cx } from '../../../../utils/cx.js';
 import { DT, createWorld, step } from './engine/lumiEngine.js';
-import { addEffects, createRenderState, renderLumi } from './engine/lumiRenderer.js';
+import { addEffects, createRenderState, disposeRenderState, renderLumi } from './engine/lumiRenderer.js';
 import { LEVELS } from './levels/levels.js';
 import './styles/lumi.css';
 
@@ -107,6 +107,7 @@ function Play({ index, frame, onMenu, onNext }) {
   useEffect(() => () => clearTimeout(lightTimer.current), []);
   const world = useRef(createWorld(def));
   const view = useRef(createRenderState());
+  useEffect(() => () => disposeRenderState(view.current), []);
   const touch = useRef(NO_INPUT);
   const acc = useRef(0);
   const hudClock = useRef(0);
@@ -216,6 +217,7 @@ function Play({ index, frame, onMenu, onNext }) {
     setLighting(false);
     resetSession();
     world.current = createWorld(def);
+    disposeRenderState(view.current);
     view.current = createRenderState();
     touch.current = NO_INPUT;
     acc.current = 0;
@@ -250,9 +252,9 @@ function Play({ index, frame, onMenu, onNext }) {
           { id: 'time', label: 'Tiempo', value: formatTime(hud.time) },
         ]}
       />
-      {touchUI && phase !== 'over' && <PlatformControls key={round} inputRef={touch} />}
+      {touchUI && phase !== 'over' && <PlatformControls key={`platformcontrols-${round}`} inputRef={touch} />}
       {phase === 'run' && (
-        <ControlsHint key={round} touch="‹ › moverse (desliza el pulgar) · botón redondo: saltar" desktop="← → moverse · Espacio o ↑ saltar (mantén para más altura) · Esc pausa" />
+        <ControlsHint key={`controlshint-${round}`} touch="‹ › moverse (desliza el pulgar) · botón redondo: saltar" desktop="← → moverse · Espacio o ↑ saltar (mantén para más altura) · Esc pausa" />
       )}
       {phase === 'countdown' && (
         <div className="lumi-intro" aria-hidden="true">
@@ -267,7 +269,7 @@ function Play({ index, frame, onMenu, onNext }) {
       )}
       {phase === 'countdown' && (
         <Countdown
-          key={round}
+          key={`countdown-${round}`}
           paused={frame.interrupted}
           onTick={() => audio.play(SFX.tick)}
           onDone={() => {

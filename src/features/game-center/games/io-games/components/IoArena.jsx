@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ListOrdered } from 'lucide-react';
 import { Button } from '../../../../../components/common/Button.jsx';
 import { GameHUD } from '../../../components/GameHUD.jsx';
@@ -13,6 +13,8 @@ import { useGameAudio } from '../../../hooks/useGameAudio.js';
 import { useGameFrame, useInProgress, usePauseOnInterrupt } from '../../../hooks/useGameFrame.js';
 import { useKeyboard } from '../../../hooks/useKeyboard.js';
 import { vectorFromKeys } from '../engine/vector.js';
+import { disposeArt } from '../modes/ioArt.js';
+import { useReducedMotion } from '../../../../../hooks/useReducedMotion.js';
 
 const GAME_ID = 'io-games';
 const COUNTDOWN_SFX = { wave: 'square', from: 520, dur: 0.08, gain: 0.08 };
@@ -35,11 +37,14 @@ export function IoArena({ mode, config, onMenu }) {
   const [result, setResult] = useState(null);
   const world = useRef(config.create(Date.now()));
   const view = useRef({});
+  // Los sprites del dibujo se liberan al salir de la arena.
+  useEffect(() => () => disposeArt(view.current), []);
   const joystick = useRef({ x: 0, y: 0 });
   const mouse = useRef(null); // destino del ratón en coordenadas de pantalla
   const hudClock = useRef(0);
   const ended = useRef(false);
   const { start, reset: resetSession, finish } = session;
+  const reduced = useReducedMotion();
 
   const draw = useCallback((dt = 0) => config.render(ctxRef.current, sizeRef.current, world.current, view.current, dt), [config]);
   const { canvasRef, ctxRef, sizeRef } = useCanvas(() => draw(0));
@@ -102,6 +107,7 @@ export function IoArena({ mode, config, onMenu }) {
   useGameLoop(
     (dt) => {
       const running = phase === 'run' && session.statusRef.current === 'playing';
+      view.current.reduced = reduced;
       if (running) {
         const input = config.input === 'vector' ? vectorInput() : {};
         for (const event of config.step(world.current, input, dt)) {
@@ -127,6 +133,7 @@ export function IoArena({ mode, config, onMenu }) {
     resetSession();
     world.current = config.create(Date.now());
     ended.current = false;
+    disposeArt(view.current);
     view.current = {};
     joystick.current = { x: 0, y: 0 };
     setHud(config.hud(world.current));

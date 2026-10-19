@@ -1,49 +1,63 @@
 /**
  * Piezas de ajedrez originales, dibujadas para este proyecto en SVG.
- * Siluetas geométricas sobre una base común; cada bando con su propio relleno
- * y contorno para que se lean bien sobre casillas claras y oscuras.
+ * Siluetas de estilo Staunton sobre una peana común; marfil y ébano con un
+ * degradado lateral que les da volumen (los degradados se definen una sola vez
+ * en <ChessPieceDefs />). Contorno propio por bando para que se lean bien
+ * sobre casillas claras y oscuras.
  */
+const BASE = 'M31 63 H69 Q72 63 72 66 V70 Q72 74 68 74 H32 Q28 74 28 70 V66 Q28 63 31 63Z';
+const COLLAR = (y) => `M37 ${y} H63 Q65 ${y + 2.5} 62 ${y + 4.5} H38 Q35 ${y + 2.5} 37 ${y}Z`;
+
 const SHAPES = {
   p: (
     <>
-      <circle cx="50" cy="34" r="12" />
-      <path d="M38 50 Q50 42 62 50 L66 70 H34Z" />
+      <circle cx="50" cy="21" r="10" />
+      <path d={COLLAR(31)} />
+      <path d="M42 35.5 H58 Q57 48 66 63 H34 Q43 48 42 35.5Z" />
     </>
   ),
   r: (
     <>
-      <path d="M30 22 H38 V30 H46 V22 H54 V30 H62 V22 H70 V40 L64 46 V70 H36 V46 L30 40Z" />
+      <path d="M33 9 H41 V15 H46.5 V9 H53.5 V15 H59 V9 H67 V24 Q67 27 63 28 H37 Q33 27 33 24Z" />
+      <path d="M38 28 H62 V55 Q63 59 67 63 H33 Q37 59 38 55Z" />
+      <path d="M38 52 H62" className="piece__cut" />
     </>
   ),
   n: (
     <>
-      <path d="M36 70 C36 56 44 50 48 44 L36 46 C30 46 28 40 32 36 L48 22 C52 18 56 16 60 16 L62 22 C70 28 72 40 68 52 L66 70Z" />
-      <circle cx="52" cy="30" r="3" className="piece__eye" />
+      <path d="M35 63 C35 52 41 46 45.5 40 C40 42 33 44 29.5 40.5 C25.5 36.5 29 31 35 26.5 C39.5 23 41 16 47 12 L48.5 5 L54 11 C66 13 72.5 27 70.5 42 C69.5 51 67 57 67 63Z" />
+      <path d="M53 13 C60 18 64 28 63 40" className="piece__cut" />
+      <circle cx="45" cy="22" r="2.6" className="piece__eye" />
     </>
   ),
   b: (
     <>
-      <circle cx="50" cy="18" r="5" />
-      <path d="M50 24 C62 32 64 44 58 54 H42 C36 44 38 32 50 24Z" />
-      <path d="M50 30 L56 40" className="piece__cut" />
-      <path d="M40 58 H60 L64 70 H36Z" />
+      <circle cx="50" cy="8" r="4" />
+      <path d="M50 12.5 C62 20 64.5 31 58.5 40 H41.5 C35.5 31 38 20 50 12.5Z" />
+      <path d="M52.5 19 L46.5 29" className="piece__cut" />
+      <path d={COLLAR(40)} />
+      <path d="M43 44.5 H57 Q57.5 55 66 63 H34 Q42.5 55 43 44.5Z" />
     </>
   ),
   q: (
     <>
-      <circle cx="30" cy="26" r="5" />
-      <circle cx="43" cy="20" r="5" />
-      <circle cx="57" cy="20" r="5" />
-      <circle cx="70" cy="26" r="5" />
-      <path d="M30 32 L38 56 H62 L70 32 L58 44 L50 26 L42 44Z" />
-      <path d="M36 58 H64 L66 70 H34Z" />
+      <path d="M30 23 L38 45 L40 17 L47 41 L50 13 L53 41 L60 17 L62 45 L70 23 L64 52 H36Z" />
+      <circle cx="30" cy="21" r="3.6" />
+      <circle cx="40" cy="15" r="3.6" />
+      <circle cx="50" cy="10.5" r="3.8" />
+      <circle cx="60" cy="15" r="3.6" />
+      <circle cx="70" cy="21" r="3.6" />
+      <path d={COLLAR(51)} />
+      <path d="M39.5 55.5 H60.5 Q61.5 60 67 63 H33 Q38.5 60 39.5 55.5Z" />
     </>
   ),
   k: (
     <>
-      <path d="M47 10 H53 V16 H59 V22 H53 V28 H47 V22 H41 V16 H47Z" />
-      <path d="M50 30 C66 30 70 40 64 54 H36 C30 40 34 30 50 30Z" />
-      <path d="M36 58 H64 L66 70 H34Z" />
+      <path d="M47 3 H53 V8 H58 V13.5 H53 V19 H47 V13.5 H42 V8 H47Z" />
+      <path d="M50 20 C64 20 70.5 30 66.5 42 L62.5 51 H37.5 L33.5 42 C29.5 30 36 20 50 20Z" />
+      <path d="M39 30 Q50 25 61 30" className="piece__cut" />
+      <path d={COLLAR(51)} />
+      <path d="M39.5 55.5 H60.5 Q61.5 60 67 63 H33 Q38.5 60 39.5 55.5Z" />
     </>
   ),
 };
@@ -58,20 +72,43 @@ export function pieceLabel(piece) {
   return `${name} ${color}`;
 }
 
-export function ChessPiece({ piece, className }) {
+/** Degradados compartidos por todas las piezas (se monta una vez por partida). */
+export function ChessPieceDefs() {
+  return (
+    <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="chess-ivory" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#d8ccb2" />
+          <stop offset="0.32" stopColor="#fffbf0" />
+          <stop offset="0.62" stopColor="#f1e7d2" />
+          <stop offset="1" stopColor="#b9a888" />
+        </linearGradient>
+        <linearGradient id="chess-ebony" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stopColor="#15121a" />
+          <stop offset="0.3" stopColor="#4a4252" />
+          <stop offset="0.6" stopColor="#272230" />
+          <stop offset="1" stopColor="#0c0a0f" />
+        </linearGradient>
+      </defs>
+    </svg>
+  );
+}
+
+export function ChessPiece({ piece, className, style }) {
   const type = piece.toLowerCase();
   const white = piece !== type;
   return (
     <svg
-      viewBox="0 0 100 80"
+      viewBox="20 0 60 80"
       className={`piece ${white ? 'piece--white' : 'piece--black'} ${className ?? ''}`}
+      style={style}
       aria-hidden="true"
       focusable="false"
     >
-      <ellipse cx="50" cy="74" rx="22" ry="4" className="piece__shadow" />
+      <ellipse cx="50" cy="75" rx="24" ry="4" className="piece__shadow" />
       <g className="piece__body">
         {SHAPES[type]}
-        <rect x="32" y="68" width="36" height="6" rx="2" />
+        <path d={BASE} />
       </g>
     </svg>
   );

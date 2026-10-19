@@ -16,7 +16,7 @@ import { useMediaQuery } from '../../../../hooks/useMediaQuery.js';
 import { formatTime } from '../../services/gameLifecycle.js';
 import { cx } from '../../../../utils/cx.js';
 import { MAX_HITS, createParking, starsFor, step } from './engine/parkingEngine.js';
-import { createRenderState, renderParking } from './engine/parkingRenderer.js';
+import { createRenderState, disposeRenderState, renderParking } from './engine/parkingRenderer.js';
 import { LEVELS } from './levels/levels.js';
 import './styles/aparcar.css';
 
@@ -95,6 +95,7 @@ function Drive({ level, frame, onLevels, onNext }) {
   const [result, setResult] = useState(null);
   const world = useRef(createParking(level));
   const view = useRef(createRenderState());
+  useEffect(() => () => disposeRenderState(view.current), []);
   const touch = useRef(NO_INPUT);
   const lastInput = useRef({ throttle: 0, steer: 0 });
   const hudClock = useRef(0);
@@ -128,6 +129,7 @@ function Drive({ level, frame, onLevels, onNext }) {
   const restart = useCallback(() => {
     resetSession();
     world.current = createParking(level);
+    disposeRenderState(view.current);
     view.current = createRenderState();
     touch.current = NO_INPUT;
     setHud({ hits: 0, time: 0, gear: 'N' });
@@ -218,8 +220,8 @@ function Drive({ level, frame, onLevels, onNext }) {
           { id: 'gear', label: 'Marcha', value: hud.gear },
         ]}
       />
-      {touchUI && !result && <DriveControls key={round} inputRef={touch} brakeLabel="Frenar o marcha atrás" side={lowLandscape} />}
-      {!result && <ControlsHint key={round} touch={level.tip} desktop={`${level.tip} · Flechas o WASD para conducir`} duration={5000} />}
+      {touchUI && !result && <DriveControls key={`drivecontrols-${round}`} inputRef={touch} brakeLabel="Frenar o marcha atrás" side={lowLandscape} />}
+      {!result && <ControlsHint key={`controlshint-${round}`} touch={level.tip} desktop={`${level.tip} · Flechas o WASD para conducir`} duration={5000} />}
       {session.isPaused && !result && <PauseMenu onResume={session.resume} onRestart={restart} onExit={frame.exit} />}
       {result && (
         <GameResults

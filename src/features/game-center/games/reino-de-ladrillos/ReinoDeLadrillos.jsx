@@ -17,7 +17,7 @@ import { useMediaQuery } from '../../../../hooks/useMediaQuery.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { cx } from '../../../../utils/cx.js';
 import { DT, coinTotal, createWorld, step } from './engine/brickEngine.js';
-import { addEffects, createRenderState, renderBricks } from './engine/brickRenderer.js';
+import { addEffects, createRenderState, disposeRenderState, renderBricks } from './engine/brickRenderer.js';
 import { LEVELS, THEME_NAMES } from './levels/levels.js';
 import './styles/reino.css';
 
@@ -122,6 +122,7 @@ function Play({ startIndex, frame, onMenu }) {
   const [result, setResult] = useState(null);
   const world = useRef(createWorld(LEVELS[startIndex]));
   const view = useRef(createRenderState());
+  useEffect(() => () => disposeRenderState(view.current), []);
   const touch = useRef(NO_INPUT);
   const acc = useRef(0);
   const hudClock = useRef(0);
@@ -293,8 +294,8 @@ function Play({ startIndex, frame, onMenu }) {
           { id: 'time', label: 'Tiempo', value: String(Math.ceil(hud.time)), tone: hud.time < 30 ? 'warn' : undefined },
         ]}
       />
-      {touchUI && (phase === 'run' || phase === 'countdown') && <PlatformControls key={round} inputRef={touch} />}
-      {phase === 'run' && <ControlsHint key={round} touch="‹ › moverse · botón redondo: saltar (mantén para más altura)" desktop="← → moverse · Espacio o ↑ saltar (mantén para más altura) · Esc pausa" />}
+      {touchUI && (phase === 'run' || phase === 'countdown') && <PlatformControls key={`platformcontrols-${round}`} inputRef={touch} />}
+      {phase === 'run' && <ControlsHint key={`controlshint-${round}`} touch="‹ › moverse · botón redondo: saltar (mantén para más altura)" desktop="← → moverse · Espacio o ↑ saltar (mantén para más altura) · Esc pausa" />}
       {phase === 'countdown' && (
         <div className="rl-intro" aria-hidden="true">
           <span>Nivel 1-{index + 1}</span>
@@ -307,7 +308,7 @@ function Play({ startIndex, frame, onMenu }) {
           <Smartphone aria-hidden="true" /> En horizontal verás más del nivel
         </p>
       )}
-      {phase === 'countdown' && <Countdown key={round} paused={frame.interrupted} onTick={() => audio.play(SFX.tick)} onDone={beginLevel} />}
+      {phase === 'countdown' && <Countdown key={`countdown-${round}`} paused={frame.interrupted} onTick={() => audio.play(SFX.tick)} onDone={beginLevel} />}
       {session.isPaused && phase === 'run' && <PauseMenu onResume={session.resume} onRestart={restart} onExit={frame.exit} />}
       {phase === 'cleared' && cleared && (
         <GameOverlay

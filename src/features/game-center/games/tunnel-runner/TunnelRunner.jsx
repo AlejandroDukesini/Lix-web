@@ -14,7 +14,7 @@ import { useGameFrame, useInProgress, usePauseOnInterrupt } from '../../hooks/us
 import { useKeyboard } from '../../hooks/useKeyboard.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { MILESTONES, createTunnel, scoreOf, step, zoneOf } from './engine/tunnelEngine.js';
-import { createRenderState, renderTunnel } from './engine/tunnelRenderer.js';
+import { createRenderState, disposeRenderState, renderTunnel } from './engine/tunnelRenderer.js';
 import './styles/tunnel-runner.css';
 
 const GAME_ID = 'tunnel-runner';
@@ -44,6 +44,7 @@ export default function TunnelRunner() {
   const [result, setResult] = useState(null);
   const world = useRef(createTunnel(Date.now()));
   const view = useRef(createRenderState());
+  useEffect(() => () => disposeRenderState(view.current), []);
   const touch = useRef({ left: false, right: false });
   const hudClock = useRef(0);
   const reduced = useReducedMotion();
@@ -122,6 +123,7 @@ export default function TunnelRunner() {
   const restart = useCallback(() => {
     resetSession();
     world.current = createTunnel(Date.now());
+    disposeRenderState(view.current);
     view.current = createRenderState();
     touch.current = { left: false, right: false };
     setHud({ distance: 0, speed: 0, zone: 0 });
@@ -157,7 +159,7 @@ export default function TunnelRunner() {
       {phase === 'run' && <SteerButtons inputRef={touch} />}
       {phase === 'run' && (
         <ControlsHint
-          key={round}
+          key={`controlshint-${round}`}
           icon={Hand}
           touch="Desliza ← → para girar"
           desktop="← → o A D para girar · Esc para pausar"
@@ -170,7 +172,7 @@ export default function TunnelRunner() {
       )}
       {phase === 'countdown' && (
         <Countdown
-          key={round}
+          key={`countdown-${round}`}
           paused={frame.interrupted}
           onTick={() => audio.play(SFX.tick)}
           onDone={() => {

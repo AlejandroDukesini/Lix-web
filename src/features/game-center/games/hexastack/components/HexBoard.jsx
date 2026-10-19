@@ -29,12 +29,22 @@ export function Stack({ stack, cx, cy, ghost = false, scale = 1 }) {
   const run = topRun(stack);
   return (
     <g className={cx_(ghost)} aria-hidden="true">
+      {/* Sombra de contacto de la torre sobre el tablero. */}
+      <ellipse cx={cx + r * 0.08} cy={cy + layer + r * 0.2} rx={r * 0.95} ry={r * 0.55} className="hx-shadow" />
       {shown.map((color, i) => {
         const y = cy - i * layer;
+        const isTop = i === shown.length - 1;
         return (
           <g key={i}>
             <polygon points={hexPoints(cx, y + layer * 0.8, r)} fill={COLORS[color].side} className="hx-side" />
             <polygon points={hexPoints(cx, y, r)} fill={COLORS[color].hex} className="hx-tile" />
+            {isTop && (
+              <>
+                {/* Ficha superior esmaltada: bisel interior y brillo. */}
+                <polygon points={hexPoints(cx, y, r * 0.78)} className="hx-bevel" />
+                <ellipse cx={cx - r * 0.25} cy={y - r * 0.38} rx={r * 0.38} ry={r * 0.14} className="hx-gloss" />
+              </>
+            )}
           </g>
         );
       })}
@@ -142,6 +152,7 @@ export function HexBoard({ state, preview, flash, merged, placed, fx, onCell, on
             onKeyDown={(event) => (event.key === 'Enter' || event.key === ' ') && (event.preventDefault(), onCell(key))}
           >
             <polygon points={hexPoints(x, y, SIZE * 0.95)} className="hx-slot" />
+            <polygon points={hexPoints(x, y, SIZE * 0.72)} className="hx-socket" />
             <Stack stack={stack} cx={x} cy={y} />
           </g>
         );

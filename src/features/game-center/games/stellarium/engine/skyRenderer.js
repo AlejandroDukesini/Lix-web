@@ -7,6 +7,8 @@
 import { CONSTELLATIONS, DEEP_SKY, SPECTRAL, STARS, starById } from '../data/catalog.js';
 import { ASTERISM } from '../data/asterism.js';
 import { DEG, EYEPIECE_FOV, FRAMES, backgroundStars, basis, milkyWay, project, scaleFor, vecOf } from './sky.js';
+import { createSpriteCache } from '../../../render/sprites.js';
+import { seeded } from '../../../render/paint.js';
 
 const BG = backgroundStars();
 const MW = milkyWay();
@@ -17,6 +19,91 @@ const ECLIPTIC = Array.from({ length: 121 }, (_, i) => {
   return [Math.cos(l), Math.sin(l) * Math.cos(e), Math.sin(l) * Math.sin(e)];
 });
 const AST_VECS = Object.fromEntries(Object.entries(ASTERISM.stars).map(([k, s]) => [k, vecOf(s.ra, s.dec)]));
+const DSO_VECS = DEEP_SKY.map((o) => vecOf(o.ra, o.dec));
+
+/*
+ * Sprites (se pintan una vez y se copian con drawImage): así ningún degradado
+ * se crea en cada fotograma. Tamaño de referencia: 64 px; el núcleo ocupa 1/6.
+ */
+const SPRITE = 64;
+
+/** Estrella: halo del color espectral, núcleo blanco y nítido. */
+function paintStar(color) {
+  return (c, w) => {
+    const m = w / 2;
+    const g = c.createRadialGradient(m, m, 0, m, m, m);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.12, '#ffffff');
+    g.addColorStop(0.18, color);
+    g.addColorStop(0.32, `${color}55`);
+    g.addColorStop(1, `${color}00`);
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, w);
+  };
+}
+
+/** Destello en cruz de las estrellas más brillantes (como las aspas de un telescopio). */
+function paintSpikes(c, w) {
+  const m = w / 2;
+  for (const [dx, dy] of [[1, 0], [0, 1]]) {
+    const g = c.createLinearGradient(m - dx * m, m - dy * m, m + dx * m, m + dy * m);
+    g.addColorStop(0, 'rgba(255,255,255,0)');
+    g.addColorStop(0.5, 'rgba(255,255,255,0.85)');
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    c.fillStyle = g;
+    c.fillRect(dx ? 0 : m - 0.6, dy ? 0 : m - 0.6, dx ? w : 1.2, dy ? w : 1.2);
+  }
+}
+
+/** Nube suave para la bruma de la Vía Láctea. */
+function paintHaze(rgb) {
+  return (c, w) => {
+    const m = w / 2;
+    const g = c.createRadialGradient(m, m, 0, m, m, m);
+    g.addColorStop(0, `rgba(${rgb}, 0.5)`);
+    g.addColorStop(0.5, `rgba(${rgb}, 0.18)`);
+    g.addColorStop(1, `rgba(${rgb}, 0)`);
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, w);
+  };
+}
+
+/** Galaxia espiral vista de canto: disco, bulbo cálido y una franja de polvo. */
+function paintGalaxy(c, w) {
+  const m = w / 2;
+  const disc = c.createRadialGradient(m, m, 0, m, m, m);
+  disc.addColorStop(0, 'rgba(255, 244, 225, 0.95)');
+  disc.addColorStop(0.12, 'rgba(255, 225, 190, 0.7)');
+  disc.addColorStop(0.4, 'rgba(200, 195, 255, 0.28)');
+  disc.addColorStop(1, 'rgba(160, 150, 255, 0)');
+  c.fillStyle = disc;
+  c.fillRect(0, 0, w, w);
+  c.globalCompositeOperation = 'destination-out';
+  c.fillStyle = 'rgba(0, 0, 0, 0.45)';
+  c.beginPath();
+  c.ellipse(m, m + w * 0.06, m * 0.85, w * 0.025, 0, 0, Math.PI * 2);
+  c.fill();
+  c.globalCompositeOperation = 'source-over';
+}
+
+/** Nebulosa: varias nubes de colores (hidrógeno rosa, oxígeno azul) con estructura irregular. */
+function paintNebula(c, w) {
+  const rnd = seeded(42);
+  const colors = ['255, 110, 160', '120, 200, 255', '255, 170, 120', '200, 130, 255'];
+  for (let i = 0; i < 14; i += 1) {
+    const x = w * (0.25 + rnd() * 0.5);
+    const y = w * (0.25 + rnd() * 0.5);
+    const r = w * (0.12 + rnd() * 0.25);
+    const g = c.createRadialGradient(x, y, 0, x, y, r);
+    const col = colors[i % colors.length];
+    g.addColorStop(0, `rgba(${col}, 0.32)`);
+    g.addColorStop(1, `rgba(${col}, 0)`);
+    c.fillStyle = g;
+    c.fillRect(0, 0, w, w);
+  }
+}
+
+const HAZE_STEP = 9; // una nube por cada 9 puntos de la Vía Láctea
 
 /** Radio de una estrella según su magnitud y el aumento. */
 export function starRadius(mag, fov) {
@@ -42,25 +129,47 @@ function polyline(ctx, pts) {
 export function renderSky(ctx, size, s, dt) {
   if (!ctx || !size.width) return;
   const { width: W, height: H } = size;
+  const dpr = Math.min(2, size.dpr || 1);
   s.time = (s.time ?? 0) + dt;
+  s.sprites ??= createSpriteCache(24);
+  const sprite = (key, paint, px = SPRITE) => s.sprites.get(key, px, px, paint, dpr);
   const view = s.view;
   const b = basis(view);
   const scale = scaleFor(view, W, H);
   const P = (v) => project(b, scale, W, H, v);
 
-  // Cielo nocturno
-  const g = ctx.createRadialGradient(W / 2, H * 0.4, 0, W / 2, H / 2, Math.max(W, H) * 0.8);
-  g.addColorStop(0, '#141a3d');
-  g.addColorStop(1, '#05060f');
-  ctx.fillStyle = g;
+  // Cielo nocturno y viñeta: degradados guardados mientras no cambie el tamaño.
+  if (s.bgKey !== `${W}x${H}`) {
+    s.bgKey = `${W}x${H}`;
+    s.bg = ctx.createRadialGradient(W / 2, H * 0.4, 0, W / 2, H / 2, Math.max(W, H) * 0.8);
+    s.bg.addColorStop(0, '#161c44');
+    s.bg.addColorStop(0.55, '#0a0d24');
+    s.bg.addColorStop(1, '#04050c');
+    s.vignette = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.75);
+    s.vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    s.vignette.addColorStop(1, 'rgba(0, 0, 0, 0.55)');
+  }
+  ctx.fillStyle = s.bg;
   ctx.fillRect(0, 0, W, H);
 
   ctx.save();
   ctx.globalCompositeOperation = 'lighter';
   // Vía Láctea
   if (s.toggles.milky) {
-    // Bruma fina: muchos puntos pequeños y muy tenues (no discos), como polvo de estrellas.
     const k = Math.min(2, Math.max(0.7, 60 / view.fov));
+    // Bruma: nubes grandes y tenues que dan cuerpo a la banda (cálidas hacia el centro galáctico).
+    const warm = sprite('haze-warm', paintHaze('255, 215, 170'), 48);
+    const cool = sprite('haze-cool', paintHaze('150, 170, 255'), 48);
+    const hr = 26 * k;
+    for (let i = 0; i < MW.length; i += HAZE_STEP) {
+      const m = MW[i];
+      const p = P(m.v);
+      if (!p) continue;
+      ctx.globalAlpha = Math.min(1, m.a * 1.6);
+      ctx.drawImage(m.a > 0.14 ? warm.canvas : cool.canvas, p.x - hr, p.y - hr, hr * 2, hr * 2);
+    }
+    ctx.globalAlpha = 1;
+    // Polvo fino: muchos puntos pequeños y muy tenues (no discos), como polvo de estrellas.
     for (const m of MW) {
       const p = P(m.v);
       if (!p) continue;
@@ -133,89 +242,68 @@ export function renderSky(ctx, size, s, dt) {
     }
     ctx.stroke();
   }
+  const astGlow = sprite(astFound ? 'ast-on' : 'ast-off', paintStar(astFound ? '#ffd2e1' : '#ffdce6'), 32);
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.globalAlpha = astFound ? 1 : 0.6;
   for (const v of Object.values(AST_VECS)) {
     const p = P(v);
-    if (!p) continue;
-    const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, 9);
-    glow.addColorStop(0, astFound ? 'rgba(255, 210, 225, 0.95)' : 'rgba(255, 220, 230, 0.55)');
-    glow.addColorStop(1, 'rgba(255, 180, 210, 0)');
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, 9, 0, Math.PI * 2);
-    ctx.fill();
+    if (p) ctx.drawImage(astGlow.canvas, p.x - 10, p.y - 10, 20, 20);
   }
+  ctx.restore();
 
-  // Cielo profundo
-  for (const o of DEEP_SKY) {
-    const p = P(vecOf(o.ra, o.dec));
-    if (!p) continue;
+  // Cielo profundo (sprites escalados: el tamaño aparente crece con el aumento)
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  DEEP_SKY.forEach((o, i) => {
+    const p = P(DSO_VECS[i]);
+    if (!p) return;
     const r = Math.max(5, (o.size * DEG * scale) / 1.2);
-    ctx.save();
-    ctx.translate(p.x, p.y);
     if (o.type === 'galaxy') {
+      const gal = sprite('galaxy', paintGalaxy, 96);
+      ctx.save();
+      ctx.translate(p.x, p.y);
       ctx.rotate((o.angle ?? 0) * DEG);
       ctx.scale(1, 0.32);
-      const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
-      gg.addColorStop(0, 'rgba(255, 240, 220, 0.85)');
-      gg.addColorStop(0.3, 'rgba(210, 200, 255, 0.35)');
-      gg.addColorStop(1, 'rgba(160, 150, 255, 0)');
-      ctx.fillStyle = gg;
-      ctx.beginPath();
-      ctx.arc(0, 0, r, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.drawImage(gal.canvas, -r, -r, r * 2, r * 2);
+      ctx.restore();
     } else if (o.type === 'nebula') {
-      for (const [dx, dy, c] of [[0, 0, '255, 120, 170'], [r * 0.3, -r * 0.2, '120, 200, 255'], [-r * 0.3, r * 0.25, '255, 170, 120']]) {
-        const gg = ctx.createRadialGradient(dx, dy, 0, dx, dy, r);
-        gg.addColorStop(0, `rgba(${c}, 0.45)`);
-        gg.addColorStop(1, `rgba(${c}, 0)`);
-        ctx.fillStyle = gg;
-        ctx.beginPath();
-        ctx.arc(dx, dy, r, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      const neb = sprite('nebula', paintNebula, 96);
+      ctx.drawImage(neb.canvas, p.x - r * 1.3, p.y - r * 1.3, r * 2.6, r * 2.6);
     } else {
       const pts = [[0, 0], [0.5, -0.3], [-0.4, -0.2], [0.2, 0.45], [-0.55, 0.3], [0.7, 0.2], [-0.1, -0.6]];
-      ctx.fillStyle = 'rgba(190, 215, 255, 0.95)';
-      for (const [dx, dy] of pts) {
-        ctx.beginPath();
-        ctx.arc(dx * r, dy * r, Math.max(1.2, r * 0.08), 0, Math.PI * 2);
-        ctx.fill();
-      }
-      const gg = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.2);
-      gg.addColorStop(0, 'rgba(150, 190, 255, 0.25)');
-      gg.addColorStop(1, 'rgba(150, 190, 255, 0)');
-      ctx.fillStyle = gg;
-      ctx.beginPath();
-      ctx.arc(0, 0, r * 1.2, 0, Math.PI * 2);
-      ctx.fill();
+      const haze = sprite('haze-cool', paintHaze('150, 170, 255'), 48);
+      ctx.globalAlpha = 0.6;
+      ctx.drawImage(haze.canvas, p.x - r * 1.2, p.y - r * 1.2, r * 2.4, r * 2.4);
+      ctx.globalAlpha = 1;
+      const dot = sprite('star-B', paintStar(SPECTRAL.B.color));
+      const d = Math.max(7, r * 0.5);
+      for (const [dx, dy] of pts) ctx.drawImage(dot.canvas, p.x + dx * r - d / 2, p.y + dy * r - d / 2, d, d);
     }
-    ctx.restore();
-  }
+  });
+  ctx.restore();
 
-  // Estrellas del catálogo
+  // Estrellas del catálogo: halo + núcleo de un sprite por tipo espectral; aspas en las más brillantes.
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  const spikes = sprite('spikes', paintSpikes);
   for (const st of STARS) {
     const p = P(STAR_VECS.get(st.id));
     if (!p) continue;
     const r = starRadius(st.mag, view.fov);
-    const color = SPECTRAL[st.spec]?.color ?? '#fff';
     const tw = s.reduced ? 1 : 0.88 + 0.12 * Math.sin(s.time * 2 + st.ra * 7);
-    if (st.mag < 2.6) {
-      const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.2);
-      glow.addColorStop(0, color);
-      glow.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.globalAlpha = 0.35 * tw;
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, r * 3.2, 0, Math.PI * 2);
-      ctx.fill();
-    }
+    const star = sprite(`star-${st.spec}`, paintStar(SPECTRAL[st.spec]?.color ?? '#ffffff'));
+    // El núcleo ocupa 1/6 del sprite: con d = 6r su radio es exactamente r.
+    const d = r * (st.mag < 2.6 ? 7 : 5.2);
     ctx.globalAlpha = tw;
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.globalAlpha = 1;
+    ctx.drawImage(star.canvas, p.x - d / 2, p.y - d / 2, d, d);
+    if (st.mag < 1.2) {
+      const l = r * (9 - st.mag * 3);
+      ctx.globalAlpha = 0.55 * tw;
+      ctx.drawImage(spikes.canvas, p.x - l / 2, p.y - l / 2, l, l);
+    }
   }
+  ctx.restore();
 
   // El Sol del día elegido
   if (s.sun) {
@@ -272,6 +360,10 @@ export function renderSky(ctx, size, s, dt) {
       }
     }
   }
+
+  // Viñeta: los bordes se oscurecen, como al mirar por un instrumento.
+  ctx.fillStyle = s.vignette;
+  ctx.fillRect(0, 0, W, H);
 
   // Retícula central y ocular
   const cx = W / 2;

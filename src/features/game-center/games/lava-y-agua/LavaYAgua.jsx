@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Check, ChevronRight, Hourglass, ListOrdered, Lock, RotateCcw, Undo2 } from 'lucide-react';
 import { Button } from '../../../../components/common/Button.jsx';
 import { GameHUD } from '../../components/GameHUD.jsx';
@@ -11,7 +11,7 @@ import { useGameAudio } from '../../hooks/useGameAudio.js';
 import { useGameFrame, useInProgress } from '../../hooks/useGameFrame.js';
 import { useKeyboard } from '../../hooks/useKeyboard.js';
 import { cx } from '../../../../utils/cx.js';
-import { act, createGame, starsFor, undo } from './engine/lavaEngine.js';
+import { act, cellAt, createGame, starsFor, undo } from './engine/lavaEngine.js';
 import { LEVELS, TIER_LABELS } from './levels/levels.js';
 import './styles/lava-y-agua.css';
 
@@ -88,13 +88,50 @@ function nearestLava(game) {
   return best;
 }
 
+/** Personaje: un espíritu de ceniza con ojos grandes; chamuscado si la lava lo alcanza. */
+function Sprite({ lost }) {
+  return (
+    <svg viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+      <ellipse cx="20" cy="36" rx="11" ry="3" fill="rgb(0 0 0 / 0.45)" />
+      <path d="M20 4c3 4 1 6 4 8 6 2 10 8 10 14a14 11 0 0 1-28 0c0-6 4-12 10-14 3-2 1-4 4-8z" fill={lost ? '#5b5458' : 'url(#lv-body)'} />
+      <ellipse cx="14" cy="18" rx="4" ry="3" fill="#fff" opacity={lost ? 0.15 : 0.55} />
+      {lost ? (
+        <path d="M12 22l4 4m0-4l-4 4M24 22l4 4m0-4l-4 4" stroke="#1d1418" strokeWidth="2.2" strokeLinecap="round" />
+      ) : (
+        <>
+          <ellipse cx="14.5" cy="24" rx="2.6" ry="3.4" fill="#2a1420" />
+          <ellipse cx="25.5" cy="24" rx="2.6" ry="3.4" fill="#2a1420" />
+          <circle cx="15.3" cy="22.8" r="1" fill="#fff" />
+          <circle cx="26.3" cy="22.8" r="1" fill="#fff" />
+          <ellipse cx="11" cy="29" rx="2.4" ry="1.4" fill="#ff8fb3" opacity="0.7" />
+          <ellipse cx="29" cy="29" rx="2.4" ry="1.4" fill="#ff8fb3" opacity="0.7" />
+        </>
+      )}
+      <defs>
+        <radialGradient id="lv-body" cx="0.38" cy="0.35" r="0.75">
+          <stop offset="0" stopColor="#fffdf4" />
+          <stop offset="0.55" stopColor="#ffe3b0" />
+          <stop offset="1" stopColor="#f59c7a" />
+        </radialGradient>
+      </defs>
+    </svg>
+  );
+}
+
 function Board({ game, onCell, swipe }) {
-  const { width, height, exit, switches } = game.level;
+  const { width, height, exit, switches, lavaEvery } = game.level;
+  // Casillas que cambiaron en el último turno (o al deshacer): solo esas se animan.
+  const prevGrid = useRef(game.grid.slice());
+  useEffect(() => {
+    prevGrid.current = game.grid.slice();
+  });
+  // Lava espesa: brilla con más fuerza el turno en que va a avanzar.
+  const surging = lavaEvery > 1 && (game.turn + 1) % lavaEvery === 0;
   const cells = [];
   for (let y = 0; y < height; y += 1) {
     for (let x = 0; x < width; x += 1) {
-      const c = game.grid[y * width + x];
-      const isPlayer = game.player.x === x && game.player.y === y;
+      const i = y * width + x;
+      const c = game.grid[i];
       const isExit = exit.x === x && exit.y === y;
       const sw = switches.findIndex((s) => s.x === x && s.y === y);
       const adjacent = Math.abs(game.player.x - x) + Math.abs(game.player.y - y) === 1;
@@ -104,6 +141,8 @@ function Board({ game, onCell, swipe }) {
           className={cx(
             'lv-cell',
             `is-${{ '#': 'wall', '.': 'floor', L: 'lava', W: 'water', S: 'stone' }[c] ?? 'gate'}`,
+            prevGrid.current[i] !== c && 'is-new',
+            c === '#' && cellAt(game, x, y + 1) !== '#' && 'has-face',
             isExit && 'is-exit',
             sw >= 0 && (game.pressed[sw] ? 'is-switch-on' : 'is-switch'),
             adjacent && game.status === 'playing' && 'is-adjacent',
@@ -113,7 +152,6 @@ function Board({ game, onCell, swipe }) {
         >
           {/[A-C]/.test(c) && <i className="lv-gate">{c}</i>}
           {sw >= 0 && <i className="lv-lever">{switches[sw].id.toLowerCase()}</i>}
-          {isPlayer && <i className={cx('lv-player', game.status === 'lost' && 'is-lost')} />}
         </span>,
       );
     }
@@ -125,8 +163,19 @@ function Board({ game, onCell, swipe }) {
   };
   return (
     <div className="lv-board-wrap" {...swipe}>
-      <div className="lv-board" role="img" aria-label={describe()} style={{ '--cols': width, '--rows': height }}>
+      <div
+        className={cx('lv-board', lavaEvery > 1 && 'is-thick', surging && 'is-surging')}
+        role="img"
+        aria-label={describe()}
+        style={{ '--cols': width, '--rows': height }}
+      >
         {cells}
+        {/* Capa propia: se desliza de casilla en casilla en vez de saltar. */}
+        <i className={cx('lv-player', game.status === 'lost' && 'is-lost', game.status === 'won' && 'is-won')} style={{ '--px': game.player.x, '--py': game.player.y }}>
+          <span key={game.turn} className="lv-player__hop">
+            <Sprite lost={game.status === 'lost'} />
+          </span>
+        </i>
       </div>
     </div>
   );

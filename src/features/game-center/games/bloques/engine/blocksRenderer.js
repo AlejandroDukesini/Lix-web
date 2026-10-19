@@ -4,6 +4,16 @@
  * completa cruza el tablero como una estrella fugaz.
  */
 import { COLS, HIDDEN, ROWS, SHAPES, VISIBLE_ROWS, cellsOf, ghostOf, preview } from './blocksEngine.js';
+import { createSpriteCache } from '../../../render/sprites.js';
+
+// Teselas y nebulosa en caché: la pieza de vidrio se pinta una vez por color y tamaño.
+const sprites = createSpriteCache(60);
+let spriteDpr = 1;
+
+/** Libera las teselas en caché (al salir del juego). */
+export function disposeRenderState() {
+  sprites.clear();
+}
 
 export const PIECE_COLORS = Object.freeze({
   I: '#5ee6ff',
@@ -72,21 +82,88 @@ function shade(hex, amount) {
   return `rgb(${f((n >> 16) & 255)}, ${f((n >> 8) & 255)}, ${f(n & 255)})`;
 }
 
-/** Una tesela de vidrio iluminado. */
-function drawTile(ctx, x, y, size, color, alpha = 1) {
-  const pad = Math.max(1, size * 0.06);
+/**
+ * Tesela de vidriera iluminada: marco de plomo, bisel claro arriba a la
+ * izquierda y oscuro abajo a la derecha, cara central con luz interior, una
+ * faceta diagonal y un destello. Se pinta una vez por color y tamaño.
+ */
+function paintTile(ctx, size, color) {
+  const pad = Math.max(1, size * 0.05);
   const s = size - pad * 2;
+  const r = Math.max(2, size * 0.16);
+  const bevel = Math.max(1.5, size * 0.14);
+  // Plomo.
+  ctx.fillStyle = 'rgba(6,8,24,0.85)';
+  roundRect(ctx, pad, pad, s, s, r);
+  ctx.fill();
+  // Bisel: cuatro caras con luz distinta.
+  const x0 = pad + 1;
+  const y0 = pad + 1;
+  const w = s - 2;
+  const faces = [
+    [shade(color, 0.32), [x0, y0], [x0 + w, y0], [x0 + w - bevel, y0 + bevel], [x0 + bevel, y0 + bevel]],
+    [shade(color, 0.16), [x0, y0], [x0 + bevel, y0 + bevel], [x0 + bevel, y0 + w - bevel], [x0, y0 + w]],
+    [shade(color, -0.22), [x0 + w, y0], [x0 + w, y0 + w], [x0 + w - bevel, y0 + w - bevel], [x0 + w - bevel, y0 + bevel]],
+    [shade(color, -0.3), [x0, y0 + w], [x0 + bevel, y0 + w - bevel], [x0 + w - bevel, y0 + w - bevel], [x0 + w, y0 + w]],
+  ];
+  ctx.save();
+  roundRect(ctx, x0, y0, w, w, r * 0.85);
+  ctx.clip();
+  for (const [fill, ...pts] of faces) {
+    ctx.fillStyle = fill;
+    ctx.beginPath();
+    pts.forEach(([px, py], i) => (i ? ctx.lineTo(px, py) : ctx.moveTo(px, py)));
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+  // Cara central con luz interior.
+  const inner = w - bevel * 2;
+  const glow = ctx.createRadialGradient(x0 + bevel + inner * 0.35, y0 + bevel + inner * 0.3, inner * 0.05, x0 + w / 2, y0 + w / 2, inner * 0.75);
+  glow.addColorStop(0, shade(color, 0.35));
+  glow.addColorStop(0.55, color);
+  glow.addColorStop(1, shade(color, -0.12));
+  ctx.fillStyle = glow;
+  roundRect(ctx, x0 + bevel, y0 + bevel, inner, inner, Math.max(1, r * 0.4));
+  ctx.fill();
+  // Faceta diagonal y destello.
+  ctx.fillStyle = 'rgba(255,255,255,0.22)';
+  ctx.beginPath();
+  ctx.moveTo(x0 + bevel, y0 + bevel + inner * 0.55);
+  ctx.lineTo(x0 + bevel + inner * 0.55, y0 + bevel);
+  ctx.lineTo(x0 + bevel + inner * 0.8, y0 + bevel);
+  ctx.lineTo(x0 + bevel, y0 + bevel + inner * 0.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.9)';
+  ctx.beginPath();
+  ctx.arc(x0 + bevel + inner * 0.22, y0 + bevel + inner * 0.2, Math.max(0.8, inner * 0.07), 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawTile(ctx, x, y, size, color, alpha = 1) {
+  const sprite = sprites.get(`t${color}`, size, size, (c, w) => paintTile(c, w, color), spriteDpr);
+  if (!sprite) return;
   ctx.globalAlpha = alpha;
-  const grad = ctx.createLinearGradient(x, y, x + size, y + size);
-  grad.addColorStop(0, shade(color, 0.18));
-  grad.addColorStop(1, shade(color, -0.18));
-  ctx.fillStyle = grad;
-  roundRect(ctx, x + pad, y + pad, s, s, Math.max(2, size * 0.2));
-  ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.32)';
-  roundRect(ctx, x + pad + s * 0.14, y + pad + s * 0.1, s * 0.5, s * 0.16, s * 0.08);
-  ctx.fill();
+  ctx.drawImage(sprite.canvas, x, y, size, size);
   ctx.globalAlpha = 1;
+}
+
+/** Nebulosa del fondo (manchas de color suaves), en caché por tamaño de pantalla. */
+function paintNebula(ctx, w, h) {
+  const blobs = [
+    [0.18, 0.22, 0.45, '120 80 220'],
+    [0.85, 0.35, 0.4, '60 140 230'],
+    [0.6, 0.85, 0.5, '220 90 170'],
+    [0.1, 0.8, 0.35, '80 200 220'],
+  ];
+  for (const [x, y, r, rgb] of blobs) {
+    const g = ctx.createRadialGradient(w * x, h * y, 0, w * x, h * y, Math.max(w, h) * r);
+    g.addColorStop(0, `rgb(${rgb} / 0.22)`);
+    g.addColorStop(1, `rgb(${rgb} / 0)`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+  }
 }
 
 function drawMini(ctx, type, cx, cy, size, alpha = 1) {
@@ -118,6 +195,7 @@ function panel(ctx, x, y, w, h, label, cell) {
 export function renderBlocks(ctx, size, state, view, dt, { insetBottom = 0, reduced = false } = {}) {
   if (!ctx || !size.width) return;
   const { width, height } = size;
+  spriteDpr = size.dpr || 1;
   view.time += dt;
   const layout = computeLayout(width, height, { insetBottom });
   view.layout = layout;
@@ -129,6 +207,8 @@ export function renderBlocks(ctx, size, state, view, dt, { insetBottom = 0, redu
   sky.addColorStop(1, SKY_BOTTOM);
   ctx.fillStyle = sky;
   ctx.fillRect(0, 0, width, height);
+  const nebula = sprites.get('nebula', width, height, paintNebula, 0.5);
+  if (nebula) ctx.drawImage(nebula.canvas, 0, 0, width, height);
   for (const star of view.stars) {
     const twinkle = reduced ? 1 : 0.65 + 0.35 * Math.sin(view.time * 1.4 + star.tw);
     ctx.globalAlpha = star.a * twinkle;
@@ -139,13 +219,24 @@ export function renderBlocks(ctx, size, state, view, dt, { insetBottom = 0, redu
   }
   ctx.globalAlpha = 1;
 
-  // Pozo del tablero
-  ctx.fillStyle = 'rgba(8, 10, 32, 0.78)';
-  roundRect(ctx, bx - 4, by - 4, boardW + 8, boardH + 8, Math.max(6, cell * 0.3));
+  // Pozo del tablero: ventana con marco metálico biselado y cristal oscuro.
+  const frame = Math.max(5, cell * 0.28);
+  const rim = ctx.createLinearGradient(bx, by - frame, bx, by + boardH + frame);
+  rim.addColorStop(0, '#8d97d6');
+  rim.addColorStop(0.5, '#3c4380');
+  rim.addColorStop(1, '#262b5a');
+  ctx.fillStyle = rim;
+  roundRect(ctx, bx - frame, by - frame, boardW + frame * 2, boardH + frame * 2, Math.max(8, cell * 0.4));
   ctx.fill();
-  ctx.strokeStyle = 'rgba(160, 175, 255, 0.35)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = 'rgba(220, 228, 255, 0.45)';
+  ctx.lineWidth = 1;
   ctx.stroke();
+  const well = ctx.createLinearGradient(0, by, 0, by + boardH);
+  well.addColorStop(0, 'rgba(10, 12, 40, 0.92)');
+  well.addColorStop(1, 'rgba(18, 14, 52, 0.92)');
+  ctx.fillStyle = well;
+  roundRect(ctx, bx - 2, by - 2, boardW + 4, boardH + 4, Math.max(4, cell * 0.2));
+  ctx.fill();
   ctx.strokeStyle = 'rgba(160, 175, 255, 0.07)';
   ctx.lineWidth = 1;
   ctx.beginPath();
@@ -174,14 +265,19 @@ export function renderBlocks(ctx, size, state, view, dt, { insetBottom = 0, redu
 
   // Sombra y pieza activa
   if (state.active) {
+    // Sombra: contorno y relleno muy tenue del color de la pieza, donde caerá.
     const ghost = ghostOf(state);
-    ctx.strokeStyle = shade(PIECE_COLORS[state.active.type], 0.1);
-    ctx.globalAlpha = 0.55;
+    const tint = PIECE_COLORS[state.active.type];
+    ctx.strokeStyle = shade(tint, 0.1);
     ctx.lineWidth = Math.max(1, cell * 0.08);
     for (const [gx, gy] of cellsOf(ghost)) {
       if (gy < HIDDEN) continue;
       const [sx, sy] = toScreen(gx, gy);
       roundRect(ctx, sx + cell * 0.12, sy + cell * 0.12, cell * 0.76, cell * 0.76, cell * 0.18);
+      ctx.globalAlpha = 0.12;
+      ctx.fillStyle = tint;
+      ctx.fill();
+      ctx.globalAlpha = 0.55;
       ctx.stroke();
     }
     ctx.globalAlpha = 1;

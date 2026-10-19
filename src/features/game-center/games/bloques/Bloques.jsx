@@ -19,7 +19,7 @@ import { formatTime } from '../../services/gameLifecycle.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { cx } from '../../../../utils/cx.js';
 import { MODES, createGame, hardDrop, hold, move, rotate, tick } from './engine/blocksEngine.js';
-import { addEffects, createRenderState, renderBlocks } from './engine/blocksRenderer.js';
+import { addEffects, createRenderState, disposeRenderState, renderBlocks } from './engine/blocksRenderer.js';
 import { MILESTONES, milestonesFor } from './milestones.js';
 import './styles/bloques.css';
 
@@ -135,6 +135,7 @@ function Play({ config, frame, onMenu }) {
   const [result, setResult] = useState(null);
   const game = useRef(createGame({ seed: Date.now() >>> 0, ...config }));
   const view = useRef(createRenderState());
+  useEffect(() => () => disposeRenderState(), []);
   const touch = useRef(NO_INPUT);
   const repeat = useRef({ left: { held: false, t: 0 }, right: { held: false, t: 0 } });
   const gesture = useRef(null);
@@ -398,7 +399,7 @@ function Play({ config, frame, onMenu }) {
         ]}
       />
       {touchUI && phase !== 'over' && (
-        <div className="bq-pad" data-no-gesture key={round}>
+        <div className="bq-pad" data-no-gesture key={`div-${round}`}>
           <div className="bq-pad__row">
             <TapButton label="Guardar pieza" icon={Repeat2} onPress={() => act('hold')} className="bq-btn bq-btn--small" />
             <TapButton label="Girar a la izquierda" icon={RotateCcw} onPress={() => act('ccw')} className="bq-btn" />
@@ -414,14 +415,14 @@ function Play({ config, frame, onMenu }) {
       )}
       {phase === 'run' && (
         <ControlsHint
-          key={round}
+          key={`controlshint-${round}`}
           touch="Toca el tablero para girar · arrastra para mover · desliza rápido hacia abajo para soltar"
           desktop="← → mover · ↑ o X girar · Z girar al revés · ↓ bajar · Espacio soltar · C guardar · Esc pausa"
         />
       )}
       {phase === 'countdown' && (
         <Countdown
-          key={round}
+          key={`countdown-${round}`}
           paused={frame.interrupted}
           onTick={() => audio.play(SFX.tick)}
           onDone={() => {

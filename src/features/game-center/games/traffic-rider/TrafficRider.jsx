@@ -18,7 +18,7 @@ import { useMediaQuery } from '../../../../hooks/useMediaQuery.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { cx } from '../../../../utils/cx.js';
 import { KMH, MISSIONS, createRide, missionProgress, sceneAt, step } from './engine/riderEngine.js';
-import { createRenderState, renderRide } from './engine/riderRenderer.js';
+import { createRenderState, disposeRenderState, renderRide } from './engine/riderRenderer.js';
 import { ControlSettings, KeyLegend, RiderControls, controlMethod, useTiltSteer } from './components/RiderControls.jsx';
 import './styles/traffic-rider.css';
 
@@ -139,6 +139,7 @@ function Ride({ mode, frame, record, onMenu }) {
   const [result, setResult] = useState(null);
   const world = useRef(createRide(Date.now()));
   const view = useRef(createRenderState());
+  useEffect(() => () => disposeRenderState(view.current), []);
   const touch = useRef(NO_INPUT);
   const analog = useRef(0);
   const method = controlMethod(record);
@@ -249,6 +250,7 @@ function Ride({ mode, frame, record, onMenu }) {
   const restart = useCallback(() => {
     resetSession();
     world.current = createRide(Date.now());
+    disposeRenderState(view.current);
     view.current = createRenderState();
     touch.current = NO_INPUT;
     setHud({ speed: 0, distance: 0, score: 0, progress: null, scene: sceneAt(0).name });
@@ -287,12 +289,12 @@ function Ride({ mode, frame, record, onMenu }) {
           goalItem,
         ]}
       />
-      {touchUI && phase !== 'over' && <RiderControls key={round} inputRef={touch} method={method} side={lowLandscape} />}
+      {touchUI && phase !== 'over' && <RiderControls key={`ridercontrols-${round}`} inputRef={touch} method={method} side={lowLandscape} />}
       {!touchUI && phase !== 'over' && <KeyLegend />}
       {method === 'swipe' && <DragIndicator indicator={drag.indicator} />}
       {phase === 'run' && (
         <ControlsHint
-          key={round}
+          key={`controlshint-${round}`}
           touch={
             method === 'tilt'
               ? 'Inclina el teléfono para girar · gas y freno a la derecha'
@@ -310,7 +312,7 @@ function Ride({ mode, frame, record, onMenu }) {
       )}
       {phase === 'countdown' && (
         <Countdown
-          key={round}
+          key={`countdown-${round}`}
           paused={frame.interrupted}
           onTick={() => audio.play(SFX.tick)}
           onDone={() => {

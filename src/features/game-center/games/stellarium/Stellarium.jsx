@@ -252,6 +252,7 @@ export default function Stellarium() {
     () => () => {
       const { ra, dec, fov } = sky.current.view;
       updateGameSettings(GAME_ID, { view: { ra, dec, fov }, toggles: sky.current.toggles }).catch(() => {});
+      sky.current.sprites?.clear();
     },
     [],
   );

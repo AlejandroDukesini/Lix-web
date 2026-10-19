@@ -16,6 +16,8 @@
  * Se dibuja de lejos a cerca (algoritmo del pintor) y el jugador al final.
  */
 import { FALL_TIME, FLOAT_HALF, PLAYER_HALF, SEGMENT_LENGTH, heightAt, segmentAt } from './aquaparkEngine.js';
+import { createSpriteCache } from '../../../render/sprites.js';
+import { seeded } from '../../../render/paint.js';
 
 const ROAD_W = 3.2; // metros por unidad de ancho normalizado
 const CAMERA_BACK = 7;
@@ -30,8 +32,16 @@ const BANDS_NEAR = 12; // franjas de la sección (cerca)
 const BANDS_FAR = 6; // (lejos)
 
 export function createAquaView() {
-  return { bgOffset: 0, time: 0, splashes: [], bump: 0 };
+  return { bgOffset: 0, time: 0, splashes: [], bump: 0, sprites: createSpriteCache(40) };
 }
+
+/** Libera los sprites de la vista (al salir o reiniciar). */
+export function disposeAquaView(view) {
+  view.sprites?.clear();
+}
+
+// Resolución fija de los sprites de bañista: se escalan con la perspectiva.
+const RIDER_PX = 120;
 
 // ---------------------------------------------------------------- colores
 
@@ -107,12 +117,34 @@ function drawBackground(ctx, W, H, horizon, theme, view) {
   }
   ctx.globalAlpha = 1;
 
+  // Torres de toboganes lejanas y palmeras: el parque se extiende más allá.
+  const stripW = 760;
+  const stripH = Math.max(40, horizon * 0.5);
+  const park = view.sprites.get(`park${theme.hills}${theme.night ? 'n' : ''}`, stripW, stripH, (c, w, h) => paintParkSkyline(c, w, h, theme), 1);
+  const parkShift = (((view.bgOffset * 0.35) % stripW) + stripW) % stripW;
+  for (let x = -parkShift; x < W; x += stripW) ctx.drawImage(park.canvas, x, horizon - stripH + 2, stripW, stripH);
+
   // Piscina con brillos ondulados.
   const pool = ctx.createLinearGradient(0, horizon, 0, H);
   pool.addColorStop(0, theme.pool[0]);
   pool.addColorStop(1, theme.pool[1]);
   ctx.fillStyle = pool;
   ctx.fillRect(0, horizon, W, H - horizon);
+  // Cáusticas: red de luz del fondo de la piscina, en movimiento lento.
+  const caustics = view.sprites.get('caustics', 256, 256, paintCaustics, 1);
+  const pattern = ctx.createPattern(caustics.canvas, 'repeat');
+  if (pattern) {
+    ctx.save();
+    ctx.globalAlpha = theme.night ? 0.07 : 0.12;
+    ctx.beginPath();
+    ctx.rect(0, horizon, W, H - horizon);
+    ctx.clip();
+    const drift = view.reduced ? 0 : view.time * 9;
+    ctx.translate(-(drift % 256) - (view.bgOffset % 256), horizon - (drift * 0.6) % 256);
+    ctx.fillStyle = pattern;
+    ctx.fillRect(0, 0, W + 512, H + 512);
+    ctx.restore();
+  }
   ctx.strokeStyle = 'rgb(255 255 255 / 0.3)';
   ctx.lineCap = 'round';
   ctx.lineWidth = 2;
@@ -164,48 +196,225 @@ function drawFloat(ctx, x, y, radius) {
   ctx.stroke();
 }
 
-function drawRider(ctx, x, y, halfWidth, color, lean = 0, label = null, hurt = 0) {
+/** Siluetas lejanas del parque (torres, toboganes en espiral, palmeras), teseladas en horizontal. */
+function paintParkSkyline(ctx, W, H, theme) {
+  const rand = seeded(theme.hills.length * 13 + W);
+  const base = shade(theme.hills, theme.night ? -0.2 : -0.12);
+  const light = shade(theme.hills, 0.25);
+  ctx.lineCap = 'round';
+  // Torres con toboganes que bajan en espiral.
+  for (const tx of [0.12, 0.47, 0.8]) {
+    const x = W * tx;
+    const top = H * (0.08 + rand() * 0.2);
+    ctx.fillStyle = base;
+    ctx.fillRect(x - 3, top, 6, H - top);
+    ctx.fillRect(x - 16, top, 32, 6);
+    ctx.fillStyle = light;
+    ctx.beginPath();
+    ctx.moveTo(x - 18, top);
+    ctx.lineTo(x, top - 14);
+    ctx.lineTo(x + 18, top);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = shade(theme.slide[rand() < 0.5 ? 0 : 1], -0.15);
+    ctx.lineWidth = 6;
+    ctx.globalAlpha = 0.75;
+    ctx.beginPath();
+    for (let k = 0; k <= 40; k += 1) {
+      const t = k / 40;
+      const px = x + Math.sin(t * Math.PI * 3) * (18 + t * 10);
+      const py = top + 6 + t * (H - top - 6);
+      if (k === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+  // Palmeras.
+  for (let i = 0; i < 6; i += 1) {
+    const x = rand() * W;
+    const h = H * (0.35 + rand() * 0.3);
+    ctx.strokeStyle = base;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, H);
+    ctx.quadraticCurveTo(x + 6, H - h * 0.5, x - 2, H - h);
+    ctx.stroke();
+    ctx.fillStyle = base;
+    for (let k = 0; k < 6; k += 1) {
+      const a = -Math.PI / 2 + (k - 2.5) * 0.55;
+      ctx.save();
+      ctx.translate(x - 2, H - h);
+      ctx.rotate(a);
+      ctx.beginPath();
+      ctx.ellipse(10, 0, 12, 2.6, 0.3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
+
+/** Red de cáusticas (líneas de luz curvas) en una loseta que encaja por los bordes. */
+function paintCaustics(ctx, W, H) {
+  const rand = seeded(21);
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineCap = 'round';
+  for (let i = 0; i < 26; i += 1) {
+    const x = rand() * W;
+    const y = rand() * H;
+    const r = 14 + rand() * 22;
+    ctx.lineWidth = 0.8 + rand() * 1.1;
+    for (const ox of [-W, 0, W]) {
+      for (const oy of [-H, 0, H]) {
+        ctx.beginPath();
+        ctx.ellipse(x + ox, y + oy, r, r * (0.55 + rand() * 0.3), rand() * Math.PI, 0.3, Math.PI * (1.2 + rand() * 0.6));
+        ctx.stroke();
+      }
+    }
+  }
+}
+
+const SKIN = ['#f1c7a3', '#d9a07a', '#a8714c', '#7a4b2e'];
+const HAIR = ['#2b1b14', '#5a3622', '#c9873f', '#1b1b22'];
+const SUIT = ['#2b6cb0', '#e76f51', '#2a9d8f', '#6d4bd6', '#e63973'];
+
+/**
+ * Bañista de espaldas sentado en su flotador. Sprite de RIDER_PX de ancho; el
+ * centro del flotador queda en (W/2, H·0.72).
+ */
+function paintRider(ctx, W, H, color, seed) {
+  const rand = seeded(seed);
+  const skin = SKIN[Math.floor(rand() * SKIN.length)];
+  const hair = HAIR[Math.floor(rand() * HAIR.length)];
+  const suit = SUIT[Math.floor(rand() * SUIT.length)];
+  const longHair = rand() < 0.5;
+  const w = W * 0.92;
+  const h = w * 0.46;
+  const cx = W / 2;
+  const cy = H * 0.72;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  // Flotador: rosco con volumen, franjas y brillo.
+  const ring = ctx.createRadialGradient(cx - w * 0.15, cy - h * 0.4, w * 0.05, cx, cy, w * 0.6);
+  ring.addColorStop(0, shade(color, 0.6));
+  ring.addColorStop(0.55, color);
+  ring.addColorStop(1, shade(color, -0.35));
+  ctx.fillStyle = ring;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, w / 2, h / 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  for (const a of [0.35, 2.2]) {
+    ctx.beginPath();
+    ctx.ellipse(cx + Math.cos(a) * w * 0.42, cy + Math.sin(a) * h * 0.38, w * 0.06, h * 0.22, a, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Hueco central (agua).
+  ctx.fillStyle = 'rgba(10,60,100,0.55)';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - h * 0.05, w * 0.22, h * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // Espalda con bañador.
+  const back = ctx.createLinearGradient(cx - w * 0.2, 0, cx + w * 0.2, 0);
+  back.addColorStop(0, shade(skin, -0.2));
+  back.addColorStop(0.45, skin);
+  back.addColorStop(1, shade(skin, -0.3));
+  ctx.fillStyle = back;
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.2, cy - h * 0.05);
+  ctx.quadraticCurveTo(cx - w * 0.24, cy - h * 1.15, cx - w * 0.12, cy - h * 1.3);
+  ctx.lineTo(cx + w * 0.12, cy - h * 1.3);
+  ctx.quadraticCurveTo(cx + w * 0.24, cy - h * 1.15, cx + w * 0.2, cy - h * 0.05);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = suit;
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.21, cy - h * 0.15);
+  ctx.lineTo(cx - w * 0.2, cy - h * 0.6);
+  ctx.quadraticCurveTo(cx, cy - h * 0.72, cx + w * 0.2, cy - h * 0.6);
+  ctx.lineTo(cx + w * 0.21, cy - h * 0.15);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = suit;
+  ctx.lineWidth = w * 0.025;
+  ctx.beginPath();
+  ctx.moveTo(cx - w * 0.1, cy - h * 0.62);
+  ctx.lineTo(cx - w * 0.08, cy - h * 1.25);
+  ctx.moveTo(cx + w * 0.1, cy - h * 0.62);
+  ctx.lineTo(cx + w * 0.08, cy - h * 1.25);
+  ctx.stroke();
+  // Brazos hacia las asas del flotador.
+  ctx.strokeStyle = skin;
+  ctx.lineWidth = w * 0.075;
+  for (const k of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(cx + k * w * 0.15, cy - h * 1.15);
+    ctx.quadraticCurveTo(cx + k * w * 0.36, cy - h * 0.75, cx + k * w * 0.34, cy - h * 0.12);
+    ctx.stroke();
+    ctx.fillStyle = shade(skin, -0.1);
+    ctx.beginPath();
+    ctx.arc(cx + k * w * 0.34, cy - h * 0.1, w * 0.05, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Cabeza con pelo (de espaldas).
+  const headY = cy - h * 1.62;
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.arc(cx, headY + h * 0.05, w * 0.13, 0, Math.PI * 2);
+  ctx.fill();
+  const hg = ctx.createRadialGradient(cx - w * 0.04, headY - h * 0.15, 1, cx, headY, w * 0.15);
+  hg.addColorStop(0, shade(hair, 0.35));
+  hg.addColorStop(1, hair);
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  ctx.arc(cx, headY, w * 0.135, Math.PI * 0.95, Math.PI * 2.05);
+  ctx.quadraticCurveTo(cx + w * 0.12, headY + h * 0.25, cx, headY + h * 0.22);
+  ctx.quadraticCurveTo(cx - w * 0.12, headY + h * 0.25, cx - w * 0.135, headY);
+  ctx.fill();
+  if (longHair) {
+    ctx.beginPath();
+    ctx.ellipse(cx, headY + h * 0.42, w * 0.05, h * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Orejas.
+  ctx.fillStyle = shade(skin, -0.1);
+  for (const k of [-1, 1]) {
+    ctx.beginPath();
+    ctx.ellipse(cx + k * w * 0.135, headY + h * 0.08, w * 0.025, h * 0.07, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Parte delantera del flotador, por encima de las manos.
+  ctx.strokeStyle = shade(color, 0.3);
+  ctx.lineWidth = h * 0.28;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, w * 0.4, h * 0.3, 0, 0.15, Math.PI - 0.15);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(255,255,255,0.45)';
+  ctx.lineWidth = h * 0.06;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - h * 0.03, w * 0.4, h * 0.28, 0, 0.5, Math.PI - 0.5);
+  ctx.stroke();
+}
+
+function drawRider(ctx, x, y, halfWidth, color, lean = 0, label = null, hurt = 0, sprites = null) {
   const w = halfWidth * 2;
   const h = w * 0.46;
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(lean);
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
   ctx.fillStyle = 'rgb(0 40 70 / 0.22)';
   ctx.beginPath();
   ctx.ellipse(0, h * 0.4, w * 0.56, h * 0.42, 0, 0, Math.PI * 2);
   ctx.fill();
-  const ring = ctx.createRadialGradient(-w * 0.15, -h * 0.4, w * 0.05, 0, 0, w * 0.6);
-  ring.addColorStop(0, shade(color, 0.55));
-  ring.addColorStop(0.6, color);
-  ring.addColorStop(1, shade(color, -0.25));
-  ctx.fillStyle = ring;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, w / 2, h / 2, 0, 0, Math.PI * 2);
-  ctx.fill();
-  // Persona de espaldas, con formas redondeadas
-  ctx.fillStyle = '#3a2420';
-  ctx.beginPath();
-  ctx.ellipse(0, -h * 0.55, w * 0.18, h * 0.6, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.arc(0, -h * 1.3, w * 0.135, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = '#3a2420';
-  ctx.lineWidth = Math.max(2, w * 0.075);
-  ctx.beginPath();
-  ctx.moveTo(-w * 0.12, -h * 0.8);
-  ctx.quadraticCurveTo(-w * 0.32, -h * 0.55, -w * 0.33, -h * 0.05);
-  ctx.moveTo(w * 0.12, -h * 0.8);
-  ctx.quadraticCurveTo(w * 0.32, -h * 0.55, w * 0.33, -h * 0.05);
-  ctx.stroke();
-  // Parte delantera del flotador, por encima de las manos
-  ctx.strokeStyle = shade(color, 0.35);
-  ctx.lineWidth = Math.max(2, h * 0.28);
-  ctx.beginPath();
-  ctx.ellipse(0, 0, w * 0.4, h * 0.3, 0, 0.15, Math.PI - 0.15);
-  ctx.stroke();
+  const seed = [...color].reduce((a, c) => a * 31 + c.charCodeAt(0), 7) >>> 0;
+  const sprite = sprites?.get(`rider${color}`, RIDER_PX, RIDER_PX * 1.15, (c, sw, sh) => paintRider(c, sw, sh, color, seed), 1);
+  if (sprite) {
+    // El sprite mide RIDER_PX de ancho con el flotador al 92 %: se escala al ancho del bañista.
+    const k = w / (RIDER_PX * 0.92);
+    ctx.drawImage(sprite.canvas, -sprite.w * k * 0.5, -sprite.h * k * 0.72, sprite.w * k, sprite.h * k);
+  }
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
   if (hurt > 0) {
     ctx.strokeStyle = `rgb(255 90 90 / ${hurt})`;
     ctx.lineWidth = Math.max(2, w * 0.05);
@@ -484,7 +693,7 @@ export function renderAquapark(ctx, size, race, view, dt = 0) {
       n,
       z: rival.z,
       draw: () =>
-        drawRider(ctx, p.x + rival.x * p.w, p.y - lift(p, rival.x), PLAYER_HALF * p.w * 1.3, rival.color, rival.x * 0.35, n < 40 ? rival.name : null),
+        drawRider(ctx, p.x + rival.x * p.w, p.y - lift(p, rival.x), PLAYER_HALF * p.w * 1.3, rival.color, rival.x * 0.35, n < 40 ? rival.name : null, 0, view.sprites),
     });
   }
   sprites.sort((s1, s2) => s2.n - s1.n || (s2.z ?? 0) - (s1.z ?? 0)).forEach((sprite) => sprite.draw());
@@ -525,7 +734,7 @@ export function renderAquapark(ctx, size, race, view, dt = 0) {
       }
     }
     ctx.globalAlpha = alpha;
-    drawRider(ctx, px, py, half, '#ffd166', player.steer * 0.22, null, view.bump);
+    drawRider(ctx, px, py, half, '#ffd166', player.steer * 0.22, null, view.bump, view.sprites);
     ctx.globalAlpha = 1;
     if (player.boost > 0) {
       ctx.strokeStyle = 'rgb(255 209 102 / 0.75)';

@@ -8,6 +8,27 @@
  * depende de la pantalla y se le comunica al motor (`world.viewW`).
  */
 import { SIZE, T } from './brickEngine.js';
+import { createSpriteCache } from '../../../render/sprites.js';
+import {
+  BLOCK,
+  BRICK,
+  COIN,
+  COIN_PALETTE,
+  GROUND,
+  GROUND_TOP,
+  HARD,
+  HEART,
+  HEART_PALETTE,
+  PLAYER_PALETTE,
+  SHELL,
+  SNAIL,
+  SNAIL_PALETTE,
+  WEEVIL,
+  WEEVIL_FLAT,
+  WEEVIL_PALETTE,
+  pixelSprite,
+  playerFrame,
+} from './pixelArt.js';
 
 const LEVEL_H = 14 * T;
 
@@ -19,8 +40,52 @@ const THEMES = {
 };
 
 export function createRenderState() {
-  return { time: 0, popups: [], debris: [], coinPops: [], layout: null };
+  return { time: 0, popups: [], debris: [], coinPops: [], layout: null, sprites: createSpriteCache(120) };
 }
+
+export function disposeRenderState(view) {
+  view.sprites?.clear();
+}
+
+/** Aclara (f > 0) u oscurece (f < 0) un color hex. */
+function tone(hex, f) {
+  const n = parseInt(hex.slice(1), 16);
+  const ch = (c) => Math.round(f < 0 ? c * (1 + f) : c + (255 - c) * f);
+  const r = ch((n >> 16) & 255);
+  const g = ch((n >> 8) & 255);
+  const b = ch(n & 255);
+  return `#${((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1)}`;
+}
+
+/** Paletas de las losetas de cada ambiente (derivadas de sus colores). */
+const tilePalettes = new Map();
+function paletteFor(theme) {
+  let p = tilePalettes.get(theme);
+  if (p) return p;
+  p = {
+    ground: { G: theme.top, H: tone(theme.top, 0.35), g: tone(theme.top, -0.25), D: theme.ground, d: theme.groundDark, l: tone(theme.ground, 0.18) },
+    brick: { R: theme.brick, r: tone(theme.brick, -0.25), L: tone(theme.brick, 0.3), m: tone(theme.groundDark, -0.2) },
+    block: { o: '#4a2a0c', Y: tone(theme.block, 0.45), y: theme.block, z: tone(theme.block, -0.3), q: '#7a4a12', S: '#fff3cf' },
+    used: { o: '#3a240f', Y: '#a9784a', y: '#8b5e34', z: '#5a3a1e', q: '#5a3a1e', S: '#8b5e34' },
+    hard: { L: tone(theme.ground, 0.35), l: theme.ground, D: theme.groundDark, d: tone(theme.groundDark, -0.25) },
+  };
+  tilePalettes.set(theme, p);
+  return p;
+}
+
+const CLOUD = [
+  '..........oooo..........',
+  '.......ooowwwwooo.......',
+  '.....oowwwwwwwwwwoo.....',
+  '..ooowwwwwwwwwwwwwwooo..',
+  '.owwwwwwwwwwwwwwwwwwwwo.',
+  'owwwwwwwwwwwwwwwwwwwwwwo',
+  'owwwwwwwwwwwwwwwwwwwwwwo',
+  'oWWWwwwwwwwwwwwwwwwWWWWo',
+  '.oWWWWWWWWWWWWWWWWWWWWo.',
+  '..oooooooooooooooooooo..',
+];
+const CLOUD_PALETTE = { o: '#9fc3e6', w: '#ffffff', W: '#dcebfa' };
 
 export function addEffects(view, events, reduced) {
   for (const e of events) {
@@ -66,7 +131,7 @@ function drawHeart(ctx, cx, cy, s, color) {
   ctx.fill();
 }
 
-function drawBackground(ctx, theme, camX, viewW, time) {
+function drawBackground(ctx, theme, camX, viewW, time, sprites) {
   const g = ctx.createLinearGradient(0, 0, 0, LEVEL_H);
   g.addColorStop(0, theme.sky[0]);
   g.addColorStop(1, theme.sky[1]);
@@ -87,6 +152,27 @@ function drawBackground(ctx, theme, camX, viewW, time) {
     }
     ctx.lineTo(camX + viewW + 4, LEVEL_H);
     ctx.fill();
+    // Contorno y matas: las colinas parecen ilustradas, no manchas planas.
+    ctx.strokeStyle = tone(color, -0.25);
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = camX - 2; x <= camX + viewW + 4; x += 8) {
+      const wx = x - off;
+      const y = base - Math.abs(Math.sin(wx / 90)) * amp - Math.sin(wx / 37) * 6;
+      if (x === camX - 2) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.fillStyle = tone(color, -0.12);
+    for (let x = Math.floor((camX - off) / 23) * 23; x < camX - off + viewW + 23; x += 23) {
+      const sx = x + off;
+      const y = base - Math.abs(Math.sin(x / 90)) * amp - Math.sin(x / 37) * 6;
+      const k = Math.abs(Math.sin(x * 12.9898));
+      if (k < 0.55) continue;
+      ctx.beginPath();
+      ctx.arc(sx, y + 14 + k * 30, 3 + k * 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   // Nubes (o estrellas en los niveles oscuros)
   const dark = theme === THEMES.subsuelo || theme === THEMES.castillo;
@@ -98,75 +184,63 @@ function drawBackground(ctx, theme, camX, viewW, time) {
       rect(ctx, px, py, 2, 2, '#e8e4ff');
       rect(ctx, px + 47, py + 31, 1, 1, '#8a7fb0');
     } else {
-      ctx.fillStyle = 'rgba(255,255,255,0.85)';
-      ctx.beginPath();
-      ctx.ellipse(px, py, 18, 7, 0, 0, Math.PI * 2);
-      ctx.ellipse(px + 12, py - 4, 12, 7, 0, 0, Math.PI * 2);
-      ctx.fill();
+      const cloud = pixelSprite(sprites, 'cloud', CLOUD, CLOUD_PALETTE);
+      ctx.drawImage(cloud.canvas, Math.round(px - 12), Math.round(py - 6));
     }
   }
 }
 
-function drawTile(ctx, ch, x, y, theme, world, c, r, time) {
+function drawTile(ctx, ch, x, y, theme, world, c, r, time, sprites) {
+  const pal = paletteFor(theme);
+  const themeKey = theme.top + theme.ground;
   switch (ch) {
     case '#': {
       const top = r === 0 || world.grid[r - 1][c] !== '#';
-      rect(ctx, x, y, T, T, theme.ground);
-      rect(ctx, x, y + T - 3, T, 3, theme.groundDark);
-      rect(ctx, x + ((c * 5) % 11), y + 6, 2, 2, theme.groundDark);
-      if (top) {
-        rect(ctx, x, y, T, 4, theme.top);
-        rect(ctx, x + ((c * 3) % 13), y + 4, 2, 2, theme.top);
-      }
+      const sprite = top ? pixelSprite(sprites, `gt${themeKey}`, GROUND_TOP, pal.ground) : pixelSprite(sprites, `g${themeKey}${c % 2}`, GROUND, pal.ground, c % 2 === 1);
+      ctx.drawImage(sprite.canvas, x, y);
       break;
     }
     case '=':
-      rect(ctx, x, y, T, T, theme.groundDark);
-      rect(ctx, x + 1, y + 1, T - 2, T - 2, theme.ground);
-      rect(ctx, x + 1, y + 1, T - 2, 2, 'rgba(255,255,255,0.25)');
-      rect(ctx, x + 1, y + T - 3, T - 2, 2, 'rgba(0,0,0,0.25)');
+      ctx.drawImage(pixelSprite(sprites, `h${themeKey}`, HARD, pal.hard).canvas, x, y);
       break;
     case 'B':
-      rect(ctx, x, y, T, T, theme.brick);
-      ctx.fillStyle = 'rgba(0,0,0,0.3)';
-      ctx.fillRect(x, y + 7, T, 1);
-      ctx.fillRect(x, y + 15, T, 1);
-      ctx.fillRect(x + 7, y, 1, 7);
-      ctx.fillRect(x + 3, y + 8, 1, 7);
-      ctx.fillRect(x + 12, y + 8, 1, 7);
-      rect(ctx, x, y, T, 1, 'rgba(255,255,255,0.25)');
+      ctx.drawImage(pixelSprite(sprites, `b${theme.brick}${theme.groundDark}`, BRICK, pal.brick).canvas, x, y);
       break;
     case '?':
     case 'M': {
+      ctx.drawImage(pixelSprite(sprites, `q${theme.block}`, BLOCK, pal.block).canvas, x, y);
+      // La estrella late: invita a golpear el bloque.
       const glow = 0.5 + 0.5 * Math.sin(time * 4 + c);
-      rect(ctx, x, y, T, T, '#7a4a12');
-      rect(ctx, x + 1, y + 1, T - 2, T - 2, theme.block);
-      rect(ctx, x + 1, y + 1, T - 2, 2, 'rgba(255,255,255,0.35)');
-      drawStar(ctx, x + T / 2, y + T / 2 + 0.5, 5, `rgba(255, 250, 220, ${0.6 + glow * 0.4})`);
+      drawStar(ctx, x + T / 2, y + 7, 4.2, `rgba(255, 255, 240, ${glow * 0.45})`);
       break;
     }
     case 'U':
-      rect(ctx, x, y, T, T, '#5a3a1e');
-      rect(ctx, x + 1, y + 1, T - 2, T - 2, '#8b5e34');
+      ctx.drawImage(pixelSprite(sprites, 'used', BLOCK, pal.used).canvas, x, y);
       break;
     case 'T': {
       // Columna de piedra (las «tuberías» de este reino): capitel arriba.
       const top = r === 0 || world.grid[r - 1][c] !== 'T';
       const left = c === 0 || world.grid[r][c - 1] !== 'T';
-      rect(ctx, x, y, T, T, '#3f9c94');
-      rect(ctx, x + (left ? 2 : 0), y, 3, T, 'rgba(255,255,255,0.25)');
-      rect(ctx, x + (left ? 9 : 7), y, 2, T, 'rgba(0,0,0,0.18)');
+      // Fuste cilíndrico en bandas de luz (pixel art) con estrías y capitel moldurado.
+      const bands = left ? ['#2a6f69', '#3f9c94', '#7fded4', '#55c2b8', '#3f9c94', '#3f9c94', '#3f9c94', '#3f9c94'] : ['#3f9c94', '#3f9c94', '#3f9c94', '#368a83', '#2f7b75', '#2a6f69', '#225c57', '#1a4a46'];
+      for (let k = 0; k < 8; k += 1) rect(ctx, x + k * 2, y, 2, T, bands[k]);
+      rect(ctx, x + (left ? 0 : T - 1), y, 1, T, '#163f3b');
+      if ((r + c) % 2 === 0) rect(ctx, x + 6, y + 4, 1, 8, 'rgba(0,0,0,0.15)');
       if (top) {
-        rect(ctx, x - (left ? 1 : 0), y, T + 1, 5, '#55c2b8');
-        rect(ctx, x - (left ? 1 : 0), y + 5, T + 1, 1, 'rgba(0,0,0,0.3)');
+        rect(ctx, x - (left ? 1 : 0), y, T + 1, 6, '#163f3b');
+        rect(ctx, x - (left ? 1 : 0) + 1, y + 1, T - 1, 4, '#55c2b8');
+        rect(ctx, x - (left ? 1 : 0) + 1, y + 1, T - 1, 1, '#9cefe6');
+        rect(ctx, x - (left ? 1 : 0), y + 6, T + 1, 1, 'rgba(0,0,0,0.3)');
       }
       break;
     }
     case '-': {
       // Copa de árbol: hojas encima y tronco hasta el suelo (decorado).
-      rect(ctx, x, y, T, 6, '#4fae55');
+      rect(ctx, x, y - 1, T, 7, '#2c6a33');
+      rect(ctx, x, y, T, 5, '#4fae55');
       rect(ctx, x, y, T, 2, '#7ad16c');
       rect(ctx, x + ((c * 7) % 12), y + 2, 3, 2, '#3c8a42');
+      rect(ctx, x + ((c * 5 + 6) % 13), y + 1, 2, 1, '#a8e68f');
       const left = world.grid[r][c - 1] !== '-';
       const right = world.grid[r][c + 1] !== '-';
       if (left) rect(ctx, x - 2, y + 1, 3, 5, '#4fae55');
@@ -175,8 +249,12 @@ function drawTile(ctx, ch, x, y, theme, world, c, r, time) {
     }
     case 'L': {
       const wave = Math.sin(time * 3 + c * 0.9) * 1.5;
-      rect(ctx, x, y + 3 + wave, T, T - 3 - wave, '#e8441a');
+      rect(ctx, x, y + 3 + wave, T, T - 3 - wave, '#c22f12');
+      rect(ctx, x, y + 6 + wave, T, T - 6 - wave, '#e8441a');
       rect(ctx, x, y + 3 + wave, T, 3, '#ffb347');
+      rect(ctx, x + ((c * 5) % 12), y + 9 + wave, 2, 2, '#ffd27a');
+      const bubble = (time * 1.3 + c * 0.37) % 1;
+      if (bubble < 0.3) rect(ctx, x + ((c * 7) % 11) + 2, y + 2 + wave - bubble * 10, 2, 2, '#ffb347');
       break;
     }
     default:
@@ -198,45 +276,23 @@ function drawTrunks(ctx, world, c0, c1) {
   }
 }
 
-function drawPlayer(ctx, p, time, dying) {
+function drawPlayer(ctx, p, time, dying, sprites) {
   if (p.invulnerable > 0 && Math.floor(time * 16) % 2 === 0 && !dying) return;
-  const x = Math.round(p.x);
-  const y = Math.round(p.y);
-  const f = p.facing;
   const big = p.h > SIZE.small.h;
-  const run = Math.abs(p.vx) > 10 && p.onGround ? Math.floor(time * 12) % 2 : 0;
-  ctx.save();
-  if (f < 0) {
-    ctx.translate(x + p.w / 2, 0);
-    ctx.scale(-1, 1);
-    ctx.translate(-(x + p.w / 2), 0);
-  }
-  const h = p.h;
-  const headH = big ? 10 : 7;
-  // Botas
-  rect(ctx, x + 1 + (run ? 1 : 0), y + h - 3, 4, 3, '#3a2440');
-  rect(ctx, x + 7 - (run ? 1 : 0), y + h - 3, 4, 3, '#3a2440');
-  // Abrigo
-  rect(ctx, x + 1, y + headH, 10, h - headH - 3, '#2f8f9d');
-  rect(ctx, x + 1, y + headH, 10, 2, '#46b3c2');
-  if (big) rect(ctx, x + 5, y + headH + 3, 2, h - headH - 7, '#24707b');
-  // Bufanda rosa (ondea)
-  rect(ctx, x, y + headH - 1, 12, 3, '#ff6fa8');
-  rect(ctx, x - 3 - (run ? 1 : 0), y + headH, 4, 2, '#ff6fa8');
-  // Cara y casco
-  rect(ctx, x + 2, y + 1, 9, headH - 1, '#ffd9b8');
-  rect(ctx, x + 1, y, 11, big ? 4 : 3, '#f2b632');
-  rect(ctx, x + 1, y + (big ? 3 : 2), 4, 1, '#f2b632');
-  rect(ctx, x + 8, y + (big ? 5 : 3), 2, 2, '#2a1a2a');
-  ctx.restore();
+  const running = Math.abs(p.vx) > 10 && p.onGround;
+  const pose = dying || !p.onGround ? 'jump' : running ? (Math.floor(time * 12) % 2 ? 'runA' : 'runB') : 'idle';
+  const flip = p.facing < 0;
+  const sprite = pixelSprite(sprites, `p${big ? 'B' : 's'}${pose}${flip ? 'L' : 'R'}`, playerFrame(big, pose), PLAYER_PALETTE, flip);
+  // El sprite tiene el ancho (12) y el alto de la caja: lo que se ve es lo que choca.
+  ctx.drawImage(sprite.canvas, Math.round(p.x + (p.w - sprite.w) / 2), Math.round(p.y + p.h - sprite.h));
 }
 
-function drawEnemy(ctx, e, time) {
+function drawEnemy(ctx, e, time, sprites) {
   const x = Math.round(e.x);
   const y = Math.round(e.y);
   if (e.state === 'dead' && e.how === 'stomp') {
     if (e.dead > 0.5) return;
-    rect(ctx, x, y + e.h - 4, e.w, 4, '#5b3a7a');
+    ctx.drawImage(pixelSprite(sprites, 'wflat', WEEVIL_FLAT, WEEVIL_PALETTE).canvas, x, y + e.h - 4);
     return;
   }
   const flip = e.state === 'dead';
@@ -245,39 +301,13 @@ function drawEnemy(ctx, e, time) {
     ctx.translate(0, y * 2 + e.h);
     ctx.scale(1, -1);
   }
-  if (e.type === 'walker') {
-    const step = Math.floor(time * 8) % 2;
-    rect(ctx, x + 1 + step, y + e.h - 2, 3, 2, '#2a1a2a');
-    rect(ctx, x + e.w - 4 - step, y + e.h - 2, 3, 2, '#2a1a2a');
-    ctx.fillStyle = '#6b3fa0';
-    ctx.beginPath();
-    ctx.ellipse(x + e.w / 2, y + e.h / 2 + 1, e.w / 2, e.h / 2 - 1, 0, 0, Math.PI * 2);
-    ctx.fill();
-    rect(ctx, x + e.w / 2 - 0.5, y + 2, 1, e.h - 5, '#4a2a74');
-    rect(ctx, x + 2, y + 4, 3, 3, '#fff');
-    rect(ctx, x + e.w - 5, y + 4, 3, 3, '#fff');
-    rect(ctx, x + 3, y + 5, 1, 1, '#000');
-    rect(ctx, x + e.w - 4, y + 5, 1, 1, '#000');
-  } else {
-    // Caracol: concha en espiral; escondido solo se ve la concha.
-    if (e.state === 'walk') {
-      rect(ctx, x, y + e.h - 4, e.w, 4, '#9be37a');
-      rect(ctx, x - 1, y + e.h - 9, 3, 6, '#9be37a');
-      rect(ctx, x - 1, y + e.h - 11, 1, 3, '#9be37a');
-    }
-    ctx.fillStyle = '#ff9f43';
-    ctx.beginPath();
-    ctx.arc(x + e.w / 2 + 1, y + e.h / 2, e.h / 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#a3561c';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    for (let a = 0; a < Math.PI * 4; a += 0.3) {
-      const rr = (a / (Math.PI * 4)) * (e.h / 2 - 1.5);
-      ctx.lineTo(x + e.w / 2 + 1 + Math.cos(a) * rr, y + e.h / 2 + Math.sin(a) * rr);
-    }
-    ctx.stroke();
-  }
+  const step = Math.floor(time * 8) % 2;
+  const right = e.vx > 0;
+  let sprite;
+  if (e.type === 'walker') sprite = pixelSprite(sprites, `w${step}`, WEEVIL[step], WEEVIL_PALETTE);
+  else if (e.state === 'walk') sprite = pixelSprite(sprites, `s${step}${right ? 'R' : 'L'}`, SNAIL[step], SNAIL_PALETTE, right);
+  else sprite = pixelSprite(sprites, 'shell', SHELL, SNAIL_PALETTE);
+  ctx.drawImage(sprite.canvas, x + Math.round((e.w - sprite.w) / 2), y + e.h - sprite.h);
   ctx.restore();
 }
 
@@ -330,7 +360,9 @@ export function renderBricks(ctx, size, world, view, dt, { insetBottom = 0, redu
   ctx.translate(-Math.round(camX * v.scale) / v.scale, 0);
   ctx.imageSmoothingEnabled = false;
 
-  drawBackground(ctx, theme, camX, v.viewW, reduced ? 0 : view.time);
+  view.sprites ??= createSpriteCache(120);
+  const sprites = view.sprites;
+  drawBackground(ctx, theme, camX, v.viewW, reduced ? 0 : view.time, sprites);
   const c0 = Math.max(0, Math.floor(camX / T) - 1);
   const c1 = Math.min(world.level.cols - 1, Math.ceil((camX + v.viewW) / T) + 1);
   drawTrunks(ctx, world, Math.max(0, c0 - 8), c1);
@@ -357,33 +389,29 @@ export function renderBricks(ctx, size, world, view, dt, { insetBottom = 0, redu
   for (let r = 0; r < world.level.rows; r += 1) {
     for (let c = c0; c <= c1; c += 1) {
       const ch = world.grid[r][c];
-      if (ch !== ' ') drawTile(ctx, ch, c * T, r * T + bumpOf(c, r), theme, world, c, r, reduced ? 0 : view.time);
+      if (ch !== ' ') drawTile(ctx, ch, c * T, r * T + bumpOf(c, r), theme, world, c, r, reduced ? 0 : view.time, sprites);
     }
   }
 
   // Monedas
   world.level.coins.forEach((coin, i) => {
     if (world.coins[i] || coin.x < camX - T || coin.x > camX + v.viewW + T) return;
-    const squash = reduced ? 1 : Math.abs(Math.cos(view.time * 3 + coin.x * 0.05));
-    ctx.fillStyle = '#ffd23f';
-    ctx.beginPath();
-    ctx.ellipse(coin.x + 5, coin.y + 6, Math.max(1.2, 5 * squash), 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fff4b0';
-    ctx.fillRect(coin.x + 4, coin.y + 2, 1.5, 6);
+    // Moneda que gira: tres fotogramas (de frente, de tres cuartos y de canto).
+    const turn = reduced ? 1 : Math.abs(Math.cos(view.time * 3 + coin.x * 0.05));
+    const frame = turn > 0.66 ? 0 : turn > 0.25 ? 1 : 2;
+    ctx.drawImage(pixelSprite(sprites, `coin${frame}`, COIN[frame], COIN_PALETTE).canvas, coin.x, coin.y);
   });
 
-  for (const it of world.items) drawHeart(ctx, it.x + 6, it.y + 6, 5.5, '#ff4f8b');
-  for (const e of world.enemies) if (e.active || e.state === 'dead') drawEnemy(ctx, e, view.time);
-  drawPlayer(ctx, world.player, view.time, world.status === 'dying');
+  const heart = pixelSprite(sprites, 'heart', HEART, HEART_PALETTE);
+  for (const it of world.items) ctx.drawImage(heart.canvas, Math.round(it.x), Math.round(it.y + 1));
+  for (const e of world.enemies) if (e.active || e.state === 'dead') drawEnemy(ctx, e, view.time, sprites);
+  drawPlayer(ctx, world.player, view.time, world.status === 'dying', sprites);
 
   // Efectos
   view.coinPops = view.coinPops.filter((p) => (p.t += dt) < 0.45);
   for (const p of view.coinPops) {
-    ctx.fillStyle = '#ffd23f';
-    ctx.beginPath();
-    ctx.ellipse(p.x + 5, p.y - p.t * 70, 4, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
+    const frame = Math.floor(p.t * 14) % 3;
+    ctx.drawImage(pixelSprite(sprites, `coin${frame}`, COIN[frame], COIN_PALETTE).canvas, Math.round(p.x), Math.round(p.y - p.t * 70));
   }
   view.debris = view.debris.filter((d) => (d.t += dt) < 0.8);
   for (const d of view.debris) {
@@ -391,12 +419,19 @@ export function renderBricks(ctx, size, world, view, dt, { insetBottom = 0, redu
     d.x += d.vx * dt;
     d.y += d.vy * dt;
     rect(ctx, d.x, d.y, 5, 5, theme.brick);
+    rect(ctx, d.x, d.y, 5, 1, tone(theme.brick, 0.3));
+    rect(ctx, d.x + 4, d.y, 1, 5, tone(theme.brick, -0.3));
   }
   view.popups = view.popups.filter((p) => (p.t += dt) < 0.8);
   ctx.font = 'bold 8px Manrope, system-ui, sans-serif';
   ctx.textAlign = 'center';
+  ctx.lineWidth = 2;
+  ctx.lineJoin = 'round';
   for (const p of view.popups) {
-    ctx.fillStyle = `rgba(255,255,255,${1 - p.t / 0.8})`;
+    const a = 1 - p.t / 0.8;
+    ctx.strokeStyle = `rgba(42,26,42,${a})`;
+    ctx.strokeText(p.text, p.x + 8, p.y - p.t * 30);
+    ctx.fillStyle = `rgba(255,255,255,${a})`;
     ctx.fillText(p.text, p.x + 8, p.y - p.t * 30);
   }
   ctx.restore();

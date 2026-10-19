@@ -18,6 +18,10 @@
  * poco hasta la nave; el color se funde en los 80 m alrededor del cambio.
  */
 import { SIDES, SIDE_ARC, VIEW_DEPTH, ZONE_LENGTH, obstacleZ, ringOffset, zoneAt, zoneOf } from './tunnelEngine.js';
+import { createSpriteCache } from '../../../render/sprites.js';
+import { createParticles } from '../../../render/particles.js';
+import { createQualityMonitor } from '../../../render/quality.js';
+import { glow as addGlow } from '../../../render/paint.js';
 
 const CAMERA_BACK = 3.2; // metros entre la cámara y la nave
 const BAND = 6; // metros por banda de pared
@@ -29,7 +33,141 @@ const BLEND = 80; // metros de fundido entre tramos
 const LANE_GAP = 0.035; // separación visual entre carriles bloqueados (rad)
 
 export function createRenderState() {
-  return { particles: [], flash: 0, shake: 0, time: 0, reduced: false };
+  return {
+    particles: [],
+    sparks: createParticles(90),
+    sprites: createSpriteCache(40),
+    quality: createQualityMonitor(),
+    flash: 0,
+    lastFlash: 0,
+    shake: 0,
+    time: 0,
+    reduced: false,
+  };
+}
+
+export function disposeRenderState(view) {
+  view.sprites.clear();
+  view.sparks.clear();
+}
+
+/**
+ * Nave vista desde atrás: casco en flecha con alas, cabina de cristal, toberas
+ * y líneas de panel. Se pinta una vez por tono de tramo (en pasos de 10°).
+ */
+function paintShip(ctx, W, H, hue) {
+  const cx = W / 2;
+  const s = W / 3.2;
+  const cy = H * 0.5;
+  const wing = ctx.createLinearGradient(0, cy - s * 0.2, 0, cy + s * 0.6);
+  wing.addColorStop(0, `hsl(${hue} 30% 88%)`);
+  wing.addColorStop(1, `hsl(${hue} 35% 42%)`);
+  ctx.strokeStyle = `hsl(${hue} 50% 18%)`;
+  ctx.lineWidth = Math.max(1, s * 0.05);
+  ctx.lineJoin = 'round';
+  for (const k of [-1, 1]) {
+    // Ala.
+    ctx.fillStyle = wing;
+    ctx.beginPath();
+    ctx.moveTo(cx + k * s * 0.35, cy - s * 0.2);
+    ctx.lineTo(cx + k * s * 1.45, cy + s * 0.32);
+    ctx.lineTo(cx + k * s * 1.5, cy + s * 0.5);
+    ctx.lineTo(cx + k * s * 0.4, cy + s * 0.48);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Franja de color.
+    ctx.fillStyle = `hsl(${hue} 95% 58%)`;
+    ctx.beginPath();
+    ctx.moveTo(cx + k * s * 0.9, cy + s * 0.12);
+    ctx.lineTo(cx + k * s * 1.3, cy + s * 0.32);
+    ctx.lineTo(cx + k * s * 1.25, cy + s * 0.4);
+    ctx.lineTo(cx + k * s * 0.85, cy + s * 0.22);
+    ctx.closePath();
+    ctx.fill();
+    // Luz de posición en la punta.
+    ctx.fillStyle = k < 0 ? '#ff5a6e' : '#5affb4';
+    ctx.beginPath();
+    ctx.arc(cx + k * s * 1.47, cy + s * 0.42, s * 0.06, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Casco central con reflejo metálico.
+  const hull = ctx.createLinearGradient(cx - s * 0.6, 0, cx + s * 0.6, 0);
+  hull.addColorStop(0, `hsl(${hue} 20% 55%)`);
+  hull.addColorStop(0.35, '#ffffff');
+  hull.addColorStop(0.7, `hsl(${hue} 25% 80%)`);
+  hull.addColorStop(1, `hsl(${hue} 30% 45%)`);
+  ctx.fillStyle = hull;
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - s * 1.0);
+  ctx.bezierCurveTo(cx + s * 0.45, cy - s * 0.7, cx + s * 0.62, cy + s * 0.2, cx + s * 0.55, cy + s * 0.62);
+  ctx.lineTo(cx - s * 0.55, cy + s * 0.62);
+  ctx.bezierCurveTo(cx - s * 0.62, cy + s * 0.2, cx - s * 0.45, cy - s * 0.7, cx, cy - s * 1.0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Líneas de panel.
+  ctx.strokeStyle = `hsl(${hue} 30% 30% / 0.45)`;
+  ctx.lineWidth = Math.max(0.8, s * 0.025);
+  ctx.beginPath();
+  ctx.moveTo(cx - s * 0.42, cy + s * 0.2);
+  ctx.lineTo(cx + s * 0.42, cy + s * 0.2);
+  ctx.moveTo(cx, cy + s * 0.2);
+  ctx.lineTo(cx, cy + s * 0.62);
+  ctx.stroke();
+  // Cabina.
+  const glass = ctx.createLinearGradient(0, cy - s * 0.75, 0, cy + s * 0.1);
+  glass.addColorStop(0, `hsl(${hue} 90% 85%)`);
+  glass.addColorStop(0.5, `hsl(${hue} 80% 40%)`);
+  glass.addColorStop(1, `hsl(${hue} 90% 18%)`);
+  ctx.fillStyle = glass;
+  ctx.strokeStyle = `hsl(${hue} 40% 20%)`;
+  ctx.lineWidth = Math.max(1, s * 0.05);
+  ctx.beginPath();
+  ctx.ellipse(cx, cy - s * 0.3, s * 0.24, s * 0.42, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.75)';
+  ctx.beginPath();
+  ctx.ellipse(cx - s * 0.08, cy - s * 0.48, s * 0.06, s * 0.16, -0.3, 0, Math.PI * 2);
+  ctx.fill();
+  // Toberas.
+  for (const k of [-1, 1]) {
+    const nx = cx + k * s * 0.3;
+    const ny = cy + s * 0.66;
+    ctx.fillStyle = '#2b2a35';
+    ctx.beginPath();
+    ctx.ellipse(nx, ny, s * 0.2, s * 0.13, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const core = ctx.createRadialGradient(nx, ny, 0, nx, ny, s * 0.15);
+    core.addColorStop(0, '#ffffff');
+    core.addColorStop(0.5, `hsl(${(hue + 30) % 360} 100% 70%)`);
+    core.addColorStop(1, `hsl(${(hue + 30) % 360} 100% 40%)`);
+    ctx.fillStyle = core;
+    ctx.beginPath();
+    ctx.ellipse(nx, ny, s * 0.13, s * 0.08, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+function burstSparks(view, x, y, hue, scale) {
+  if (view.reduced) return;
+  const n = view.quality.quality === 'low' ? 18 : 36;
+  for (let i = 0; i < n; i += 1) {
+    const a = Math.random() * Math.PI * 2;
+    const sp = scale * (2 + Math.random() * 7);
+    view.sparks.emit({
+      x,
+      y,
+      vx: Math.cos(a) * sp,
+      vy: Math.sin(a) * sp - scale * 2,
+      gravity: scale * 12,
+      drag: 1.2,
+      decay: 0.9 + Math.random() * 0.8,
+      size: scale * (0.05 + Math.random() * 0.08),
+      color: i % 3 ? `hsl(${(hue + 160) % 360} 100% 70%)` : '#fff3c4',
+    });
+  }
 }
 
 const mixHue = (a, b, t) => {
@@ -142,8 +280,22 @@ export function renderTunnel(ctx, size, state, view, dt = 0) {
       ringSector(d, near, side * SIDE_ARC, (side + 1) * SIDE_ARC + 0.002);
       ctx.fill();
     }
-    // Decoración del tramo: aros de luz, farolas en las juntas o enredaderas.
+    // Juntas entre carriles de esta banda: textura de paneles que respeta el
+    // orden de dibujo (las bandas cercanas tapan a las lejanas en las curvas).
     const [rx, ry] = center(d);
+    if (fog > 0.04) {
+      const [nx, ny] = center(near);
+      ctx.strokeStyle = `hsl(${look.hue} 60% 3% / ${0.2 + fog * 0.5})`;
+      ctx.lineWidth = Math.max(1, fog * 2);
+      ctx.beginPath();
+      for (let side = 0; side < SIDES; side += 1) {
+        const a = side * SIDE_ARC + rot;
+        ctx.moveTo(rx + Math.cos(a) * radius(d), ry + Math.sin(a) * radius(d));
+        ctx.lineTo(nx + Math.cos(a) * radius(near), ny + Math.sin(a) * radius(near));
+      }
+      ctx.stroke();
+    }
+    // Decoración del tramo: aros de luz, farolas en las juntas o enredaderas.
     if (deco === 'rims' || worldBand % 3 === 0) {
       ctx.strokeStyle = `hsl(${(look.hue + 30) % 360} 100% 72% / ${0.08 + fog * 0.45})`;
       ctx.lineWidth = Math.max(1, fog * (deco === 'rims' ? 2.5 : 1.5));
@@ -173,6 +325,10 @@ export function renderTunnel(ctx, size, state, view, dt = 0) {
       }
     }
   }
+
+  // Luz de los motores sobre el suelo del túnel, bajo la nave.
+  const [lx, ly] = center(CAMERA_BACK);
+  addGlow(ctx, lx, ly + radius(CAMERA_BACK) * 0.95, minSide * 0.22, `hsl(${(hue + 30) % 360} 100% 60% / 0.55)`);
 
   // Ambiente del tramo: estelas, brasas, burbujas, nieve, luciérnagas o estrellas.
   const ambient = AMBIENT[here.zone.ambient] ?? AMBIENT.streaks;
@@ -225,13 +381,23 @@ export function renderTunnel(ctx, size, state, view, dt = 0) {
         }
       }
     }
-    // Cara trasera (grosor) y cara delantera iluminada.
+    // Cara trasera (grosor) y cara delantera con relieve: más clara junto al
+    // borde interior (donde le da la luz del fondo) y más oscura contra la pared.
+    const [gx, gy] = center(d);
     for (const [depth, light, alpha] of [
       [d + SLAB, 10 + fog * 16, 1],
       [d, 26 + fog * 40, 0.6 + fog * 0.4],
     ]) {
-      ctx.fillStyle = `hsl(${accent} 85% ${light}% / ${alpha})`;
-      ctx.strokeStyle = ctx.fillStyle;
+      ctx.strokeStyle = `hsl(${accent} 85% ${light}% / ${alpha})`;
+      if (depth === d && fog > 0.15) {
+        const face = ctx.createRadialGradient(gx, gy, radius(d) * inner, gx, gy, radius(d));
+        face.addColorStop(0, `hsl(${accent} 90% ${Math.min(88, light + 22)}% / ${alpha})`);
+        face.addColorStop(0.35, `hsl(${accent} 85% ${light}% / ${alpha})`);
+        face.addColorStop(1, `hsl(${accent} 80% ${light * 0.55}% / ${alpha})`);
+        ctx.fillStyle = face;
+      } else {
+        ctx.fillStyle = ctx.strokeStyle;
+      }
       ctx.lineWidth = round;
       for (let side = 0; side < SIDES; side += 1) {
         if (!ring.blocked[side]) continue;
@@ -239,6 +405,17 @@ export function renderTunnel(ctx, size, state, view, dt = 0) {
         const a2 = (side + 1) * SIDE_ARC + spin - LANE_GAP;
         ringSector(depth, depth, a1, a2, 1, inner);
         ctx.fill();
+        ctx.stroke();
+      }
+    }
+    // Arista interior iluminada: separa el bloque del fondo y marca su altura.
+    if (fog > 0.1) {
+      ctx.strokeStyle = `hsl(${accent} 100% 85% / ${fog * 0.8})`;
+      ctx.lineWidth = Math.max(1, fog * 2.5);
+      for (let side = 0; side < SIDES; side += 1) {
+        if (!ring.blocked[side]) continue;
+        ctx.beginPath();
+        ctx.arc(gx, gy, radius(d) * inner, side * SIDE_ARC + spin + rot + LANE_GAP + 0.01, (side + 1) * SIDE_ARC + spin + rot - LANE_GAP - 0.01);
         ctx.stroke();
       }
     }
@@ -265,41 +442,63 @@ export function renderTunnel(ctx, size, state, view, dt = 0) {
     }
   }
 
-  // Nave: siempre abajo, con forma de gota y cabina, inclinada según el giro.
+  // Nave: siempre abajo, inclinada según el giro, con llama viva en las toberas.
   const [sx, sy0] = center(CAMERA_BACK);
   const sy = sy0 + radius(CAMERA_BACK) * 0.84;
-  const s = minSide * 0.045;
+  const s = minSide * 0.052;
   const tilt = Math.max(-0.4, Math.min(0.4, -state.omega * 0.11));
+  const shipHue = Math.round(hue / 10) * 10;
+  const ship = view.sprites.get(`ship${shipHue}`, s * 3.2, s * 2.4, (c, w, h) => paintShip(c, w, h, shipHue), size.dpr || 1);
   ctx.save();
   ctx.translate(sx, sy);
   ctx.rotate(tilt);
-  const flame = 0.75 + Math.sin(view.time * 32) * 0.2;
-  const thrust = ctx.createRadialGradient(0, s * 0.8, 0, 0, s * 0.8, s * 1.1 * flame);
-  thrust.addColorStop(0, `hsl(${(hue + 30) % 360} 100% 85% / 0.9)`);
-  thrust.addColorStop(1, 'transparent');
-  ctx.fillStyle = thrust;
-  ctx.beginPath();
-  ctx.arc(0, s * 0.8, s * 1.1 * flame, 0, Math.PI * 2);
-  ctx.fill();
-  const hull = ctx.createLinearGradient(0, -s, 0, s * 0.7);
-  hull.addColorStop(0, '#ffffff');
-  hull.addColorStop(1, `hsl(${hue} 60% 78%)`);
-  ctx.fillStyle = hull;
-  ctx.strokeStyle = `hsl(${hue} 100% 62%)`;
-  ctx.lineWidth = Math.max(2, s * 0.1);
-  ctx.beginPath();
-  ctx.moveTo(0, -s * 1.05);
-  ctx.bezierCurveTo(s * 0.55, -s * 0.9, s * 1.35, s * 0.25, s * 1.1, s * 0.55);
-  ctx.quadraticCurveTo(0, s * 0.95, -s * 1.1, s * 0.55);
-  ctx.bezierCurveTo(-s * 1.35, s * 0.25, -s * 0.55, -s * 0.9, 0, -s * 1.05);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-  ctx.fillStyle = `hsl(${hue} 90% 40%)`;
-  ctx.beginPath();
-  ctx.ellipse(0, -s * 0.25, s * 0.28, s * 0.38, 0, 0, Math.PI * 2);
-  ctx.fill();
+  const flame = view.reduced ? 0.85 : 0.75 + Math.sin(view.time * 32) * 0.2;
+  // Las toberas del sprite quedan a 0,66·(ancho/3,2) bajo su centro.
+  const nozzleY = s * 0.66;
+  for (const k of [-1, 1]) {
+    const nx = k * s * 0.3;
+    const plume = ctx.createLinearGradient(0, nozzleY, 0, nozzleY + s * 1.4 * flame);
+    plume.addColorStop(0, `hsl(${(hue + 30) % 360} 100% 88% / 0.95)`);
+    plume.addColorStop(1, `hsl(${(hue + 30) % 360} 100% 60% / 0)`);
+    ctx.fillStyle = plume;
+    ctx.beginPath();
+    ctx.moveTo(nx - s * 0.13, nozzleY);
+    ctx.quadraticCurveTo(nx, nozzleY + s * 1.7 * flame, nx + s * 0.13, nozzleY);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.drawImage(ship.canvas, -ship.w / 2, -ship.h / 2, ship.w, ship.h);
   ctx.restore();
+
+  // Chispas del choque.
+  if (view.flash > view.lastFlash + 0.5) burstSparks(view, sx, sy, hue, s);
+  view.lastFlash = view.flash;
+  ctx.globalCompositeOperation = 'lighter';
+  view.sparks.update(dt, (p) => {
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, Math.max(1, p.size * p.life), 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  ctx.globalCompositeOperation = 'source-over';
+
+  // Viñeta: concentra la mirada en el centro del túnel.
+  const vignette = view.sprites.get(
+    'vignette',
+    W,
+    H,
+    (c, w, h) => {
+      const g = c.createRadialGradient(w / 2, h * 0.44, Math.min(w, h) * 0.3, w / 2, h * 0.44, Math.max(w, h) * 0.75);
+      g.addColorStop(0, 'rgba(0,0,0,0)');
+      g.addColorStop(1, 'rgba(0,0,0,0.5)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, w, h);
+    },
+    1,
+  );
+  ctx.drawImage(vignette.canvas, 0, 0, W, H);
 
   // Choque: un velo rojizo breve y suave (sin destellos con movimiento reducido).
   if (view.flash > 0 && !view.reduced) {

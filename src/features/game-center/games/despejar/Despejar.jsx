@@ -13,6 +13,7 @@ import { formatTime } from '../../services/gameLifecycle.js';
 import { cx } from '../../../../utils/cx.js';
 import { DIRS, createState, isCleared, isSolvable, move, reach, tapMove } from './engine/jamEngine.js';
 import { LEVELS } from './levels/levels.js';
+import { CarArt } from './components/CarArt.jsx';
 import './styles/despejar.css';
 
 const GAME_ID = 'despejar';
@@ -184,6 +185,7 @@ function Board({ level, state, leaving, bump, onMove, disabled }) {
               onClick={(event) => event.detail === 0 && onMove(car.id, 'tap')}
             >
               <span className="jm-car__body">
+                <CarArt length={car.length} dir={car.dir} uid={car.id} />
                 <ArrowRight className="jm-car__arrow" style={{ transform: `rotate(${ROTATION[car.dir]}deg)` }} aria-hidden="true" />
               </span>
             </button>

@@ -107,6 +107,8 @@ function LevelSelect({ completed, best, onPick }) {
   );
 }
 
+const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
+
 function Board({ board, state, animating, hint, onMove, swipe, shake, notice }) {
   const moves = useMemo(() => (animating ? [] : availableMoves(board, state)), [board, state, animating]);
   const targets = new Map(moves.map((m) => [m.end, m.direction]));
@@ -124,6 +126,18 @@ function Board({ board, state, animating, hint, onMove, swipe, shake, notice }) 
     }
   }
   const stepMs = stepMsFor(order.size);
+  // Uniones del trazo: cada par de casillas consecutivas del recorrido queda
+  // pintado como una sola pincelada (sin hueco entre ellas).
+  const joins = new Map();
+  const join = (a, b, dirA, dirB) => {
+    joins.set(a, `${joins.get(a) ?? ''} j-${dirA}`);
+    joins.set(b, `${joins.get(b) ?? ''} j-${dirB}`);
+  };
+  state.history.forEach((step, i) => {
+    const end = state.history[i + 1]?.from ?? state.pos;
+    const delta = { up: -board.width, down: board.width, left: -1, right: 1 }[step.direction];
+    for (let at = step.from, guard = 0; at !== end && guard < 64; at += delta, guard += 1) join(at, at + delta, step.direction, OPPOSITE[step.direction]);
+  });
   const hintTarget = hint ? moves.find((m) => m.direction === hint)?.end : null;
   const ballRow = rowOf(board, state.pos);
   const ballCol = colOf(board, state.pos);
@@ -156,8 +170,10 @@ function Board({ board, state, animating, hint, onMove, swipe, shake, notice }) 
                       hintTarget === index && 'is-hint',
                       board.start === index && 'is-start',
                       animating && order.has(index) && 'is-painting',
+                      covered && joins.get(index),
                     )}
-                    style={order.has(index) ? { '--delay': `${order.get(index) * stepMs}ms` } : undefined}
+                    data-dir={direction}
+                    style={{ '--r': r, '--c': c, ...(order.has(index) && { '--delay': `${order.get(index) * stepMs}ms` }) }}
                     aria-label={label}
                     tabIndex={direction ? 0 : -1}
                     disabled={!direction}

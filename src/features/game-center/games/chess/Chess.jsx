@@ -14,7 +14,7 @@ import { cx } from '../../../../utils/cx.js';
 import { BLACK, WHITE, colorOf, createGame, kingSquare, legalMoves, needsPromotion, playMove, squareName, typeOf } from './engine/chessEngine.js';
 import { AI_LEVELS, findLevel, normalizeLevelId } from './engine/aiLevels.js';
 import { createAIClient } from './engine/aiClient.js';
-import { ChessPiece, pieceLabel } from './components/ChessPieces.jsx';
+import { ChessPiece, ChessPieceDefs, pieceLabel } from './components/ChessPieces.jsx';
 import './styles/chess.css';
 
 const GAME_ID = 'chess';
@@ -152,8 +152,17 @@ function Board({ game, orientation, selected, targets, onSquare, disabled }) {
     refs.current[next]?.focus();
   };
 
+  // Última jugada: la pieza llega deslizándose desde su casilla de origen (en casillas visuales).
+  const slide = useMemo(() => {
+    if (!last) return null;
+    const from = order.indexOf(last.from);
+    const to = order.indexOf(last.to);
+    return { '--dx': (from % 8) - (to % 8), '--dy': Math.floor(from / 8) - Math.floor(to / 8) };
+  }, [last, order]);
+
   return (
     <div className="chess-board" role="grid" aria-label="Tablero de ajedrez">
+      <ChessPieceDefs />
       {Array.from({ length: 8 }, (_, row) => (
         <div key={row} role="row" className="chess-board__row">
           {order.slice(row * 8, row * 8 + 8).map((square, col) => {
@@ -192,7 +201,13 @@ function Board({ game, orientation, selected, targets, onSquare, disabled }) {
                   onClick={() => !disabled && onSquare(square)}
                   aria-disabled={disabled || undefined}
                 >
-                  {piece && <ChessPiece piece={piece} />}
+                  {piece &&
+                    (last?.to === square ? (
+                      <ChessPiece key={game.history.length} piece={piece} className="is-arriving" style={slide} />
+                    ) : (
+                      <ChessPiece piece={piece} />
+                    ))}
+                  {last?.to === square && last.captured && <span key={game.history.length} className="chess-square__burst" aria-hidden="true" />}
                   {col === 0 && <span className="chess-square__rank">{name[1]}</span>}
                   {row === 7 && <span className="chess-square__file">{name[0]}</span>}
                 </button>

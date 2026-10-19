@@ -13,6 +13,8 @@
   --lg-wall-line: rgb(255 255 255 / 0.05);
   --lg-board: rgb(255 255 255 / 0.04);
   --lg-target: #ffd166;
+  --lg-wall-top: #2a2537;
+  --lg-frame: #16131f;
 }
 [data-theme='light'] .game-screen[data-game='logic-grid'] {
   --lg-cell: #ffffff;
@@ -21,6 +23,8 @@
   --lg-wall-line: rgb(255 255 255 / 0.08);
   --lg-board: #efe9dc;
   --lg-target: #b7791f;
+  --lg-wall-top: #4a4560;
+  --lg-frame: #ddd4c2;
 }
 
 /* ---------- Selección de nivel ---------- */
@@ -169,9 +173,15 @@
   grid-auto-rows: var(--cell);
   padding: 10px;
   border-radius: var(--radius-lg);
+  /* Bandeja lacada: marco biselado y el fondo un poco hundido. */
   background: var(--lg-board);
   border: var(--surface-border-width) solid var(--surface-border);
-  box-shadow: var(--surface-shadow);
+  box-shadow:
+    inset 0 2px 10px rgb(0 0 0 / 0.35),
+    inset 0 1px 0 rgb(255 255 255 / 0.06),
+    0 26px 50px -28px rgb(0 0 0 / 0.8),
+    0 0 0 6px var(--lg-frame),
+    0 0 0 7px rgb(255 255 255 / 0.06);
   box-sizing: content-box;
 }
 
@@ -180,17 +190,23 @@
 }
 
 .lg-cell-slot {
-  padding: 3px;
+  position: relative;
 }
 
+/* Losa por cubrir: cerámica mate con bisel (luz arriba, sombra abajo). */
 .lg-cell {
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  inset: 3px;
   display: block;
   padding: 0;
   border-radius: 22%;
-  background: var(--lg-cell);
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.06), transparent 40%),
+    var(--lg-cell);
   border: 2px solid var(--lg-cell-border);
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.18),
+    0 1px 0 rgb(255 255 255 / 0.04);
   transition:
     background 220ms var(--ease-out) var(--delay, 0ms),
     border-color 220ms var(--ease-out) var(--delay, 0ms),
@@ -202,39 +218,90 @@
   opacity: 1;
 }
 
+/* Muro: pilar alzado que proyecta sombra hacia abajo. */
 .lg-cell.is-wall {
-  border-radius: 22%;
-  margin: 3px;
-  width: calc(100% - 6px);
-  height: calc(100% - 6px);
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  border-radius: 18%;
+  margin: 2px;
+  width: calc(100% - 4px);
+  height: calc(100% - 4px);
   border: none;
-  background:
-    repeating-linear-gradient(135deg, var(--lg-wall-line) 0 4px, transparent 4px 9px),
-    var(--lg-wall);
+  background: linear-gradient(180deg, var(--lg-wall-top) 0 74%, var(--lg-wall) 74%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 6px 8px -3px rgb(0 0 0 / 0.55);
 }
 
+/* Cubierta: pintura brillante. El degradado abarca el tablero entero (no cada
+   casilla), así un trazo largo se lee como una sola pincelada continua. */
 .lg-cell.is-covered {
   border-color: transparent;
-  background: linear-gradient(135deg, var(--lg-paint-a), var(--lg-paint-b));
+  background:
+    linear-gradient(180deg, rgb(255 255 255 / 0.28), transparent 45%),
+    linear-gradient(135deg, var(--lg-paint-a), var(--lg-paint-b)) calc(var(--c) * var(--cell) * -1) calc(var(--r) * var(--cell) * -1) /
+      calc(var(--cols) * var(--cell)) calc(var(--rows) * var(--cell)) no-repeat;
+  box-shadow:
+    inset 0 -3px 0 rgb(0 0 0 / 0.16),
+    0 4px 12px -6px var(--lg-paint-a);
   transform: scale(1);
+}
+
+/* Uniones del trazo: la pintura cruza el hueco hasta la casilla vecina. */
+.lg-cell.is-covered.j-right {
+  right: -1px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.lg-cell.is-covered.j-left {
+  left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+.lg-cell.is-covered.j-down {
+  bottom: -1px;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.lg-cell.is-covered.j-up {
+  top: -1px;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
 }
 
 .lg-cell.is-start:not(.is-covered) {
   border-style: dashed;
 }
 
-/* Destinos posibles: contorno discontinuo y punto central. */
+/* Destinos posibles: contorno discontinuo y una flecha hacia donde se irá. */
 .lg-cell.is-target {
   cursor: pointer;
   border-style: dashed;
   border-color: var(--lg-target);
-  background-image: radial-gradient(circle, var(--lg-target) 0 12%, transparent 13%);
 }
 
-.lg-cell.is-target.is-covered {
-  background-image:
-    radial-gradient(circle, rgb(255 255 255 / 0.95) 0 12%, transparent 13%),
-    linear-gradient(135deg, var(--lg-paint-a), var(--lg-paint-b));
+.lg-cell.is-target::after {
+  content: '';
+  position: absolute;
+  inset: 30%;
+  background: var(--lg-target);
+  clip-path: polygon(50% 6%, 94% 56%, 66% 56%, 66% 94%, 34% 94%, 34% 56%, 6% 56%);
+  opacity: 0.9;
+}
+
+.lg-cell[data-dir='right']::after {
+  rotate: 90deg;
+}
+.lg-cell[data-dir='down']::after {
+  rotate: 180deg;
+}
+.lg-cell[data-dir='left']::after {
+  rotate: 270deg;
+}
+
+.lg-cell.is-target.is-covered::after {
+  background: #fff;
 }
 
 @media (hover: hover) {
@@ -249,6 +316,7 @@
 }
 
 .lg-cell.is-hint {
+  z-index: 1;
   animation: lg-hint 900ms var(--ease-in-out) infinite;
 }
 
@@ -260,6 +328,7 @@
 
 .lg-ball {
   position: absolute;
+  z-index: 2;
   left: calc(10px + var(--c) * var(--cell));
   top: calc(10px + var(--r) * var(--cell));
   width: var(--cell);
@@ -290,13 +359,31 @@
   }
 }
 
+/* Ficha: una gota de pintura con brillo especular y sombra en el suelo. */
+.lg-ball::before {
+  content: '';
+  position: absolute;
+  left: 24%;
+  right: 24%;
+  bottom: 14%;
+  height: 14%;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.45);
+  filter: blur(2px);
+}
+
 .lg-ball__body {
   position: absolute;
-  inset: 22%;
+  inset: 20% 20% 24%;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ffffff, #e9e4ff 55%, #b9adff);
-  border: 3px solid #2d2a3e;
-  box-shadow: 0 6px 14px -4px rgb(0 0 0 / 0.5);
+  background:
+    radial-gradient(circle at 34% 28%, #fff 0 9%, rgb(255 255 255 / 0.5) 16%, transparent 36%),
+    radial-gradient(circle at 60% 75%, color-mix(in oklab, var(--lg-paint-b) 70%, #fff), transparent 60%),
+    linear-gradient(150deg, color-mix(in oklab, var(--lg-paint-a) 85%, #fff), var(--lg-paint-a) 55%, color-mix(in oklab, var(--lg-paint-a) 60%, #000));
+  border: 2px solid rgb(255 255 255 / 0.85);
+  box-shadow:
+    0 0 0 2px #1d1a2b,
+    0 6px 14px -4px rgb(0 0 0 / 0.5);
 }
 
 .lg-board.is-path .lg-ball__body {

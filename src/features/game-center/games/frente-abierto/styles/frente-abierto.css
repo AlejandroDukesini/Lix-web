@@ -177,26 +177,56 @@
   max-height: max(calc(var(--fa-min-w) * var(--fa-ratio, 1)), 280px, calc(100dvh - 300px));
   user-select: none;
   -webkit-tap-highlight-color: transparent;
+  /* Mesa de juego: un mar profundo con un leve oleaje. */
+  border-radius: var(--gc-radius-md);
+  background:
+    repeating-radial-gradient(ellipse 60% 30% at 30% 20%, transparent 0 14px, rgb(255 255 255 / 0.035) 14px 15px),
+    radial-gradient(120% 90% at 50% 40%, #1f5f7a, #123a52 70%, #0c2a3d);
+  box-shadow: inset 0 0 40px rgb(0 0 0 / 0.45);
+}
+
+.fa-coast__shallow {
+  fill: #2f8aa0;
+  opacity: 0.55;
+}
+
+.fa-coast__sand {
+  fill: #d9c48f;
 }
 
 .fa-hex {
   cursor: pointer;
   outline: none;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 160ms var(--ease-out);
+}
+
+.fa-hex__edge {
+  fill: #5f6b45;
+  stroke: rgb(0 0 0 / 0.35);
+  stroke-width: 1;
+  filter: brightness(0.6);
 }
 
 .fa-hex__shape {
-  stroke: color-mix(in oklab, var(--bg) 70%, transparent);
-  stroke-width: 2;
+  stroke: rgb(20 18 12 / 0.45);
+  stroke-width: 1.5;
   stroke-linejoin: round;
   transition: opacity 0.2s;
 }
 
+.fa-hex__sheen {
+  pointer-events: none;
+}
+
+/* Neutral: tierra de pradera con surcos (patrón, no solo color). */
 .fa-neutral-bg {
-  fill: color-mix(in oklab, var(--text) 12%, var(--surface));
+  fill: #8c9a62;
 }
 
 .fa-neutral-line {
-  stroke: color-mix(in oklab, var(--text) 22%, transparent);
+  stroke: rgb(60 70 30 / 0.35);
   stroke-width: 2;
 }
 
@@ -204,20 +234,32 @@
   opacity: 0.62;
 }
 
+/* Elegido: la losa se alza y se recorta con un borde claro. */
+.fa-hex.is-selected {
+  transform: translateY(-3px);
+}
+
 .fa-hex.is-selected .fa-hex__shape {
-  stroke: var(--text);
-  stroke-width: 4;
+  stroke: #fff;
+  stroke-width: 3.5;
 }
 
 .fa-hex.is-move .fa-hex__shape {
-  stroke: #3fbf7f;
-  stroke-width: 4;
+  stroke: #46e08f;
+  stroke-width: 3.5;
 }
 
 .fa-hex.is-attack .fa-hex__shape {
-  stroke: #e0404a;
-  stroke-width: 4;
+  stroke: #ff3b47;
+  stroke-width: 3.5;
   stroke-dasharray: 6 4;
+  animation: fa-march 0.9s linear infinite;
+}
+
+@keyframes fa-march {
+  to {
+    stroke-dashoffset: -20;
+  }
 }
 
 .fa-hex:focus-visible .fa-hex__shape {
@@ -233,34 +275,54 @@
   from {
     filter: brightness(1.6);
   }
+  30% {
+    transform: scale(1.06);
+  }
 }
 
 .fa-glyph {
-  font-size: 11px;
-  fill: rgba(20, 20, 30, 0.75);
+  font-size: 10px;
+  fill: rgb(20 20 30 / 0.75);
+  pointer-events: none;
+}
+
+.fa-token {
+  fill: #1c1a22;
+  stroke: rgb(255 255 255 / 0.85);
+  stroke-width: 1.5;
   pointer-events: none;
 }
 
 .fa-troops {
-  font-size: 15px;
+  font-size: 12px;
   font-weight: 800;
-  fill: #14141e;
-  paint-order: stroke;
-  stroke: rgba(255, 255, 255, 0.55);
-  stroke-width: 3;
+  fill: #fff;
   pointer-events: none;
 }
 
 .fa-icon {
-  fill: rgba(20, 20, 30, 0.7);
+  fill: rgb(30 24 20 / 0.82);
   pointer-events: none;
 }
 
+.fa-icon__cut {
+  fill: #f2d48a;
+}
+
 .fa-capital {
-  fill: #fff;
-  stroke: #14141e;
-  stroke-width: 1.5;
   pointer-events: none;
+}
+
+.fa-capital__pole {
+  stroke: #2a2228;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.fa-capital__flag {
+  fill: #fff;
+  stroke: #2a2228;
+  stroke-width: 1;
 }
 
 .fa-legend {
@@ -298,8 +360,8 @@
 .fa-legend__neutral {
   background: repeating-linear-gradient(
     45deg,
-    color-mix(in oklab, var(--text) 12%, var(--surface)) 0 3px,
-    color-mix(in oklab, var(--text) 26%, var(--surface)) 3px 5px
+    #8c9a62 0 3px,
+    #6e7c48 3px 5px
   );
 }
 

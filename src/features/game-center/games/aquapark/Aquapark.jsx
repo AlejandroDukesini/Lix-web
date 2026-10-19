@@ -19,7 +19,7 @@ import { updateGameSettings } from '../../services/gameStorage.js';
 import { cx } from '../../../../utils/cx.js';
 import { CIRCUITS } from './engine/circuits.js';
 import { createRace, positionOf, progressOf, raceTimeMs, stepRace } from './engine/aquaparkEngine.js';
-import { createAquaView, renderAquapark } from './engine/aquaparkRenderer.js';
+import { createAquaView, disposeAquaView, renderAquapark } from './engine/aquaparkRenderer.js';
 import './styles/aquapark.css';
 
 const GAME_ID = 'aquapark';
@@ -115,6 +115,7 @@ function Race({ circuit, onCircuits, onNext, frame }) {
   const reduced = useReducedMotion();
   const race = useRef(createRace(circuit));
   const view = useRef(createAquaView());
+  useEffect(() => () => disposeAquaView(view.current), []);
   const touch = useRef({ left: false, right: false });
   const hudClock = useRef(0);
   const { start, reset: resetSession, finish } = session;
@@ -214,6 +215,7 @@ function Race({ circuit, onCircuits, onNext, frame }) {
     setArriving(false);
     resetSession();
     race.current = createRace(circuit);
+    disposeAquaView(view.current);
     view.current = createAquaView();
     touch.current = { left: false, right: false };
     setHud({ time: 0, position: 4, progress: 0, speed: 0 });
@@ -251,7 +253,7 @@ function Race({ circuit, onCircuits, onNext, frame }) {
       )}
       {phase === 'run' && (
         <ControlsHint
-          key={round}
+          key={`controlshint-${round}`}
           icon={Hand}
           touch="Desliza ← → para moverte"
           desktop="← → o A D para moverte · Esc para pausar"
@@ -259,7 +261,7 @@ function Race({ circuit, onCircuits, onNext, frame }) {
       )}
       {phase === 'countdown' && (
         <Countdown
-          key={round}
+          key={`countdown-${round}`}
           paused={frame.interrupted}
           onTick={() => audio.play(SFX.tick)}
           onDone={() => {

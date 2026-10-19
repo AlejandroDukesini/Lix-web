@@ -135,16 +135,20 @@
 .lv-board {
   /* Celda: lo que quepa a lo ancho y a lo alto (dejando sitio a HUD, textos y controles), máx. 56 px. */
   --cell: min(calc((100cqw - 8px) / var(--cols)), calc((100dvh - 360px) / var(--rows)), 56px);
+  position: relative;
   display: grid;
   grid-template-columns: repeat(var(--cols), var(--cell));
   grid-template-rows: repeat(var(--rows), var(--cell));
   gap: 2px;
   padding: 4px;
   border-radius: var(--gc-radius-md);
-  background: #120d10;
+  /* Lecho de basalto con un resplandor rojizo: la cueva está caliente. */
+  background:
+    radial-gradient(120% 90% at 50% 110%, rgb(255 90 30 / 0.16), transparent 60%),
+    #0e0a0c;
   box-shadow:
     0 24px 60px -30px rgb(255 90 30 / 0.6),
-    inset 0 0 0 1px rgb(255 255 255 / 0.06);
+    inset 0 0 0 1px rgb(255 255 255 / 0.05);
 }
 
 .lv-play.has-touch .lv-board {
@@ -160,50 +164,216 @@
   min-height: 18px;
 }
 
-.lv-cell.is-wall {
-  background: linear-gradient(160deg, #3a3036, #241c21);
-  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.35);
+/* Muro: roca alzada con la cara superior iluminada; si hay paso debajo, se ve su frente. */
+.lv-cell {
+  /* Variación por casilla (sin JS): las vetas y costras no se repiten como un sello. */
+  --a: 26% 30%;
+  --b: 72% 66%;
+}
+.lv-cell:nth-child(3n + 1) {
+  --a: 64% 24%;
+  --b: 30% 74%;
+}
+.lv-cell:nth-child(5n + 2) {
+  --a: 38% 58%;
+  --b: 80% 30%;
 }
 
+.lv-cell.is-wall {
+  border-radius: 4px;
+  background:
+    radial-gradient(ellipse 34% 22% at var(--a), rgb(255 255 255 / 0.07), transparent),
+    radial-gradient(ellipse 30% 20% at var(--b), rgb(0 0 0 / 0.25), transparent),
+    linear-gradient(180deg, #4a3f45, #342a30);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+.lv-cell.is-wall.has-face {
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 34% 18% at var(--a), rgb(255 255 255 / 0.07), transparent),
+    linear-gradient(180deg, #4a3f45 0 68%, #241c21 68%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 4px 6px -2px rgb(0 0 0 / 0.55);
+}
+
+/* Suelo: losas hundidas con una junta en cruz. */
 .lv-cell.is-floor {
-  background: #2c2328;
+  background:
+    linear-gradient(90deg, transparent 49%, rgb(0 0 0 / 0.18) 49% 51%, transparent 51%),
+    linear-gradient(transparent 49%, rgb(0 0 0 / 0.14) 49% 51%, transparent 51%),
+    linear-gradient(160deg, #2b2227, #221a1f);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.45);
 }
 
 .lv-cell.is-adjacent {
   cursor: pointer;
-  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 0.12);
 }
 
+.lv-cell.is-adjacent::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 5px;
+  border: 2px dashed rgb(255 231 166 / 0.28);
+  pointer-events: none;
+}
+
+/* Lava: costra oscura sobre roca fundida; el núcleo late animando solo la opacidad (barato). */
 .lv-cell.is-lava {
+  --crust: rgb(70 16 6 / 0.75);
+  overflow: hidden;
+  border-radius: 4px;
   background:
-    radial-gradient(circle at 30% 30%, #ffe08a 0 12%, transparent 30%),
-    radial-gradient(circle at 70% 65%, #ffb347 0 10%, transparent 28%),
-    linear-gradient(135deg, #ff7a1a, #d6301a);
-  box-shadow: 0 0 12px rgb(255 100 30 / 0.55);
-  animation: lv-lava 2.4s ease-in-out infinite alternate;
+    radial-gradient(ellipse 36% 24% at var(--a), var(--crust), transparent 75%),
+    radial-gradient(ellipse 28% 34% at var(--b), var(--crust), transparent 75%),
+    radial-gradient(ellipse 60% 40% at 50% 50%, rgb(255 220 120 / 0.5), transparent 70%),
+    linear-gradient(135deg, #ff9a2b, #e8401b 60%, #b9230f);
+  box-shadow: 0 0 14px 1px rgb(255 100 30 / 0.5);
 }
 
-@keyframes lv-lava {
+.lv-cell.is-lava::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 45% 50%, #fff2b0 0 10%, rgb(255 200 90 / 0.6) 24%, transparent 55%);
+  animation: lv-glow 2.2s ease-in-out infinite alternate;
+}
+
+/* Lava espesa: más oscura y apagada; se enciende el turno en que va a avanzar. */
+.lv-board.is-thick .lv-cell.is-lava {
+  --crust: rgb(40 10 4 / 0.9);
+  background:
+    radial-gradient(ellipse 46% 32% at var(--a), var(--crust), transparent 80%),
+    radial-gradient(ellipse 36% 42% at var(--b), var(--crust), transparent 80%),
+    linear-gradient(135deg, #d9561c, #9c2410);
+  box-shadow: 0 0 8px rgb(255 100 30 / 0.3);
+}
+
+.lv-board.is-thick:not(.is-surging) .lv-cell.is-lava::after {
+  opacity: 0.25;
+  animation: none;
+}
+
+.lv-board.is-surging .lv-cell.is-lava {
+  box-shadow: 0 0 16px 2px rgb(255 120 40 / 0.75);
+}
+
+@keyframes lv-glow {
+  from {
+    opacity: 0.35;
+  }
   to {
-    filter: brightness(1.18) saturate(1.1);
+    opacity: 1;
   }
 }
 
-.lv-cell.is-water {
-  background:
-    radial-gradient(circle at 35% 30%, rgb(255 255 255 / 0.5) 0 6%, transparent 20%),
-    linear-gradient(160deg, #6cc6ff, #1f6fd1);
+/* Líquido recién llegado: brota desde el centro de la casilla. */
+.lv-cell.is-lava.is-new {
+  animation: lv-pour 260ms var(--ease-out) both;
 }
 
+@keyframes lv-pour {
+  from {
+    transform: scale(0.35);
+    border-radius: 50%;
+  }
+}
+
+/* Agua: superficie con ondas y un destello que oscila. */
+.lv-cell.is-water {
+  overflow: hidden;
+  background:
+    repeating-radial-gradient(circle at 30% 120%, transparent 0 7px, rgb(255 255 255 / 0.12) 7px 8px),
+    linear-gradient(170deg, #5cc0ff, #1f6fd1 70%, #1a55a8);
+  box-shadow: inset 0 2px 5px rgb(0 20 60 / 0.4);
+}
+
+.lv-cell.is-water::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / 0.35) 45%, transparent 58%);
+  animation: lv-shimmer 3s ease-in-out infinite alternate;
+}
+
+@keyframes lv-shimmer {
+  from {
+    opacity: 0.1;
+  }
+  to {
+    opacity: 0.7;
+  }
+}
+
+.lv-cell.is-water.is-new {
+  animation: lv-pour 300ms var(--ease-out) both;
+}
+
+/* Piedra: basalto enfriado con grietas; al nacer, las grietas aún brillan y sale vapor. */
 .lv-cell.is-stone {
   background:
-    linear-gradient(115deg, transparent 46%, rgb(0 0 0 / 0.35) 47% 50%, transparent 51%),
-    linear-gradient(35deg, transparent 60%, rgb(0 0 0 / 0.3) 61% 63%, transparent 64%),
-    linear-gradient(160deg, #8b8f99, #5c606b);
+    linear-gradient(115deg, transparent 46%, rgb(0 0 0 / 0.4) 47% 50%, transparent 51%),
+    linear-gradient(35deg, transparent 60%, rgb(0 0 0 / 0.35) 61% 63%, transparent 64%),
+    radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.12), transparent 50%),
+    linear-gradient(160deg, #7e7f88, #4f5059);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    inset 0 -3px 0 rgb(0 0 0 / 0.3);
 }
 
+.lv-cell.is-stone.is-new::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(115deg, transparent 46%, #ffb347 47% 50%, transparent 51%),
+    linear-gradient(35deg, transparent 60%, #ff7a1a 61% 63%, transparent 64%);
+  animation: lv-cool 1.1s ease-out both;
+}
+
+.lv-cell.is-stone.is-new::after {
+  content: '';
+  position: absolute;
+  left: 15%;
+  right: 15%;
+  bottom: 30%;
+  height: 60%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgb(255 255 255 / 0.55), transparent 70%);
+  pointer-events: none;
+  animation: lv-steam 900ms ease-out both;
+}
+
+@keyframes lv-cool {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes lv-steam {
+  from {
+    opacity: 0.9;
+    transform: translateY(0) scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-70%) scale(1.3);
+  }
+}
+
+/* Compuerta: rastrillo de hierro con remaches. */
 .lv-cell.is-gate {
-  background: repeating-linear-gradient(90deg, #6d7484 0 5px, #3d424f 5px 9px);
+  background:
+    radial-gradient(circle at 50% 12%, #b8bfcc 0 6%, transparent 7%),
+    radial-gradient(circle at 50% 88%, #b8bfcc 0 6%, transparent 7%),
+    repeating-linear-gradient(90deg, #7b8394 0 4px, #4a505e 4px 6px, #23262e 6px 10px),
+    #23262e;
+  box-shadow:
+    inset 0 0 0 2px #2e323c,
+    0 3px 6px -2px rgb(0 0 0 / 0.6);
 }
 
 .lv-gate,
@@ -215,50 +385,131 @@
   text-shadow: 0 1px 2px #000;
 }
 
+.lv-gate {
+  display: grid;
+  place-items: center;
+  width: 58%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #1a1c22;
+  box-shadow: inset 0 0 0 2px #8a93a6;
+}
+
+/* Palanca: placa de presión en el suelo; al pisarla se hunde y se ilumina. */
 .lv-cell.is-switch::after,
 .lv-cell.is-switch-on::after {
   content: '';
   position: absolute;
   inset: 22%;
-  border-radius: 50%;
-  border: 3px solid #c9ced9;
+  border-radius: 8px;
+  background: linear-gradient(180deg, #a3a9b6, #6b7180);
+  box-shadow:
+    0 3px 0 #3b3f49,
+    inset 0 1px 0 rgb(255 255 255 / 0.4);
 }
 
 .lv-cell.is-switch-on::after {
-  border-color: #7cf0b2;
-  background: rgb(124 240 178 / 0.25);
+  background: linear-gradient(180deg, #8af5c0, #3cbf82);
+  box-shadow:
+    0 1px 0 #1d6b48,
+    0 0 12px rgb(124 240 178 / 0.6);
+  transform: translateY(2px);
 }
 
 .lv-lever {
   position: absolute;
+  z-index: 1;
   top: 1px;
   left: 4px;
   font-size: calc(var(--cell) * 0.26);
 }
 
+/* Salida: un pozo de luz fría que respira. */
 .lv-cell.is-exit::before {
   content: '';
   position: absolute;
-  inset: 12%;
+  inset: 8%;
   border-radius: 50%;
-  background: radial-gradient(circle, #fffbe0 0 22%, #9be7ff 40%, transparent 72%);
-  box-shadow: 0 0 14px #9be7ff;
+  background: radial-gradient(circle, #fffbe0 0 18%, #9be7ff 38%, rgb(80 170 255 / 0.25) 60%, transparent 72%);
+  box-shadow: 0 0 16px rgb(155 231 255 / 0.7);
+  animation: lv-beacon 1.8s ease-in-out infinite alternate;
 }
 
-.lv-player {
-  position: relative;
-  z-index: 1;
-  width: 62%;
-  height: 62%;
+.lv-cell.is-exit::after {
+  content: '';
+  position: absolute;
+  inset: 20%;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #ffffff, #ffe7a6 45%, #ff9fc6);
-  box-shadow: 0 0 0 3px rgb(20 10 20 / 0.6), 0 0 16px rgb(255 220 160 / 0.8);
-  transition: transform var(--dur-fast) var(--ease-out);
+  border: 2px solid rgb(220 245 255 / 0.7);
+}
+
+.lv-cell.is-exit.is-lava::before {
+  display: none;
+}
+
+.lv-cell.is-exit.is-lava::after {
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Personaje: capa propia que se desliza entre casillas en vez de saltar. */
+.lv-player {
+  position: absolute;
+  z-index: 3;
+  top: 4px;
+  left: 4px;
+  width: var(--cell);
+  height: var(--cell);
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: translate(calc(var(--px) * (var(--cell) + 2px)), calc(var(--py) * (var(--cell) + 2px)));
+  transition: transform 140ms var(--ease-out);
+  filter: drop-shadow(0 0 8px rgb(255 220 160 / 0.55));
+}
+
+.lv-player__hop {
+  display: block;
+  width: 78%;
+  height: 78%;
+  animation: lv-hop 200ms var(--ease-out);
+}
+
+.lv-player__hop svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes lv-hop {
+  40% {
+    transform: translateY(-14%) scale(0.92, 1.08);
+  }
+  80% {
+    transform: scale(1.06, 0.94);
+  }
 }
 
 .lv-player.is-lost {
-  background: radial-gradient(circle at 35% 30%, #888, #444);
-  box-shadow: none;
+  filter: none;
+}
+
+.lv-player.is-lost .lv-player__hop {
+  animation: lv-burn 500ms ease-out both;
+}
+
+@keyframes lv-burn {
+  from {
+    transform: translateY(-10%);
+  }
+  to {
+    transform: scale(0.9, 0.8) translateY(8%);
+  }
+}
+
+.lv-player.is-won {
+  filter: drop-shadow(0 0 14px rgb(155 231 255 / 0.9));
 }
 
 /* Cruceta táctil con botón de esperar en el centro-izquierda. */
@@ -272,13 +523,24 @@
   gap: var(--space-2);
 }
 
+/* Botones de piedra tallada, a juego con el tablero; se hunden al pulsarlos. */
 .lv-btn.hold-btn {
   width: 60px;
   height: 60px;
   border-radius: 18px;
-  color: var(--text);
-  border-color: var(--surface-border);
-  background: var(--surface);
+  color: #f3e6dc;
+  border-color: rgb(255 255 255 / 0.08);
+  background: linear-gradient(180deg, #43383e, #2c2328);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    0 4px 0 #1a1317;
+}
+
+.lv-btn.hold-btn:active {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.08),
+    0 1px 0 #1a1317;
 }
 
 .lv-btn.hold-btn svg {
@@ -302,12 +564,9 @@
   grid-area: right;
 }
 
-[data-motion='reduced'] .lv-cell.is-lava {
-  animation: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .lv-cell.is-lava {
-    animation: none;
+@keyframes lv-beacon {
+  from {
+    opacity: 0.7;
+    transform: scale(0.92);
   }
 }

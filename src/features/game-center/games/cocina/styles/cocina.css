@@ -221,9 +221,43 @@
   padding: var(--space-4);
   border-radius: var(--gc-radius-lg);
   border: var(--surface-border-width) solid var(--surface-border);
+  /* El banco es el mostrador de la tienda: azulejos de pared, foco cálido sobre
+     lo que preparas y encimera de madera abajo, donde quedan los botones. */
+  --ck-tile: #1d4552;
+  --ck-grout: rgb(255 255 255 / 0.12);
+  --ck-counter: #3b2618;
+  --ck-edge: #8a5a34;
+  align-content: end;
+  overflow: hidden;
   background:
-    radial-gradient(60% 50% at 50% 60%, color-mix(in oklab, var(--game-a) 22%, transparent), transparent 70%),
-    var(--surface);
+    linear-gradient(to bottom, transparent 70%, var(--ck-edge) 70%, var(--ck-edge) calc(70% + 6px), rgb(0 0 0 / 0.35) calc(70% + 6px), transparent calc(70% + 16px)),
+    linear-gradient(to bottom, transparent 70%, var(--ck-counter) 70%),
+    radial-gradient(55% 45% at 50% 42%, rgb(255 236 200 / 0.28), transparent 70%),
+    repeating-linear-gradient(90deg, var(--ck-grout) 0 2px, transparent 2px 38px),
+    repeating-linear-gradient(0deg, var(--ck-grout) 0 2px, transparent 2px 38px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--ck-tile) 80%, white), var(--ck-tile));
+}
+
+/* Cada tienda con su pared: azul piscina, ladrillo de horno o rosa empolvado. */
+[data-game='pizzeria'] .ck-bench {
+  --ck-tile: #5a2a1e;
+  --ck-grout: rgb(255 220 190 / 0.14);
+  --ck-counter: #2e2018;
+  --ck-edge: #9b6a3c;
+  background:
+    linear-gradient(to bottom, transparent 70%, var(--ck-edge) 70%, var(--ck-edge) calc(70% + 6px), rgb(0 0 0 / 0.35) calc(70% + 6px), transparent calc(70% + 16px)),
+    linear-gradient(to bottom, transparent 70%, var(--ck-counter) 70%),
+    radial-gradient(55% 45% at 50% 42%, rgb(255 180 110 / 0.3), transparent 70%),
+    repeating-linear-gradient(0deg, var(--ck-grout) 0 2px, transparent 2px 22px),
+    repeating-linear-gradient(90deg, var(--ck-grout) 0 2px, transparent 2px 48px),
+    linear-gradient(to bottom, #6e3424, var(--ck-tile));
+}
+
+[data-game='pasteleria'] .ck-bench {
+  --ck-tile: #4a2340;
+  --ck-grout: rgb(255 210 235 / 0.14);
+  --ck-counter: #2f1b29;
+  --ck-edge: #d9b8cc;
 }
 
 .ck-bench__visual {

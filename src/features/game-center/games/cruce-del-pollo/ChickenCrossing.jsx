@@ -14,7 +14,7 @@ import { useGameFrame, useInProgress, usePauseOnInterrupt } from '../../hooks/us
 import { useKeyboard } from '../../hooks/useKeyboard.js';
 import { useReducedMotion } from '../../../../hooks/useReducedMotion.js';
 import { ROUNDS, createRun, requestHop, step } from './engine/chickenEngine.js';
-import { IMPACT_SECONDS, burst, chickenScreenPoint, createRenderState, layoutFor, renderChicken } from './engine/chickenRenderer.js';
+import { IMPACT_SECONDS, burst, chickenScreenPoint, createRenderState, disposeRenderState, layoutFor, renderChicken } from './engine/chickenRenderer.js';
 import './styles/chicken.css';
 
 const GAME_ID = 'cruce-del-pollo';
@@ -61,6 +61,7 @@ export default function ChickenCrossing() {
   const [impact, setImpact] = useState(false);
   const impactTimer = useRef(null);
   useEffect(() => () => clearTimeout(impactTimer.current), []);
+  useEffect(() => () => disposeRenderState(view.current), []);
   const { start, reset: resetSession, finish } = session;
 
   const draw = useCallback((dt = 0) => renderChicken(ctxRef.current, sizeRef.current, world.current, view.current, dt), []);
@@ -151,7 +152,7 @@ export default function ChickenCrossing() {
       }
       draw(running || phase === 'over' ? dt : 0);
     },
-    phase === 'countdown' || playing || (phase === 'over' && (impact || view.current.particles.length > 0)),
+    phase === 'countdown' || playing || (phase === 'over' && (impact || view.current.particles.count > 0)),
   );
 
   useEffect(() => {
@@ -165,6 +166,7 @@ export default function ChickenCrossing() {
     setImpact(false);
     resetSession();
     world.current = createRun(Date.now());
+    disposeRenderState(view.current);
     view.current = createRenderState();
     setHud({ score: 0, round: 1 });
     setResult(null);
@@ -196,7 +198,7 @@ export default function ChickenCrossing() {
       />
       {phase === 'run' && (
         <ControlsHint
-          key={round}
+          key={`controlshint-${round}`}
           icon={Hand}
           touch="Desliza ↑ ↓ ← → para moverte · toca para avanzar"
           desktop="Flechas o WASD para saltar · Esc para pausar"
@@ -209,7 +211,7 @@ export default function ChickenCrossing() {
       )}
       {phase === 'countdown' && (
         <Countdown
-          key={round}
+          key={`countdown-${round}`}
           paused={frame.interrupted}
           onTick={() => audio.play(SFX.tick)}
           onDone={() => {

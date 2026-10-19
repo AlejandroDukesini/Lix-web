@@ -68,9 +68,31 @@ function DifficultyPick({ record, saved, onNew, onResume }) {
   );
 }
 
+/** Filas, columnas y bloques llenos y sin repeticiones (claves 'r0', 'c4', 'b8'). */
+function completeUnits(board, clash) {
+  const done = new Set();
+  for (let u = 0; u < 9; u += 1) {
+    const ok = { r: true, c: true, b: true };
+    for (let k = 0; k < 9; k += 1) {
+      const cells = { r: u * 9 + k, c: k * 9 + u, b: (Math.floor(u / 3) * 3 + Math.floor(k / 3)) * 9 + (u % 3) * 3 + (k % 3) };
+      for (const t of ['r', 'c', 'b']) if (!board[cells[t]] || clash.has(cells[t])) ok[t] = false;
+    }
+    for (const t of ['r', 'c', 'b']) if (ok[t]) done.add(`${t}${u}`);
+  }
+  return done;
+}
+
 function Board({ game, selected, wrong, paused, onSelect }) {
   const clash = useMemo(() => conflicts(game.board), [game.board]);
   const sel = selected >= 0 ? { r: rowOf(selected), c: colOf(selected), b: boxOf(selected), v: game.board[selected] } : null;
+  // Destello al completar una fila, columna o bloque: solo las unidades recién terminadas.
+  const units = useMemo(() => completeUnits(game.board, clash), [game.board, clash]);
+  const prevUnits = useRef(units);
+  const fresh = [...units].filter((u) => !prevUnits.current.has(u));
+  useEffect(() => {
+    prevUnits.current = units;
+  }, [units]);
+  const sweep = (i) => fresh.some((u) => (u[0] === 'r' ? rowOf(i) : u[0] === 'c' ? colOf(i) : boxOf(i)) === Number(u[1]));
   return (
     <div className={cx('sd-board', paused && 'is-paused')} role="grid" aria-label="Tablero de Sudoku">
       {Array.from({ length: 9 }, (_, r) => (
@@ -92,13 +114,17 @@ function Board({ game, selected, wrong, paused, onSelect }) {
                     sel?.v && v === sel.v && 'is-same',
                     clash.has(i) && 'is-conflict',
                     wrong.has(i) && 'is-wrong',
+                    sweep(i) && 'is-sweep',
                   )}
+                  style={{ '--k': r + c }}
                   tabIndex={i === Math.max(0, selected) ? 0 : -1}
                   aria-label={`Fila ${r + 1}, columna ${c + 1}: ${v ? `${v}${given ? ', fija' : ''}` : 'vacía'}${clash.has(i) ? ', se repite' : ''}`}
                   onClick={() => onSelect(i)}
                 >
                   {v ? (
-                    <span className="sd-cell__value">{v}</span>
+                    <span key={v} className="sd-cell__value">
+                      {v}
+                    </span>
                   ) : game.notes[i] ? (
                     <span className="sd-notes" aria-hidden="true">
                       {DIGITS.map((d) => (

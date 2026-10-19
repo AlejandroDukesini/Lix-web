@@ -1,7 +1,11 @@
 import { useEffect, useLayoutEffect, useRef } from 'react';
+import { initialQuality, maxDprFor } from '../render/quality.js';
 
-/** Densidad máxima: más allá de 2× el coste crece mucho y la diferencia apenas se ve. */
-const MAX_DPR = 2;
+/**
+ * Densidad máxima: más allá de 2× el coste crece mucho y la diferencia apenas se ve.
+ * En dispositivos modestos se limita a 1,5× (resolución interna algo menor, sigue nítido).
+ */
+const MAX_DPR = maxDprFor(initialQuality());
 
 /**
  * Lienzo que se adapta a su contenedor y a la densidad de la pantalla.
