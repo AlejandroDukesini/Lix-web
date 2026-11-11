@@ -23,6 +23,15 @@ juegos, documentos, diario, calendario y finanzas (ya todos disponibles).
 | **Game Center — Rediseño visual (v1.1.0)**: arte, iluminación, animaciones y rendimiento móvil nuevos en los 21 juegos, sin cambiar sus reglas | ✅ Funcional (ver [Rediseño visual](#rediseño-visual-v110)) |
 | **Biblioteca**: 4 estantes y 60 capítulos narrativos (cosmos y física, criminalística, idiomas, religiones), lector con índice, favoritos, marcadores, progreso, glosario y frases para escuchar | ✅ Funcional (ver [Biblioteca](#biblioteca)) |
 | **Organización personal**: panel del día, Finanzas, Calendario (universidad, tareas, recordatorios), Notas, Diario y Diario emocional, con PIN opcional y copias selectivas | ✅ Funcional (ver [Organización personal](#organización-personal)) |
+| **Control académico** (v1.2.0): asignaturas, actividades en 8 categorías, horario semanal con choques, calendario con festivos y cuadernos por asignatura | ✅ Funcional |
+| **Consejos diarios** (v1.2.0): 120 consejos en 10 categorías, propios, franjas, historial, favoritos y notificaciones | ✅ Funcional (con la app abierta en la web; también cerrada en Android) |
+| **Lix Flowers** (v1.2.0): animaciones de flores en arte ASCII generadas con Python (Pyodide + Pillow) sin conexión | ✅ Funcional |
+| **Lix AI Studio** (v1.2.0): pintor procedural (no es IA) o IA real con un servidor propio | ✅ Funcional (IA real probada solo con un servidor simulado) |
+| **App Android** (v1.2.0): app nativa en Kotlin con 4 widgets Jetpack Glance | ✅ Funcional en emulador (API 34); sin probar en teléfono físico |
+| **Widget de Windows 11** (v1.2.0) e **iPhone** | Windows: implementado, sin verificar en el Tablero · iPhone: análisis |
+
+Todo lo nuevo de la versión 1.2.0 (arquitectura, compilación, instalación de widgets, pruebas y límites) está en
+[`DOCUMENTACION_NUEVAS_FUNCIONES_LIX.txt`](DOCUMENTACION_NUEVAS_FUNCIONES_LIX.txt) y [`docs/MULTIPLATAFORMA.md`](docs/MULTIPLATAFORMA.md).
 
 ### La presentación: «Bitácora de observación»
 

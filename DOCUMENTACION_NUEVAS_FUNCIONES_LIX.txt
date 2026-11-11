@@ -1,0 +1,337 @@
+LIX WEB — DOCUMENTACIÓN DE LAS NUEVAS FUNCIONES (versión 1.2.0)
+=================================================================
+Fecha: 11 de noviembre de 2026 · Rama de desarrollo: beta · Publicación: Principal (etiqueta v1.2.0)
+Commits de las fases (en orden):
+  ab40254  Lix Flowers (animaciones de flores con Python)
+  c9d3b89  Lix AI Studio
+  35b57f5  Control académico
+  98a8fc4  Consejos diarios
+  455c1ee  App Android nativa con widgets Jetpack Glance
+  bfb0891  Viabilidad de widgets en iPhone
+  d9f3ec4  Widget de Windows 11 para la PWA
+Detalle técnico ampliado de las plataformas: docs/MULTIPLATAFORMA.md
+
+
+1. ARQUITECTURA ORIGINAL
+------------------------
+Auditoría hecha antes de programar (repositorio «un-ano-mas-contigo», remoto Lix-web):
+- Aplicación web React 19 + Vite 8, JavaScript (sin TypeScript), React Router con HashRouter, CSS
+  propio con tokens. PWA con Service Worker propio que precachea todo el build y una
+  Content-Security-Policy estricta (default-src 'self'): ninguna petición externa.
+- NO existía ninguna aplicación Android: no había carpeta android/, Gradle, Kotlin, Java,
+  Capacitor ni WebView. «Android» era solo la PWA instalada desde Chrome. No había APK ni AAB,
+  widgets ni permisos nativos.
+- Datos: localStorage (preferencias) + IndexedDB versión 4 (stores games, library, organizer,
+  attachments, meta, backups). Copias de seguridad JSON v3 con registro central BACKUP_SOURCES; la
+  organización personal usa un almacén genérico de entidades validadas (organizer/data/entities.js)
+  con relaciones, borrado con integridad, adjuntos y copias por módulo.
+- Funciones existentes: presentación, inicio, configuración, Game Center (21 juegos), Biblioteca
+  (60 capítulos) y Organización personal (panel, finanzas, calendario con pestaña Universidad
+  —materias, docentes, salones, horarios, trabajos, exámenes, parciales, exposiciones, entregas y
+  lecturas—, tareas, notas, diario y diario emocional, recordatorios con la app abierta).
+- Línea base comprobada: 748/748 pruebas y build correcto.
+
+
+2. TECNOLOGÍAS DETECTADAS (Y AÑADIDAS)
+--------------------------------------
+Detectadas: React 19, Vite 8, React Router 7, lucide-react, Vitest + Testing Library, fake-indexeddb,
+playwright-core (E2E con Edge instalado), sharp (iconos).
+En la máquina: Android SDK (plataformas 34-36, build-tools 34/35, emulador con AVD API 34), JDK 21,
+caché de Gradle 8.14.3 / AGP 8.13.2 / Kotlin 2.4.21, Python 3.13 con Pillow 13. Sin GPU dedicada ni
+modelos de IA locales (no hay Ollama ni Stable Diffusion instalados).
+Añadidas: Pyodide 314.0.7 (CPython 3.14 en WebAssembly), rueda de Pillow 12.2.0 para Pyodide,
+proyecto Android en Kotlin con Jetpack Glance 1.2.0 y androidx.webkit.
+
+
+3. FUNCIONALIDADES NUEVAS
+-------------------------
+- Lix Flowers — Animaciones (#/flores): fotos de flores o 10 plantillas convertidas en animaciones
+  de arte ASCII generadas con Python en el propio dispositivo; personalización, reproductor,
+  exportación GIF y TXT y herbario guardado.
+- Lix AI Studio (#/estudio): generación de imágenes a partir de una descripción con dos motores
+  claramente separados: pintor procedural (NO es IA, sin conexión) e IA real mediante un servidor
+  propio de la persona. Historial persistente, guardar y descargar.
+- Control académico (#/academico): resumen, asignaturas, actividades (8 categorías), horario
+  semanal con choques, calendario mensual con festivos/eventos y cuadernos por asignatura.
+- Consejos diarios (#/consejos): 120 consejos en 10 categorías, consejos propios, franjas
+  configurables, historial, favoritos, compartir y notificaciones.
+- App Android nativa con 4 widgets y notificaciones de consejos con la app cerrada.
+- Widget de Windows 11 para la PWA (Tablero de Widgets).
+- Navegación: nuevo grupo «Taller creativo» (Lix Flowers, Lix AI Studio); Control académico en
+  «Organización»; Consejos diarios en la lista principal.
+
+
+4. ARCHIVOS MODIFICADOS
+-----------------------
+Nuevos (principales):
+  android/ (proyecto completo: Gradle, Manifest, MainActivity.kt, LixBridge.kt, Snapshot.kt,
+    tips/TipScheduler.kt, widgets/WidgetUi.kt, widgets/Widgets.kt, recursos y metadatos XML)
+  src/features/flowers/ (FlowersPage, AsciiPlayer, flowersOptions, engine/pythonEngine,
+    engine/python.worker, python/lix_flowers.py, python/test_lix_flowers.py, pruebas)
+  src/features/studio/ (ai/AiStudioPage, ai/proceduralPainter, ai/providers, shared/CreationGallery,
+    shared/creations, pruebas)
+  src/features/academic/ (AcademicPage, academicLogic, useAcademic, views/*, pruebas)
+  src/features/tips/ (TipsPage, TipsRunner, tipsLogic, nativeTips, content/tips.js, pruebas)
+  src/services/native/ (androidBridge, snapshot, NativeSync, pruebas)
+  public/widgets/ (plantilla Adaptive Card, widget-data.js, captura)
+  scripts/vite-plugin-pyodide.js, scripts/android-build.mjs, docs/MULTIPLATAFORMA.md
+  vendor/pyodide/pillow-12.2.0-cp314-cp314-pyemscripten_2026_0_wasm32.whl
+Modificados:
+  src/features/organizer/data/entities.js (módulos studio y tips; academicDate, notebook,
+    creation, tip, ajustes; materia con edificio y descripción; nota con cuaderno y fecha; tipos
+    de actividad project y research), organizer/planner/agenda.js, UniversityForms.jsx (edificio,
+    descripción, aviso de choques), notes/views/NoteEditor.jsx (cuaderno y fecha),
+  src/app/App.jsx, src/app/modules.js, src/components/navigation/Navigation.jsx,
+  src/components/layout/AppShell.jsx, src/features/settings/sections/InstallSection.jsx,
+  src/services/pwa/pwaStore.js, src/tests/setup.js, public/manifest.webmanifest,
+  public/service-worker.js, scripts/vite-plugin-offline.js (CSP), scripts/verify-offline.mjs,
+  vite.config.js, package.json, .gitignore.
+Total: 99 archivos, ~9.700 líneas añadidas. Ninguna funcionalidad existente se eliminó.
+
+
+5. DEPENDENCIAS AGREGADAS
+-------------------------
+- npm: pyodide 314.0.7 (versión exacta). Se copia a dist/pyodide/ en el build.
+- vendor: rueda de Pillow 12.2.0 para Pyodide; el build comprueba su sha256 contra el
+  pyodide-lock.json oficial y falla si no coincide.
+- Android (Gradle): androidx.core:core-ktx 1.17.0, androidx.activity:activity-ktx 1.11.0,
+  androidx.webkit:webkit 1.14.0, androidx.glance:glance-appwidget 1.2.0,
+  androidx.glance:glance-material3 1.2.0. Plugins: AGP 8.13.2, Kotlin 2.4.21 (+ Compose).
+- Python de escritorio (opcional, solo para la herramienta de terminal y npm run test:python):
+  Pillow.
+- CSP: se añadió 'wasm-unsafe-eval' (solo permite compilar WebAssembly; eval de JS sigue
+  bloqueado) y connect-src a localhost (cualquier puerto) y a los puertos 7860/8080 de la red
+  local (servidor de IA propio). Nada más.
+
+
+6. IMPLEMENTACIÓN PYTHON
+------------------------
+- Python corre de verdad: src/features/flowers/python/lix_flowers.py es la única implementación
+  del motor. En la app se ejecuta con Pyodide (CPython 3.14 compilado a WebAssembly) dentro de un
+  Web Worker; en un computador, con CPython: python lix_flowers.py --ayuda (genera GIF o reproduce
+  en la terminal con color). No hay servidor: Python y Pillow van dentro de la app (≈14 MB, ≈5 MB
+  comprimidos) y se precachean, así que funciona sin conexión.
+- Proceso con una imagen: (1) lectura y validación con Pillow (formato PNG/JPEG/WEBP, tamaño
+  ≤ 12 MB, mínimo 16×16, máximo 40 MP, orientación EXIF); (2) redimensionado a una rejilla de
+  celdas (corrigiendo que una celda de texto es el doble de alta que ancha); (3) escala de grises y
+  separación del fondo de la foto (distancia de color a la mediana de los bordes) para la densidad;
+  colores originales cuantizados, un tema o un solo color; (4) conversión a caracteres según la
+  intensidad; (5) generación de fotogramas con un efecto (floración, brisa, brillo, pétalos,
+  latido); (6) secuencia animada; (7) visualización en un canvas de la app y exportación a GIF con
+  Pillow (fuente de mapa de bits 6×11, monoespaciada).
+- 10 plantillas sin imagen, dibujadas con Python puro: flores creciendo, pétalos cayendo, rosa
+  animada, girasol (filotaxis de 137,5°), jardín, lluvia de flores, corazón de flores, flores
+  brillantes, floración progresiva y jardín nocturno. Los bucles son continuos cuando procede.
+- Personalización: velocidad, tamaño (48/72/96 columnas), colores, intensidad, cantidad de
+  caracteres (5/10/70), fondo, tipo de animación y variación (semilla). Reproducir, pausar,
+  reiniciar. Guardar en el herbario (GIF ≤ 3 MB como adjunto) y exportar GIF o TXT.
+- La validación se hace dos veces: en JavaScript (tipo, extensión, peso, dimensiones) y en Python.
+- La interfaz muestra la prueba: «Generado con Python (Pyodide 314.0.7) y Pillow · … ms».
+
+
+7. IMPLEMENTACIÓN DE IA
+-----------------------
+Análisis: un modelo de imágenes en el teléfono no es viable (Stable Diffusion necesita 2-4 GB y
+GPU/WebGPU; Pyodide no puede ejecutarlo). Una API en la nube rompería el principio 100 % local y
+requeriría claves, así que no viene configurada.
+Implementación:
+- Pintor procedural (proceduralPainter.js): reconoce palabras clave (cielo, mar, montañas, flores,
+  ciudad, lluvia, nieve, colores…) y compone la escena en un canvas. Siempre etiquetado «Procedural ·
+  no es IA» y enseña las palabras que reconoció (o que no reconoció ninguna).
+- IA real con un servidor propio (providers.js): Stable Diffusion WebUI / Forge / SD.Next
+  (POST /sdapi/v1/txt2img) o servidores compatibles con OpenAI en local, como LocalAI
+  (POST /v1/images/generations). Solo este computador (localhost) o equipos de la red en los
+  puertos 7860/8080. Sin claves en el código ni en el repositorio; solo se hace una petición al
+  pulsar «Generar» o «Probar conexión»; errores explicados (sin conexión, HTTP, respuesta sin
+  imagen, firma de imagen no válida, tiempo de espera de 3 minutos, cancelación).
+- Dependencias de Internet: ninguna. Un servidor de la misma Wi-Fi funciona sin Internet.
+- Historial: las 24 últimas imágenes generadas; las guardadas (♥) no se borran solas.
+
+
+8. IMPLEMENTACIÓN ACADÉMICA
+---------------------------
+- Reutiliza los datos del Calendario (materias y actividades): lo creado en Control académico
+  aparece en el Calendario, en el panel del día y en los recordatorios, y al revés.
+- Asignaturas: CRUD con color, descripción, profesor, contacto, aula, edificio, semestre, período
+  y horario (día, inicio, fin, aula y edificio por clase). Aviso de choques al editar (no bloquea).
+- Actividades: tareas/trabajos, parciales, exámenes, exposiciones, proyectos, entregas, lecturas e
+  investigaciones con título, descripción, asignatura, fecha, hora, prioridad, estado y
+  observaciones. CRUD, filtros por categoría, estado y asignatura, y búsqueda.
+- Horario: vista semanal con la hora actual; las clases que se cruzan se dibujan lado a lado y
+  marcadas, y hay un aviso con el detalle.
+- Calendario académico: vista mensual con actividades, festivos, eventos académicos y fechas
+  importantes registrados a mano (únicos, anuales o por rango) y país/calendario configurable. La
+  app no descarga ni inventa festivos.
+- Resumen: próxima clase (salta festivos, días omitidos y materias fuera de su período), próxima
+  entrega, próximo parcial, vencidas, próximos 7 días y fechas del mes.
+- Cuadernos: uno por asignatura (o libres); sus páginas son notas normales y se editan con el mismo
+  editor de Notas (Markdown y guardado automático), con fecha de la nota y búsqueda.
+
+
+9. NOTIFICACIONES
+-----------------
+- Consejos dentro de la app: tarjeta flotante cuando empieza una franja y la app está visible.
+- Notificaciones del sistema en la web: con permiso, si la app está en segundo plano. Solo
+  funcionan con la app abierta o en segundo plano reciente: no hay servidor push.
+- Android: el sistema las programa (AlarmManager.setAndAllowWhileIdle) también con la app cerrada.
+  No son exactas: Android puede retrasarlas (en el emulador se observó una ventana de hasta 33 min
+  para franjas horarias y de 1 h para la primera del día siguiente). Se pide POST_NOTIFICATIONS solo
+  al activarlas.
+- Sin duplicados: una sola vez por franja aunque haya varias pestañas, un único id de notificación
+  en Android, y tras un tiempo dormido solo se muestra la franja más reciente. Los consejos que
+  Android muestra con la app cerrada pasan al historial de la app («Notificación de Android»).
+- Elección sin repetir los 30 últimos y respetando categorías, días y horario.
+
+
+10. WIDGETS ANDROID
+-------------------
+Implementados con Jetpack Glance (Kotlin + Compose), cada uno con su GlanceAppWidgetReceiver,
+metadatos XML (tamaño mínimo, celdas objetivo, redimensionado horizontal y vertical,
+updatePeriodMillis de 30 min) y registro en AndroidManifest:
+  1. Consejo del día: consejo vigente y categoría; abre #/consejos.
+  2. Control académico: próxima clase (hora, aula, edificio), próxima tarea y próximo parcial; vencidas.
+  3. Calendario académico: fecha de hoy, festivo del día, próximas actividades y entregas pendientes.
+  4. Lix Flowers: un fotograma de la última animación dibujado en bitmap (Glance no anima; no se
+     fuerza ninguna animación pesada).
+Datos: la app publica la instantánea por el puente; se guarda en filesDir/widget_snapshot.json
+(escritura atómica y validada). Los widgets solo la leen y la interpretan con la hora actual. Se
+actualizan al publicar datos, al sonar un consejo y cada 30 minutos.
+Desde Configuración → App de Android hay un botón por widget que pide al lanzador fijarlo
+(requestPinAppWidget, Android 8+).
+Verificado en el emulador (API 34): los cuatro widgets colocados en la pantalla de inicio con datos
+reales, abren la app en su sección, alarma programada, notificación entregada y sin duplicar.
+
+
+11. VIABILIDAD DE iOS
+---------------------
+Viable solo con una app nativa: la PWA de Safari no puede tener widgets. Haría falta un proyecto
+Xcode (Mac y cuenta de Apple Developer), una app contenedora con WKWebView y el mismo dist/, un App
+Group compartido, una Widget Extension en SwiftUI con TimelineProvider que lea la instantánea y
+notificaciones locales con UNUserNotificationCenter. Un proyecto de Android Studio no compila para
+iPhone. No se ha implementado ni simulado; el contrato de datos (instantánea v1) ya está listo.
+Detalle y riesgos en docs/MULTIPLATAFORMA.md, sección 2.
+
+
+12. VIABILIDAD DE WINDOWS
+-------------------------
+Implementado un widget PWA para el Tablero de Widgets de Windows 11, siguiendo la documentación de
+Microsoft Edge: miembro «widgets» en el manifiesto, plantilla Adaptive Card 1.5 y eventos del
+Service Worker (widgetinstall, widgetresume, widgetuninstall, periodicsync, widgetclick) con
+self.widgets.updateByTag. Muestra el consejo de la franja y la próxima clase, entrega y parcial a
+partir de la misma instantánea (guardada en IndexedDB).
+No verificado en el Tablero real: requiere instalar la PWA desde un origen HTTPS público,
+WinAppSDK 1.2 y el modo de desarrollador. No se hizo un proveedor Win32/C# (exigiría una app MSIX
+y otra base de código para unos datos que viven en el navegador). Una ventana flotante de la app
+no es un widget del Tablero y no se presenta como tal.
+
+
+13. PRUEBAS REALIZADAS
+----------------------
+- npm test: 822/822 pruebas (57 archivos), entre ellas:
+    · el motor Python real en Pyodide (Node): 10 plantillas, 5 efectos, validación de imágenes,
+      exportación GIF con Pillow (fotogramas, duración, bucle);
+    · interpretación procedural, validación de direcciones, ambos protocolos de IA y sus errores
+      (fetch simulado) e interfaz de AI Studio;
+    · lógica académica (choques, carriles, próxima clase con festivos, fechas anuales y rangos,
+      matriz mensual, cuadernos) e interfaz (asignatura con choque, categorías nuevas, festivo
+      anual, cuaderno con el editor de Notas);
+    · consejos (franjas, frecuencias, sin repeticiones, límite del historial, una vez por franja,
+      notificación solo si está activada, validación de horario);
+    · instantánea para widgets, puente Android fuera y dentro del APK y datos del widget de Windows.
+- npm run test:python: 5 pruebas de unittest con CPython + Pillow (incluida la herramienta de terminal).
+- npm run test:e2e: 104/104 comprobaciones en Edge real con el build de producción, incluidas:
+  Python (Pyodide + Pillow) arrancando SIN CONEXIÓN y guardando un GIF en el herbario que persiste
+  tras recargar; AI Studio procedural sin conexión; conexión a un servidor de Stable Diffusion
+  SIMULADO en localhost:7860 (comprueba CSP, CORS y flujo; no hay un modelo real en esta máquina);
+  Control académico, Consejos y Taller creativo sin desplazamiento horizontal en móvil y en
+  escritorio (4 estilos); widget de Windows (instantánea real → datos).
+- Android, en emulador Pixel API 34 (WebView 113): APK de depuración y de publicación compilan;
+  la app arranca; Python funciona dentro del WebView; descarga de GIF a Descargas/Lix; datos
+  académicos → instantánea → 4 widgets en la pantalla de inicio; alarma de consejo programada;
+  notificación entregada adelantando el reloj; sin duplicados al repetir; consejo fusionado en el
+  historial de la app con su canal.
+- Revisión visual con capturas en Edge (escritorio 1280×900 y móvil 390×844) de cada pantalla nueva.
+- Las funcionalidades previas siguen pasando (presentación, juegos, biblioteca, organización).
+
+
+14. PROBLEMAS ENCONTRADOS
+-------------------------
+- El fondo de los GIF salía gris: el ajuste de contraste también aclaraba el color de fondo. Ahora
+  el fondo es siempre el índice 0 de la paleta, sin modificar.
+- En fotos sobre fondo claro, el fondo de la propia foto se llenaba de «@»: la densidad pasó a
+  medir la distancia al color de fondo de la foto (mediana de los bordes).
+- Un null de JavaScript llega a Python como JsNull (no None): se envía undefined.
+- Los GIF guardan la duración en centésimas (83 ms → 80 ms): documentado en la prueba.
+- En el emulador sin GPU, la presentación astral agota la memoria de mosaicos del WebView y la
+  pantalla se ve vacía hasta saltarla. En la app instalada se puede saltar; queda pendiente probarlo
+  en un teléfono real.
+- Playwright no puede conectarse al WebView de Android (no implementa el dominio de navegador
+  de CDP): las pruebas de Android usan CDP directo (scripts/_android.mjs, herramienta local).
+- Las alarmas no exactas de Android pueden retrasarse decenas de minutos (comportamiento del sistema).
+- El WebView necesita el permiso INTERNET aunque todo se sirva desde el APK.
+
+
+15. LIMITACIONES
+----------------
+- Lix Flowers: la primera carga de Python tarda unos segundos (más en teléfonos modestos) y añade
+  ≈14 MB a la app; el GIF guardado está limitado a 3 MB (se reduce la escala si hace falta).
+- AI Studio: el pintor procedural no es IA. La IA real necesita un servidor propio encendido; no se
+  probó con un modelo real (solo con un servidor simulado). Desde una dirección https el navegador
+  puede bloquear un servidor http de la red (contenido mixto).
+- Consejos en la web/iPhone: solo con la app abierta o en segundo plano reciente.
+- Widgets: muestran la instantánea de los próximos 7 días; si la app no se abre en más tiempo,
+  se agotan los consejos precalculados y los datos pueden quedar desactualizados.
+- Los datos del APK de Android y los de la PWA del navegador son independientes (cada uno tiene su
+  almacenamiento); para pasarlos se usa la copia de seguridad JSON. Desinstalar el APK borra sus datos.
+- El APK de publicación está firmado con la clave de depuración para poder instalarlo; para
+  distribuirlo hay que configurar una firma propia (y generar un AAB si se publica en Google Play).
+- No se ha probado en teléfonos físicos (Android ni iPhone) ni en el Tablero de Widgets real.
+- iOS: sin implementar (solo análisis).
+- Festivos: no se descargan; se registran a mano.
+
+
+16. INSTRUCCIONES PARA COMPILAR
+-------------------------------
+Requisitos: Node.js 20+ y npm. Para Android: Android SDK (plataforma 36), JDK 17-21 (Gradle se
+ejecuta con el JDK de JAVA_HOME o el de org.gradle.java.home) y, la primera vez, Internet para
+descargar las dependencias de Gradle. Opcional: Python 3 + Pillow para la herramienta de terminal.
+
+  npm install                 dependencias (incluye Pyodide)
+  npm run dev                 desarrollo (Python también funciona: /pyodide se sirve en local)
+  npm run build               build web en dist/ (copia Pyodide y comprueba el checksum de Pillow)
+  npm start                   build + vista previa local
+  npm test                    pruebas unitarias e integración
+  npm run test:python         pruebas del motor con CPython
+  npm run test:e2e            verificación en Edge/Chrome (requiere build)
+  npm run check               test + build + e2e
+  npm run android:build       build web + APK de depuración
+                              → android/app/build/outputs/apk/debug/app-debug.apk
+  npm run android:release     build web + APK de publicación
+                              → android/app/build/outputs/apk/release/app-release.apk
+En Android Studio: abre la carpeta android/ (ejecuta antes npm run build; la tarea syncWebAssets
+copia dist/ a los assets). Crea android/local.properties con sdk.dir si Android Studio no lo hace.
+Herramienta de terminal de Lix Flowers:
+  python src/features/flowers/python/lix_flowers.py --plantilla rosa -o rosa.gif
+  python src/features/flowers/python/lix_flowers.py --imagen foto.jpg --efecto brisa --terminal
+
+
+17. INSTRUCCIONES PARA INSTALAR Y PROBAR LOS WIDGETS
+----------------------------------------------------
+Android:
+  1. Activa la depuración USB en el teléfono (o abre un emulador) e instala:
+       adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+     (o copia el APK al teléfono y ábrelo, permitiendo instalar apps de esa fuente).
+  2. Abre Lix una vez: así publica la primera instantánea de datos.
+  3. Añade los widgets: Configuración → App de Android → «Añadir …» (el lanzador pide
+     confirmación), o mantén pulsada la pantalla de inicio → Widgets → Lix.
+  4. Prueba: crea una asignatura con horario y una actividad en Control académico; el widget se
+     actualiza en unos segundos. Redimensiona el widget manteniéndolo pulsado.
+  5. Consejos con la app cerrada: Consejos diarios → Ajustes → activa «Notificaciones del sistema»
+     y acepta el permiso. Cierra la app; llegará uno en la siguiente franja (puede retrasarse
+     unos minutos por el ahorro de batería).
+  6. Si un widget dice «Abre Lix una vez…», abre la app para que publique los datos.
+Windows 11 (no verificado en el Tablero real, ver sección 12):
+  1. Publica dist/ en un origen HTTPS e instala la PWA con Edge.
+  2. Instala WinAppSDK 1.2 y activa el modo de desarrollador de Windows.
+  3. Abre el Tablero de Widgets (Win + W) → Añadir widgets → «Lix · Consejo y próximos».
+iPhone: no hay widgets (ver sección 11).
