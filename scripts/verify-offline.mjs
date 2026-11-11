@@ -401,6 +401,21 @@ try {
   await page.screenshot({ path: `${SHOTS}/m-org-calendario-mes.png`, fullPage: true });
   check('Calendario móvil: el mes cabe sin desplazamiento horizontal', await noHorizontalScroll(page));
 
+  // Lix Flowers sin conexión: Python (Pyodide + Pillow) arranca desde la caché, dibuja y exporta un GIF al herbario.
+  await page.goto(`${baseUrl}#/flores`);
+  await page.locator('.flowers-player canvas').waitFor({ timeout: 90000 });
+  const proof = await page.locator('.flowers-proof').innerText();
+  check('Sin conexión: Lix Flowers ejecuta Python (Pyodide) y dibuja la animación', /Generado con Python \(Pyodide 3\d\d\.\d+\.\d+\) y Pillow/.test(proof), proof);
+  await page.getByText('Girasol').click();
+  await page.waitForFunction(() => /fotogramas/.test(document.querySelector('.flowers-proof')?.textContent ?? '') && !/dibujando/.test(document.querySelector('.flowers-proof').textContent), null, { timeout: 30000 });
+  await page.getByRole('button', { name: 'Guardar en el herbario' }).click();
+  await page.locator('.creation-card img').first().waitFor({ timeout: 30000 });
+  await page.reload();
+  await page.locator('.creation-card').filter({ hasText: 'Girasol' }).first().waitFor({ timeout: 15000 });
+  check('Sin conexión: la animación (GIF hecho con Pillow) se guarda en el herbario y sigue tras recargar', true);
+  check('Lix Flowers móvil: sin desplazamiento horizontal', await noHorizontalScroll(page));
+  await page.screenshot({ path: `${SHOTS}/m-flowers.png`, fullPage: true });
+
   await page.goto(`${baseUrl}#/presentacion`);
   await page.getByRole('heading', { level: 1, name: 'Hay millones de estrellas en el universo...' }).waitFor({ timeout: 8000 });
   check('Sin conexión: la presentación se puede reproducir', true);

@@ -42,6 +42,7 @@ export const MODULES = Object.freeze({
   notes: 'Notas',
   journal: 'Diario personal',
   emotions: 'Diario emocional',
+  studio: 'Taller creativo (Lix Flowers y Lix AI Studio)',
   organizer: 'Organización (ajustes)',
 });
 
@@ -601,6 +602,35 @@ const emotionLog = {
 };
 
 /* ----------------------------------------------------------------------------------- */
+/* Taller creativo: animaciones de Lix Flowers e imágenes de Lix AI Studio               */
+/* ----------------------------------------------------------------------------------- */
+
+/**
+ * `origin` dice con qué se hizo, sin maquillarlo:
+ *   flowers    → motor Python (Pyodide + Pillow) de Lix Flowers
+ *   procedural → generador procedural local de AI Studio (NO es inteligencia artificial)
+ *   ai         → un modelo de IA real a través del proveedor indicado en `provider`
+ */
+export const CREATION_ORIGINS = ['flowers', 'procedural', 'ai'];
+
+const creation = {
+  module: 'studio',
+  label: 'creación',
+  plural: 'creaciones',
+  shape: {
+    origin: oneOf(CREATION_ORIGINS, 'flowers', 'El origen'),
+    title: text({ max: 120, required: true, label: 'El título' }),
+    prompt: text({ max: 1000 }),
+    provider: text({ max: 80 }),
+    params: text({ max: 4000 }),
+    width: int({ min: 0, max: 10000, fallback: 0 }),
+    height: int({ min: 0, max: 10000, fallback: 0 }),
+    attachmentIds: refs({ max: 2 }),
+    favorite: bool(false),
+  },
+};
+
+/* ----------------------------------------------------------------------------------- */
 /* Ajustes (un registro por tipo)                                                        */
 /* ----------------------------------------------------------------------------------- */
 
@@ -706,6 +736,7 @@ export const ENTITIES = Object.freeze({
   journalTemplate,
   emotion,
   emotionLog,
+  creation,
   ...settingsKinds,
 });
 

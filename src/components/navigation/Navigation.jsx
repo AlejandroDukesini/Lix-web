@@ -1,6 +1,7 @@
+import { Fragment } from 'react';
 import { NavLink } from 'react-router';
 import { LayoutGrid, Moon, ShieldCheck, Sun } from 'lucide-react';
-import { MODULES } from '../../app/modules.js';
+import { MODULES, NAV_GROUPS } from '../../app/modules.js';
 import { usePreferences } from '../../app/providers/PreferencesProvider.jsx';
 import { Badge } from '../common/Card.jsx';
 import { Dialog } from '../common/Dialog.jsx';
@@ -81,14 +82,18 @@ export function Sidebar() {
               <NavItem key={module.id} module={module} />
             ))}
           </ul>
-          <p className="nav-group" id="nav-group-organizer">
-            Organización
-          </p>
-          <ul className="nav-list" aria-labelledby="nav-group-organizer">
-            {MODULES.filter((m) => m.group === 'organizer').map((module) => (
-              <NavItem key={module.id} module={module} />
-            ))}
-          </ul>
+          {NAV_GROUPS.map((group) => (
+            <Fragment key={group.id}>
+              <p className="nav-group" id={`nav-group-${group.id}`}>
+                {group.label}
+              </p>
+              <ul className="nav-list" aria-labelledby={`nav-group-${group.id}`}>
+                {MODULES.filter((m) => m.group === group.id).map((module) => (
+                  <NavItem key={module.id} module={module} />
+                ))}
+              </ul>
+            </Fragment>
+          ))}
         </div>
         <ul className="nav-list nav-list--bottom">
           <NavItem module={MODULES.find((m) => m.id === 'settings')} />
@@ -164,12 +169,16 @@ export function SpacesSheet({ open, onClose }) {
             <NavItem key={module.id} module={module} onNavigate={onClose} showTeaser />
           ))}
         </ul>
-        <p className="nav-group">Organización</p>
-        <ul className="nav-list nav-list--sheet">
-          {MODULES.filter((m) => m.group === 'organizer').map((module) => (
-            <NavItem key={module.id} module={module} onNavigate={onClose} showTeaser />
-          ))}
-        </ul>
+        {NAV_GROUPS.map((group) => (
+          <Fragment key={group.id}>
+            <p className="nav-group">{group.label}</p>
+            <ul className="nav-list nav-list--sheet">
+              {MODULES.filter((m) => m.group === group.id).map((module) => (
+                <NavItem key={module.id} module={module} onNavigate={onClose} showTeaser />
+              ))}
+            </ul>
+          </Fragment>
+        ))}
       </nav>
     </Dialog>
   );

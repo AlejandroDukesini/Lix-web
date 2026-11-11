@@ -24,7 +24,11 @@ export function setReducedMotion(value) {
   reducedMotion = value;
 }
 
+// Las pruebas con `@vitest-environment node` (p. ej. Python en Pyodide) no tienen DOM que preparar.
+const hasDom = typeof window !== 'undefined';
+
 beforeEach(() => {
+  if (!hasDom) return;
   window.matchMedia = vi.fn((query) => ({
     matches: query.includes('prefers-reduced-motion') ? reducedMotion : false,
     media: query,
@@ -37,6 +41,7 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  if (!hasDom) return;
   cleanup();
   window.localStorage.clear();
   __resetForTests();

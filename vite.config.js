@@ -3,6 +3,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { offlinePrecache } from './scripts/vite-plugin-offline.js';
 import { libraryIndex } from './scripts/vite-plugin-library.js';
+import { pyodideRuntime } from './scripts/vite-plugin-pyodide.js';
 
 const { version } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 
@@ -12,7 +13,7 @@ export default defineConfig({
   define: {
     __APP_VERSION__: JSON.stringify(version),
   },
-  plugins: [react(), libraryIndex(), offlinePrecache()],
+  plugins: [react(), libraryIndex(), pyodideRuntime(), offlinePrecache()],
   server: { port: 5173, strictPort: false },
   preview: { port: 4173, strictPort: false },
   build: {

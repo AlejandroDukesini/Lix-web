@@ -12,11 +12,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "node scripts/verify-offline.mjs",
+    "test:python": "python -m unittest discover -s src/features/flowers/python",
     "icons": "node scripts/generate-icons.mjs",
     "check": "npm run test && npm run build && npm run test:e2e"
   },
   "dependencies": {
     "lucide-react": "^1.49.0",
+    "pyodide": "314.0.7",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-router": "^7.18.4"

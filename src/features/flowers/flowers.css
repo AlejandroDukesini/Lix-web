@@ -1,0 +1,360 @@
+/* Lix Flowers — un invernadero de caracteres. */
+.flowers-layout {
+  display: grid;
+  gap: var(--space-5);
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+@media (min-width: 1040px) {
+  .flowers-layout {
+    grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr);
+  }
+
+  .flowers-stage {
+    position: sticky;
+    top: var(--space-4);
+  }
+}
+
+.flowers-stage,
+.flowers-controls {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.flowers-controls {
+  padding: clamp(var(--space-4), 0.8rem + 1vw, var(--space-5));
+  border-radius: var(--surface-radius);
+  border: var(--surface-border-width) solid var(--surface-border);
+  background: var(--surface);
+  box-shadow: var(--surface-shadow);
+}
+
+/* El escenario: un cristal de invernadero con su etiqueta de herbario debajo. */
+.flowers-player {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-lg);
+  box-shadow:
+    inset 0 0 0 1px color-mix(in oklab, white 10%, transparent),
+    var(--shadow-md);
+}
+
+.flowers-player canvas {
+  display: block;
+  width: 100%;
+}
+
+.flowers-placeholder {
+  display: grid;
+  place-items: center;
+  gap: var(--space-2);
+  min-height: 240px;
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-strong);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.flowers-placeholder svg {
+  width: 36px;
+  height: 36px;
+  opacity: 0.6;
+}
+
+.flowers-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--field-radius);
+  background: var(--hover);
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.flowers-status__icon {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  color: var(--c-secondary);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-motion='full'] .flowers-status__icon {
+    animation: flowers-sprout 1.6s var(--ease-in-out) infinite alternate;
+  }
+}
+
+@keyframes flowers-sprout {
+  from {
+    transform: translateY(2px) scale(0.92);
+  }
+  to {
+    transform: translateY(-1px) scale(1.06);
+  }
+}
+
+.flowers-transport,
+.flowers-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+}
+
+.flowers-range {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-inline-start: auto;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.flowers-range input {
+  width: clamp(110px, 22vw, 180px);
+  accent-color: var(--c-primary);
+}
+
+.flowers-range output {
+  min-width: 4.5ch;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+
+.flowers-range--block {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  margin: 0;
+}
+
+.flowers-range--block input {
+  width: 100%;
+}
+
+/* Etiqueta de herbario: qué la hizo y con qué. */
+.flowers-proof {
+  margin: 0;
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--border);
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: var(--text-xs);
+  letter-spacing: 0.02em;
+  color: var(--text-subtle);
+}
+
+/* Plantillas: cada una se presenta con su firma en caracteres. */
+.flowers-templates,
+.flowers-swatches {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.flowers-templates legend,
+.flowers-swatches legend {
+  margin-bottom: var(--space-3);
+  font-weight: 600;
+}
+
+.flowers-templates__grid {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fill, minmax(116px, 1fr));
+}
+
+.flowers-template {
+  display: grid;
+  gap: var(--space-1);
+  justify-items: center;
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--field-radius);
+  border: var(--surface-border-width) solid var(--border);
+  background: color-mix(in oklab, var(--surface-strong) 70%, transparent);
+  cursor: pointer;
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out);
+}
+
+.flowers-template pre {
+  margin: 0;
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.15;
+  color: var(--c-secondary);
+}
+
+.flowers-template.is-checked {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 1px var(--c-primary);
+  color: var(--text);
+}
+
+.flowers-template.is-checked pre {
+  color: var(--c-primary);
+}
+
+.flowers-template:has(input:focus-visible),
+.flowers-swatch:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .flowers-template:not(.is-checked):hover {
+    border-color: var(--border-strong);
+    transform: translateY(-1px);
+  }
+}
+
+.flowers-swatches__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.flowers-swatch {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 64px;
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.flowers-swatch__chip {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-strong);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.flowers-swatch.is-checked {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.flowers-swatch.is-checked .flowers-swatch__chip {
+  box-shadow: 0 0 0 2px var(--c-primary);
+}
+
+.flowers-swatch--input input {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  cursor: pointer;
+}
+
+.flowers-swatch__label {
+  text-align: center;
+  line-height: 1.2;
+}
+
+.flowers-more {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.flowers-more[open] {
+  padding-top: var(--space-1);
+}
+
+.flowers-more > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-muted);
+  min-height: var(--tap);
+  display: flex;
+  align-items: center;
+}
+
+.flowers-more[open] > *:not(summary) + * {
+  margin-top: var(--space-4);
+}
+
+/* Elegir imagen */
+.flowers-picker {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.flowers-drop {
+  display: grid;
+  place-items: center;
+  gap: var(--space-1);
+  padding: var(--space-6) var(--space-4);
+  border: 2px dashed var(--border-strong);
+  border-radius: var(--field-radius);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-base) var(--ease-out),
+    background-color var(--dur-base) var(--ease-out);
+}
+
+.flowers-drop svg {
+  width: 28px;
+  height: 28px;
+  color: var(--c-secondary);
+}
+
+.flowers-drop.is-dragging,
+.flowers-drop:hover {
+  border-color: var(--c-primary);
+  background: var(--hover);
+}
+
+.flowers-drop:has(+ input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.flowers-drop__title {
+  font-weight: 600;
+}
+
+.flowers-picker__preview {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  margin: 0;
+}
+
+.flowers-picker__preview img {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+}
+
+.flowers-picker__preview figcaption {
+  display: grid;
+  min-width: 0;
+}
+
+.flowers-picker__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.flowers-picker__change {
+  justify-self: start;
+  cursor: pointer;
+}

@@ -24,7 +24,8 @@ const EXCLUDED = [/\.map$/, /^service-worker\.js$/, /(^|\/)\./];
 
 export const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self'",
+  // 'wasm-unsafe-eval' solo permite compilar WebAssembly (Python de Lix Flowers); eval() de JS sigue bloqueado.
+  "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self'",
   "img-src 'self' data: blob:",
   "font-src 'self'",

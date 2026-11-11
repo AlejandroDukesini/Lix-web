@@ -8,7 +8,13 @@
  *   3. Añade su <Route> en AppRoutes (App.jsx), con lazy() para cargarlo bajo demanda.
  * Un módulo 'soon' nunca genera una ruta: no es posible navegar a una pantalla inexistente.
  */
-import { CalendarHeart, Gamepad2, HeartPulse, House, LayoutDashboard, Library, NotebookPen, Settings, StickyNote, Wallet } from 'lucide-react';
+import { CalendarHeart, Flower2, Gamepad2, HeartPulse, House, LayoutDashboard, Library, NotebookPen, Settings, StickyNote, Wallet } from 'lucide-react';
+
+/** Grupos de la navegación (los módulos sin `group` van arriba, sueltos). */
+export const NAV_GROUPS = [
+  { id: 'organizer', label: 'Organización' },
+  { id: 'studio', label: 'Taller creativo' },
+];
 
 export const MODULES = [
   {
@@ -87,6 +93,15 @@ export const MODULES = [
     status: 'available',
     group: 'organizer',
     teaser: 'Reconocer lo que sientes y verlo con el tiempo, sin juicios.',
+  },
+  {
+    id: 'flowers',
+    path: '/flores',
+    label: 'Lix Flowers',
+    icon: Flower2,
+    status: 'available',
+    group: 'studio',
+    teaser: 'Flores hechas de caracteres: plantillas o tus fotos, animadas con Python.',
   },
   {
     id: 'settings',
