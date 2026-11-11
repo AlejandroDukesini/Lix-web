@@ -8,6 +8,7 @@ import { AppNotices } from '../feedback/AppNotices.jsx';
 // En las pruebas unitarias no se monta (sus temporizadores tocarían la base de datos entre pruebas);
 // su lógica se prueba por separado (reminders/schedule.js).
 const ReminderRunner = lazy(() => import('../../features/organizer/reminders/ReminderRunner.jsx').then((m) => ({ default: m.ReminderRunner })));
+const TipsRunner = lazy(() => import('../../features/tips/TipsRunner.jsx').then((m) => ({ default: m.TipsRunner })));
 const RUN_REMINDERS = import.meta.env.MODE !== 'test';
 
 /**
@@ -49,6 +50,7 @@ export function AppShell() {
       {RUN_REMINDERS && (
         <Suspense fallback={null}>
           <ReminderRunner />
+          <TipsRunner />
         </Suspense>
       )}
     </div>

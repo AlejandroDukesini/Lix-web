@@ -362,6 +362,7 @@ try {
     ['notas', 'Notas'],
     ['diario', 'Diario'],
     ['emociones', 'Diario emocional'],
+    ['consejos', 'Consejos diarios'],
     ['academico/horario', 'Control académico'],
     ['academico/calendario', 'Control académico'],
   ];

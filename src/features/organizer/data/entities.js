@@ -35,6 +35,7 @@ import {
   dates,
 } from './fields.js';
 import { recurrence } from './recurrence.js';
+import { TIP_CATEGORIES } from '../../tips/content/tips.js';
 
 export const MODULES = Object.freeze({
   finance: 'Finanzas',
@@ -43,6 +44,7 @@ export const MODULES = Object.freeze({
   journal: 'Diario personal',
   emotions: 'Diario emocional',
   studio: 'Taller creativo (Lix Flowers y Lix AI Studio)',
+  tips: 'Consejos diarios',
   organizer: 'Organización (ajustes)',
 });
 
@@ -673,6 +675,60 @@ const creation = {
 };
 
 /* ----------------------------------------------------------------------------------- */
+/* Consejos diarios                                                                      */
+/* ----------------------------------------------------------------------------------- */
+
+export const TIP_CATEGORY_IDS = Object.keys(TIP_CATEGORIES);
+export const TIP_FREQUENCIES = [15, 30, 60, 120, 180, 240, 360, 1440];
+
+const tip = {
+  module: 'tips',
+  label: 'consejo propio',
+  plural: 'consejos propios',
+  shape: {
+    text: text({ max: 280, required: true, label: 'El consejo' }),
+    category: oneOf(TIP_CATEGORY_IDS, 'reflexion', 'La categoría'),
+  },
+};
+
+/** Hora HH:MM con valor por defecto (los ajustes siempre tienen un horario). */
+const clock = (fallback, label) => (raw) => (typeof raw === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(raw) ? { value: raw, error: null } : { value: fallback, error: raw == null || raw === '' ? null : `${label} no es válida (usa HH:MM).` });
+/** Subconjunto de opciones; vacío o inválido → todas (nunca se queda sin días ni categorías por error). */
+const subset = (all) => (raw) => {
+  const value = Array.isArray(raw) ? all.filter((v) => raw.includes(v)) : [];
+  return { value: value.length ? value : [...all], error: null };
+};
+
+const tipsSettingsKind = {
+  tipSettings: {
+    module: 'tips',
+    shape: {
+      enabled: bool(true),
+      inApp: bool(true),
+      notifications: bool(false),
+      frequencyMinutes: oneOf(TIP_FREQUENCIES, 60, 'La frecuencia'),
+      startTime: clock('08:00', 'La hora de inicio'),
+      endTime: clock('21:00', 'La hora de fin'),
+      days: subset([0, 1, 2, 3, 4, 5, 6]),
+      categories: subset(TIP_CATEGORY_IDS),
+    },
+    check(value) {
+      if (value.endTime <= value.startTime) return { endTime: 'La hora de fin debe ser posterior a la de inicio.' };
+      return null;
+    },
+  },
+  /** Estado: favoritos (de la colección o propios), historial (últimos 200) y última franja mostrada. */
+  tipState: {
+    module: 'tips',
+    shape: {
+      favorites: refs({ max: 500 }),
+      history: list({ tipId: ref({ required: true }), shownAt: dateTime({ required: true }), channel: oneOf(['app', 'system', 'manual', 'android'], 'app') }, { max: 200, label: 'El historial' }),
+      lastSlot: text({ max: 40 }),
+    },
+  },
+};
+
+/* ----------------------------------------------------------------------------------- */
 /* Ajustes (un registro por tipo)                                                        */
 /* ----------------------------------------------------------------------------------- */
 
@@ -773,6 +829,7 @@ const settingsKinds = {
   },
 };
 
+Object.assign(settingsKinds, tipsSettingsKind);
 for (const kind of Object.values(settingsKinds)) kind.singleton = true;
 
 export const ENTITIES = Object.freeze({
@@ -798,6 +855,7 @@ export const ENTITIES = Object.freeze({
   emotion,
   emotionLog,
   creation,
+  tip,
   ...settingsKinds,
 });
 
