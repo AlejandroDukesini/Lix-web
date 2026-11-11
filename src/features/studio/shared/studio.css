@@ -10,6 +10,7 @@
 
 .creation-card {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr auto;
   overflow: hidden;
   border-radius: var(--surface-radius);
@@ -21,6 +22,8 @@
 .creation-card__media {
   display: grid;
   place-items: center;
+  min-width: 0;
+  overflow: hidden;
   aspect-ratio: 4 / 3;
   background: var(--bg-deep, #111);
 }

@@ -701,6 +701,17 @@ const settingsKinds = {
       showDetails: bool(true),
     },
   },
+  studioSettings: {
+    module: 'studio',
+    shape: {
+      provider: oneOf(['procedural', 'server'], 'procedural'),
+      protocol: oneOf(['a1111', 'openai'], 'a1111'),
+      serverUrl: text({ max: 200 }),
+      model: text({ max: 80 }),
+      steps: int({ min: 1, max: 80, fallback: 20 }),
+      size: oneOf(['square', 'landscape', 'portrait'], 'landscape'),
+    },
+  },
   privacySettings: {
     module: 'organizer',
     shape: {

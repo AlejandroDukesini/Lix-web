@@ -26,6 +26,7 @@ const EmotionsPage = lazy(() => import('../features/organizer/emotions/EmotionsP
 const DashboardPage = lazy(() => import('../features/organizer/dashboard/DashboardPage.jsx'));
 // Taller creativo. Lix Flowers carga Python (Pyodide) solo al entrar.
 const FlowersPage = lazy(() => import('../features/flowers/FlowersPage.jsx'));
+const AiStudioPage = lazy(() => import('../features/studio/ai/AiStudioPage.jsx'));
 
 function PageFallback() {
   return (
@@ -167,6 +168,14 @@ function AppRoutes() {
           element={
             <Suspense fallback={<PageFallback />}>
               <FlowersPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="estudio"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <AiStudioPage />
             </Suspense>
           }
         />

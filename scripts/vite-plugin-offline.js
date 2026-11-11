@@ -29,7 +29,9 @@ export const CONTENT_SECURITY_POLICY = [
   "style-src 'self'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self'",
+  // Lix AI Studio solo puede conectarse a un servidor de IA propio: este computador (cualquier puerto)
+  // o un equipo de la red en los puertos de Stable Diffusion WebUI (7860) o LocalAI (8080). Nada más.
+  "connect-src 'self' http://localhost:* http://127.0.0.1:* http://*:7860 http://*:8080",
   "media-src 'self' blob:",
   "worker-src 'self'",
   "manifest-src 'self'",

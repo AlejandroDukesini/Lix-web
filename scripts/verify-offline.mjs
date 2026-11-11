@@ -17,6 +17,7 @@
  * Uso: npm run test:e2e   (capturas en test-results/screenshots; SCREENSHOT_DIR para cambiarlo)
  */
 import { existsSync, mkdirSync } from 'node:fs';
+import { createServer } from 'node:http';
 import path from 'node:path';
 import { preview } from 'vite';
 import { chromium } from 'playwright-core';
@@ -413,6 +414,13 @@ try {
   await page.reload();
   await page.locator('.creation-card').filter({ hasText: 'Girasol' }).first().waitFor({ timeout: 15000 });
   check('Sin conexión: la animación (GIF hecho con Pillow) se guarda en el herbario y sigue tras recargar', true);
+  await page.goto(`${baseUrl}#/estudio`);
+  await page.getByLabel('Describe la imagen').fill('Un jardín de rosas al atardecer');
+  await page.getByRole('button', { name: 'Generar', exact: true }).click();
+  await page.getByText('Procedural · no es IA').waitFor({ timeout: 15000 });
+  check('Sin conexión: AI Studio genera con el pintor procedural y lo guarda en el historial', (await page.locator('.creation-card').count()) >= 1);
+  check('AI Studio móvil: sin desplazamiento horizontal', await noHorizontalScroll(page));
+  await page.screenshot({ path: `${SHOTS}/m-ai-studio.png`, fullPage: true });
   check('Lix Flowers móvil: sin desplazamiento horizontal', await noHorizontalScroll(page));
   await page.screenshot({ path: `${SHOTS}/m-flowers.png`, fullPage: true });
 
@@ -612,6 +620,49 @@ try {
   });
   check('Estadísticas: fichas a todo el ancho y sin textos cortados', stats.ratio > 0.95 && stats.cut === 0, JSON.stringify(stats));
 
+  // Lix AI Studio con un servidor de IA propio. No hay ningún modelo real en esta máquina: se simula un
+  // Stable Diffusion WebUI en localhost:7860 (mismo protocolo y CORS) para probar CSP, conexión y flujo.
+  const fakeSd = createServer((req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    if (req.method === 'OPTIONS') return res.end();
+    res.setHeader('Content-Type', 'application/json');
+    if (req.url === '/sdapi/v1/sd-models') return res.end(JSON.stringify([{ model_name: 'modelo-simulado' }]));
+    if (req.url === '/sdapi/v1/txt2img') {
+      let body = '';
+      req.on('data', (chunk) => (body += chunk));
+      req.on('end', () => {
+        fakeSd.lastPrompt = JSON.parse(body).prompt;
+        res.end(JSON.stringify({ images: ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=='] }));
+      });
+      return undefined;
+    }
+    res.statusCode = 404;
+    return res.end('{}');
+  });
+  await new Promise((resolve) => fakeSd.listen(7860, '127.0.0.1', resolve));
+  const aiPage = await desktop.newPage();
+  const aiIssues = watch(aiPage, 'ai');
+  await aiPage.goto(`${baseUrl}#/estudio`);
+  await aiPage.getByRole('heading', { level: 1, name: 'Lix AI Studio' }).waitFor();
+  await aiPage.getByLabel('Describe la imagen').fill('Montañas nevadas bajo un cielo estrellado');
+  await aiPage.getByRole('button', { name: 'Generar', exact: true }).click();
+  await aiPage.getByText('Procedural · no es IA').waitFor({ timeout: 15000 });
+  check('AI Studio: el pintor procedural genera la imagen y la etiqueta como «no es IA»', (await aiPage.locator('.ai-result__figure img').evaluate((img) => img.naturalWidth)) === 768);
+  await aiPage.screenshot({ path: `${SHOTS}/d-ai-procedural.png`, fullPage: true });
+  await aiPage.locator('.ai-engine').filter({ hasText: 'Servidor de IA' }).click();
+  await aiPage.getByLabel('Dirección del servidor').fill('http://127.0.0.1:7860');
+  await aiPage.getByRole('button', { name: 'Probar conexión' }).click();
+  await aiPage.getByText(/Conectado\. Modelos: modelo-simulado/).waitFor({ timeout: 10000 });
+  await aiPage.getByRole('button', { name: 'Generar', exact: true }).click();
+  await aiPage.getByText('IA · Stable Diffusion (servidor propio)').waitFor({ timeout: 15000 });
+  check('AI Studio: la CSP permite el servidor local y la imagen se etiqueta como IA (servidor simulado)', fakeSd.lastPrompt === 'Montañas nevadas bajo un cielo estrellado');
+  check('AI Studio: solo se contacta el servidor configurado', aiIssues.external.every((url) => url.startsWith('http://127.0.0.1:7860/')), aiIssues.external.join(', '));
+  check('AI Studio: sin errores en consola', aiIssues.errors.length === 0, aiIssues.errors.join(' | '));
+  await aiPage.screenshot({ path: `${SHOTS}/d-ai-server.png`, fullPage: true });
+  await new Promise((resolve) => fakeSd.close(resolve));
+
   // Datos corruptos no rompen la app
   await deskPage.evaluate(() => localStorage.setItem('uamc:preferences', '{esto no es json'));
   await deskPage.reload();
@@ -621,6 +672,7 @@ try {
 
   check('Escritorio: ninguna petición externa', deskIssues.external.length === 0, deskIssues.external.join(', '));
   check('Escritorio: sin errores en consola', deskIssues.errors.length === 0, deskIssues.errors.join(' | '));
+
   await desktop.close();
 } catch (error) {
   check('Ejecución de la verificación', false, error.message);
