@@ -362,16 +362,18 @@ try {
     ['notas', 'Notas'],
     ['diario', 'Diario'],
     ['emociones', 'Diario emocional'],
+    ['academico/horario', 'Control académico'],
+    ['academico/calendario', 'Control académico'],
   ];
   const organizerProblems = [];
   for (const [route, title] of organizerPages) {
     await page.goto(`${baseUrl}#/${route}`);
     await page.getByRole('heading', { level: 1, name: title, exact: true }).waitFor({ timeout: 8000 });
     await page.waitForTimeout(400);
-    await page.screenshot({ path: `${SHOTS}/m-org-${route}.png`, fullPage: true });
+    await page.screenshot({ path: `${SHOTS}/m-org-${route.replaceAll('/', '-')}.png`, fullPage: true });
     if (!(await noHorizontalScroll(page))) organizerProblems.push(`${route}: desplazamiento horizontal`);
   }
-  check('Sin conexión: los seis espacios de organización se abren sin desplazamiento horizontal', organizerProblems.length === 0, organizerProblems.join(' | '));
+  check('Sin conexión: los espacios de organización (y el Control académico) se abren sin desplazamiento horizontal', organizerProblems.length === 0, organizerProblems.join(' | '));
 
   // Crear datos sin conexión y comprobar que siguen ahí tras recargar.
   await page.goto(`${baseUrl}#/notas/nueva`);
@@ -417,7 +419,7 @@ try {
   await page.goto(`${baseUrl}#/estudio`);
   await page.getByLabel('Describe la imagen').fill('Un jardín de rosas al atardecer');
   await page.getByRole('button', { name: 'Generar', exact: true }).click();
-  await page.getByText('Procedural · no es IA').waitFor({ timeout: 15000 });
+  await page.locator('.ai-result__figure').getByText('Procedural · no es IA').waitFor({ timeout: 15000 });
   check('Sin conexión: AI Studio genera con el pintor procedural y lo guarda en el historial', (await page.locator('.creation-card').count()) >= 1);
   check('AI Studio móvil: sin desplazamiento horizontal', await noHorizontalScroll(page));
   await page.screenshot({ path: `${SHOTS}/m-ai-studio.png`, fullPage: true });
@@ -525,7 +527,7 @@ try {
       },
       [style, theme],
     );
-    for (const [route, title] of [['organizar', 'Organización'], ['finanzas', 'Finanzas'], ['calendario', 'Calendario'], ['notas', 'Notas'], ['diario', 'Diario'], ['emociones', 'Diario emocional']]) {
+    for (const [route, title] of [['organizar', 'Organización'], ['finanzas', 'Finanzas'], ['calendario', 'Calendario'], ['notas', 'Notas'], ['diario', 'Diario'], ['emociones', 'Diario emocional'], ['academico', 'Control académico'], ['flores', 'Lix Flowers — Animaciones'], ['estudio', 'Lix AI Studio']]) {
       await deskPage.goto(`${baseUrl}#/${route}`);
       await deskPage.reload();
       await deskPage.getByRole('heading', { level: 1, name: title, exact: true }).waitFor();
@@ -535,7 +537,7 @@ try {
       if (!(await noHorizontalScroll(deskPage))) orgDeskProblems.push(`${route} ${style}/${theme}`);
     }
   }
-  check('Organización escritorio: seis espacios × cuatro estilos sin desplazamiento horizontal', orgDeskProblems.length === 0, orgDeskProblems.join(' | '));
+  check('Organización, Control académico y Taller creativo en escritorio × cuatro estilos sin desplazamiento horizontal', orgDeskProblems.length === 0, orgDeskProblems.join(' | '));
 
   // Game Center en escritorio: biblioteca sin desplazamiento horizontal y fases futuras sin enlaces.
   await deskPage.goto(`${baseUrl}#/juegos`);
@@ -648,7 +650,7 @@ try {
   await aiPage.getByRole('heading', { level: 1, name: 'Lix AI Studio' }).waitFor();
   await aiPage.getByLabel('Describe la imagen').fill('Montañas nevadas bajo un cielo estrellado');
   await aiPage.getByRole('button', { name: 'Generar', exact: true }).click();
-  await aiPage.getByText('Procedural · no es IA').waitFor({ timeout: 15000 });
+  await aiPage.locator('.ai-result__figure').getByText('Procedural · no es IA').waitFor({ timeout: 15000 });
   check('AI Studio: el pintor procedural genera la imagen y la etiqueta como «no es IA»', (await aiPage.locator('.ai-result__figure img').evaluate((img) => img.naturalWidth)) === 768);
   await aiPage.screenshot({ path: `${SHOTS}/d-ai-procedural.png`, fullPage: true });
   await aiPage.locator('.ai-engine').filter({ hasText: 'Servidor de IA' }).click();
@@ -656,7 +658,7 @@ try {
   await aiPage.getByRole('button', { name: 'Probar conexión' }).click();
   await aiPage.getByText(/Conectado\. Modelos: modelo-simulado/).waitFor({ timeout: 10000 });
   await aiPage.getByRole('button', { name: 'Generar', exact: true }).click();
-  await aiPage.getByText('IA · Stable Diffusion (servidor propio)').waitFor({ timeout: 15000 });
+  await aiPage.locator('.ai-result__figure').getByText('IA · Stable Diffusion (servidor propio)').waitFor({ timeout: 15000 });
   check('AI Studio: la CSP permite el servidor local y la imagen se etiqueta como IA (servidor simulado)', fakeSd.lastPrompt === 'Montañas nevadas bajo un cielo estrellado');
   check('AI Studio: solo se contacta el servidor configurado', aiIssues.external.every((url) => url.startsWith('http://127.0.0.1:7860/')), aiIssues.external.join(', '));
   check('AI Studio: sin errores en consola', aiIssues.errors.length === 0, aiIssues.errors.join(' | '));

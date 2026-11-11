@@ -38,7 +38,7 @@ import { recurrence } from './recurrence.js';
 
 export const MODULES = Object.freeze({
   finance: 'Finanzas',
-  planner: 'Calendario y universidad',
+  planner: 'Calendario y control académico',
   notes: 'Notas',
   journal: 'Diario personal',
   emotions: 'Diario emocional',
@@ -341,6 +341,8 @@ const subject = {
     teacher: text({ max: 80 }),
     teacherContact: text({ max: 120 }),
     room: text({ max: 60 }),
+    building: text({ max: 60 }),
+    description: text({ max: 1000 }),
     semester: text({ max: 40 }),
     color: color('#ef6f8c'),
     startDate: date({ label: 'El inicio de clases' }),
@@ -351,6 +353,7 @@ const subject = {
         start: (raw) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(raw ?? '') ? { value: raw, error: null } : { value: null, error: 'Indica la hora de inicio de la clase.' }),
         end: (raw) => (/^([01]\d|2[0-3]):[0-5]\d$/.test(raw ?? '') ? { value: raw, error: null } : { value: null, error: 'Indica la hora de fin de la clase.' }),
         room: text({ max: 60 }),
+        building: text({ max: 60 }),
       },
       { max: 14, label: 'El horario' },
     ),
@@ -366,7 +369,7 @@ const subject = {
   },
 };
 
-export const ACTIVITY_TYPES = ['assignment', 'exam', 'midterm', 'presentation', 'delivery', 'reading', 'other'];
+export const ACTIVITY_TYPES = ['assignment', 'midterm', 'exam', 'presentation', 'project', 'delivery', 'reading', 'research', 'other'];
 
 const activity = {
   module: 'planner',
@@ -388,6 +391,28 @@ const activity = {
     completedAt: dateTime(),
   },
   refs: [{ field: 'subjectId', kind: 'subject', onDelete: 'unlink' }],
+};
+
+/** Festivos, eventos académicos y fechas importantes (Control académico). Se registran a mano: la app no los inventa. */
+export const ACADEMIC_DATE_TYPES = ['holiday', 'academic', 'important'];
+
+const academicDate = {
+  module: 'planner',
+  label: 'fecha académica',
+  plural: 'fechas académicas',
+  shape: {
+    type: oneOf(ACADEMIC_DATE_TYPES, 'holiday', 'El tipo'),
+    name: text({ max: 120, required: true, label: 'El nombre' }),
+    date: date({ required: true, label: 'La fecha' }),
+    endDate: date({ label: 'La fecha final' }),
+    yearly: bool(false),
+    region: text({ max: 60 }),
+    notes: text({ max: 1000 }),
+  },
+  check(value) {
+    if (value.endDate && value.endDate < value.date) return { endDate: 'La fecha final no puede ser anterior a la inicial.' };
+    return null;
+  },
 };
 
 const task = {
@@ -473,6 +498,20 @@ const collection = {
   },
 };
 
+/** Cuaderno digital (normalmente uno por asignatura). Sus páginas son notas normales con `notebookId`. */
+const notebook = {
+  module: 'notes',
+  label: 'cuaderno',
+  plural: 'cuadernos',
+  shape: {
+    name: text({ max: 80, required: true, label: 'El nombre' }),
+    subjectId: ref(),
+    color: color('#8e5bd8'),
+    description: text({ max: 280 }),
+  },
+  refs: [{ field: 'subjectId', kind: 'subject', onDelete: 'unlink' }],
+};
+
 const note = {
   module: 'notes',
   label: 'nota',
@@ -490,9 +529,12 @@ const note = {
     archived: bool(false),
     trashedAt: dateTime(),
     eventId: ref(),
+    notebookId: ref(),
+    noteDate: date({ label: 'La fecha de la nota' }),
   },
   refs: [
     { field: 'folderId', kind: 'folder', onDelete: 'reparent', via: 'parentId' },
+    { field: 'notebookId', kind: 'notebook', onDelete: 'unlink' },
     { field: 'categoryId', kind: 'noteCategory', onDelete: 'unlink' },
     { field: 'collectionIds', kind: 'collection', many: true, onDelete: 'unlink' },
     { field: 'eventId', kind: 'event', onDelete: 'unlink' },
@@ -701,6 +743,12 @@ const settingsKinds = {
       showDetails: bool(true),
     },
   },
+  academicSettings: {
+    module: 'planner',
+    shape: {
+      region: text({ max: 60 }),
+    },
+  },
   studioSettings: {
     module: 'studio',
     shape: {
@@ -738,10 +786,12 @@ export const ENTITIES = Object.freeze({
   event,
   subject,
   activity,
+  academicDate,
   task,
   folder,
   noteCategory,
   collection,
+  notebook,
   note,
   journalEntry,
   journalTemplate,

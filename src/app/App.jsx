@@ -24,6 +24,7 @@ const NotesPage = lazy(() => import('../features/organizer/notes/NotesPage.jsx')
 const JournalPage = lazy(() => import('../features/organizer/journal/JournalPage.jsx'));
 const EmotionsPage = lazy(() => import('../features/organizer/emotions/EmotionsPage.jsx'));
 const DashboardPage = lazy(() => import('../features/organizer/dashboard/DashboardPage.jsx'));
+const AcademicPage = lazy(() => import('../features/academic/AcademicPage.jsx'));
 // Taller creativo. Lix Flowers carga Python (Pyodide) solo al entrar.
 const FlowersPage = lazy(() => import('../features/flowers/FlowersPage.jsx'));
 const AiStudioPage = lazy(() => import('../features/studio/ai/AiStudioPage.jsx'));
@@ -128,6 +129,14 @@ function AppRoutes() {
           element={
             <Suspense fallback={<PageFallback />}>
               <PlannerPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="academico/*"
+          element={
+            <Suspense fallback={<PageFallback />}>
+              <AcademicPage />
             </Suspense>
           }
         />

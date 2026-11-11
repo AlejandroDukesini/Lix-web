@@ -24,8 +24,10 @@ export const ACTIVITY_LABELS = {
   exam: 'Examen',
   midterm: 'Parcial',
   presentation: 'Exposición',
+  project: 'Proyecto',
   delivery: 'Entrega',
   reading: 'Lectura',
+  research: 'Investigación',
   other: 'Actividad',
 };
 

@@ -3,18 +3,18 @@ import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-r
 import { Archive, ArchiveRestore, ArrowLeft, BookOpenText, Copy, PenLine, Pin, PinOff, RotateCcw, Star, Trash2 } from 'lucide-react';
 import { Button, IconButton } from '../../../../components/common/Button.jsx';
 import { commit, createRecord, deleteRecord, duplicateRecord, getRecord, updateRecord } from '../../data/store.js';
-import { useRecord, useRunner } from '../../data/hooks.js';
-import { ChipGroup, ColorPicker, SelectField, TagsField } from '../../shared/Fields.jsx';
+import { useKind, useRecord, useRunner } from '../../data/hooks.js';
+import { ChipGroup, ColorPicker, InputField, SelectField, TagsField } from '../../shared/Fields.jsx';
 import { MarkdownEditor } from '../../shared/MarkdownEditor.jsx';
 import { ActionMenu, SaveIndicator } from '../../shared/ui.jsx';
 import { useAutosave } from '../../shared/useAutosave.js';
-import { dateTimeLabel, shortDate } from '../../shared/format.js';
+import { dateTimeLabel, shortDate, todayISO } from '../../shared/format.js';
 import { tagCounts } from '../../data/tags.js';
 import { moveToTrash, restoreFromTrash, setArchived } from '../../shared/lifecycle.js';
 import { useNotes } from '../useNotes.js';
 
 const openEditors = new Map();
-const FIELDS = ['title', 'content', 'folderId', 'categoryId', 'collectionIds', 'tags', 'color', 'eventId'];
+const FIELDS = ['title', 'content', 'folderId', 'categoryId', 'collectionIds', 'tags', 'color', 'eventId', 'notebookId', 'noteDate'];
 
 /** /notas/nueva: crea la nota (con carpeta o evento de origen) y abre el editor. */
 export function NewNote() {
@@ -26,10 +26,14 @@ export function NewNote() {
     started.current = true;
     const folderId = params.get('carpeta');
     const eventId = params.get('evento');
+    // Desde un cuaderno del Control académico: la nota nace en ese cuaderno y con la fecha de hoy.
+    const notebookId = getRecord(params.get('cuaderno'))?.kind === 'notebook' ? params.get('cuaderno') : null;
     createRecord('note', {
       title: eventId ? `Notas: ${getRecord(eventId)?.title ?? ''}`.slice(0, 160) : '',
       folderId: getRecord(folderId) ? folderId : null,
       eventId: getRecord(eventId) ? eventId : null,
+      notebookId,
+      noteDate: notebookId ? todayISO() : null,
     }).then((note) => navigate(`/notas/${note.id}?nueva=1`, { replace: true }));
   }, [params, navigate]);
   return <div className="org-loading" role="status" aria-label="Creando nota" />;
@@ -45,6 +49,7 @@ export function NoteEditor() {
 
 function Editor({ note, isNew }) {
   const data = useNotes();
+  const notebooks = useKind('notebook');
   const run = useRunner();
   const navigate = useNavigate();
   const [mode, setMode] = useState(note.content ? 'read' : 'edit');
@@ -78,12 +83,19 @@ function Editor({ note, isNew }) {
   }, [values.title]);
 
   const tags = tagCounts(data.notes).map((t) => t.tag);
+  const notebook = notebooks.find((n) => n.id === values.notebookId);
   return (
     <article className="org-stack org-note-editor" aria-label="Editor de nota">
       <div className="org-toolbar org-toolbar--split">
-        <Button to="/notas" variant="ghost" size="sm" icon={ArrowLeft}>
-          Todas las notas
-        </Button>
+        {notebook ? (
+          <Button to={`/academico/cuadernos/${notebook.id}`} variant="ghost" size="sm" icon={ArrowLeft}>
+            Cuaderno: {notebook.name}
+          </Button>
+        ) : (
+          <Button to="/notas" variant="ghost" size="sm" icon={ArrowLeft}>
+            Todas las notas
+          </Button>
+        )}
         <SaveIndicator state={autosave.state} savedAt={autosave.savedAt} />
         <div className="org-toolbar__end">
           {!trashed && (
@@ -204,8 +216,12 @@ function Editor({ note, isNew }) {
 
       {!trashed && (
         <details className="org-more org-panel" open={isNew ? false : undefined}>
-          <summary>Organizar: carpeta, categoría, colecciones, etiquetas, color y evento</summary>
+          <summary>Organizar: cuaderno, carpeta, categoría, colecciones, etiquetas, color y evento</summary>
           <div className="org-more__body">
+            <div className="org-form__row">
+              <SelectField label="Cuaderno" value={values.notebookId} onChange={(notebookId) => update({ notebookId })} placeholder="Sin cuaderno" options={notebooks.map((n) => ({ value: n.id, label: n.name }))} />
+              <InputField label="Fecha de la nota" type="date" value={values.noteDate ?? ''} onChange={(noteDate) => update({ noteDate: noteDate || null })} hint="Por ejemplo, el día de la clase." />
+            </div>
             <div className="org-form__row">
               <SelectField label="Carpeta" value={values.folderId} onChange={(folderId) => update({ folderId })} placeholder="Sin carpeta" options={data.folderOptions} />
               <SelectField label="Categoría" value={values.categoryId} onChange={(categoryId) => update({ categoryId })} placeholder="Sin categoría" options={data.categories.map((c) => ({ value: c.id, label: c.name }))} />

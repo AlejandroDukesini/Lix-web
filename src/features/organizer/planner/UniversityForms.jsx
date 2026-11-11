@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { CircleAlert, Plus, X } from 'lucide-react';
 import { Button, IconButton } from '../../../components/common/Button.jsx';
 import { commit } from '../data/store.js';
 import { useRunner } from '../data/hooks.js';
@@ -9,12 +9,15 @@ import { FormDialog } from '../shared/ui.jsx';
 import { PRIORITY_LABELS } from '../shared/format.js';
 import { ACTIVITY_LABELS } from './agenda.js';
 import { usePlanner } from './usePlanner.js';
+import { conflictsFor } from '../../academic/academicLogic.js';
+import { formatClock } from '../shared/format.js';
 
 export const WEEKDAY_NAMES = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
 export const ACTIVITY_STATUS = { pending: 'Pendiente', in_progress: 'En curso', done: 'Hecha', cancelled: 'Cancelada' };
 
 export function SubjectForm({ open, onClose, initial }) {
   const run = useRunner();
+  const planner = usePlanner();
   const isEdit = Boolean(initial?.id);
   const [draft, setDraft] = useState(null);
   const [errors, setErrors] = useState(null);
@@ -25,6 +28,8 @@ export function SubjectForm({ open, onClose, initial }) {
       teacher: initial?.teacher ?? '',
       teacherContact: initial?.teacherContact ?? '',
       room: initial?.room ?? '',
+      building: initial?.building ?? '',
+      description: initial?.description ?? '',
       semester: initial?.semester ?? '',
       color: initial?.color ?? '#ef6f8c',
       startDate: initial?.startDate ?? '',
@@ -37,6 +42,19 @@ export function SubjectForm({ open, onClose, initial }) {
   if (!draft) return null;
   const set = (patch) => setDraft((d) => ({ ...d, ...patch }));
   const setSlot = (index, patch) => set({ schedule: draft.schedule.map((s, i) => (i === index ? { ...s, ...patch } : s)) });
+  return <SubjectFormBody {...{ open, onClose, initial, isEdit, draft, set, setSlot, errors, setErrors, run, planner }} />;
+}
+
+function SubjectFormBody({ open, onClose, initial, isEdit, draft, set, setSlot, errors, setErrors, run, planner }) {
+  // Choques con otras materias mientras se edita el horario (aviso, no bloqueo).
+  const clashes = useMemo(
+    () =>
+      conflictsFor(
+        { ...draft, id: initial?.id, schedule: draft.schedule.filter((s) => /^\d\d:\d\d$/.test(s.start ?? '') && /^\d\d:\d\d$/.test(s.end ?? '') && s.end > s.start), startDate: draft.startDate || null, endDate: draft.endDate || null },
+        planner.subjects,
+      ),
+    [draft, initial?.id, planner.subjects],
+  );
   const submit = async () => {
     const data = { ...draft, startDate: draft.startDate || null, endDate: draft.endDate || null };
     const { ok, errors: e } = await run(() => commit((tx) => (isEdit ? tx.update(initial.id, data) : tx.create('subject', data))), { success: isEdit ? 'Materia actualizada' : 'Materia creada' });
@@ -55,8 +73,10 @@ export function SubjectForm({ open, onClose, initial }) {
       </div>
       <div className="org-form__row">
         <InputField label="Salón habitual" value={draft.room} onChange={(room) => set({ room })} maxLength={60} />
+        <InputField label="Edificio" value={draft.building} onChange={(building) => set({ building })} maxLength={60} />
         <InputField label="Semestre" value={draft.semester} onChange={(semester) => set({ semester })} maxLength={40} placeholder="Ej.: 2026-1" />
       </div>
+      <TextAreaField label="Descripción" value={draft.description} onChange={(description) => set({ description })} rows={2} maxLength={1000} />
       <div className="org-form__row">
         <InputField label="Inicio de clases" type="date" value={draft.startDate} onChange={(startDate) => set({ startDate })} hint="Las clases aparecen en el calendario entre estas fechas." />
         <InputField label="Fin de clases" type="date" value={draft.endDate} onChange={(endDate) => set({ endDate })} error={errors?.endDate} />
@@ -71,10 +91,26 @@ export function SubjectForm({ open, onClose, initial }) {
             <InputField label="Desde" type="time" value={slot.start ?? ''} onChange={(start) => setSlot(index, { start })} />
             <InputField label="Hasta" type="time" value={slot.end ?? ''} onChange={(end) => setSlot(index, { end })} />
             <InputField label="Salón" value={slot.room ?? ''} onChange={(room) => setSlot(index, { room })} maxLength={60} placeholder={draft.room} />
+            <InputField label="Edificio" value={slot.building ?? ''} onChange={(building) => setSlot(index, { building })} maxLength={60} placeholder={draft.building} />
             <IconButton icon={X} label={`Quitar la clase del ${WEEKDAY_NAMES[slot.weekday].toLowerCase()}`} onClick={() => set({ schedule: draft.schedule.filter((_, i) => i !== index) })} />
           </div>
         ))}
         {errors?.schedule && <p className="field__error">{errors.schedule}</p>}
+        {clashes.length > 0 && (
+          <p className="org-banner org-banner--warning" role="status">
+            <CircleAlert aria-hidden="true" />
+            <span>
+              Choque de horario:{' '}
+              {clashes
+                .map((c) => {
+                  const other = c.a.subject.id === (initial?.id ?? '__nueva__') ? c.b.subject : c.a.subject;
+                  return `${WEEKDAY_NAMES[c.weekday]} con ${other.name} (${formatClock(c.from, planner.hourCycle)}–${formatClock(c.to, planner.hourCycle)})`;
+                })
+                .join('; ')}
+              . Puedes guardarlo igualmente.
+            </span>
+          </p>
+        )}
         <Button variant="secondary" size="sm" icon={Plus} onClick={() => set({ schedule: [...draft.schedule, { weekday: 1, start: '07:00', end: '09:00', room: '' }] })} disabled={draft.schedule.length >= 14}>
           Añadir clase
         </Button>
