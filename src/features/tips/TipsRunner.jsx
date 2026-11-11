@@ -20,6 +20,7 @@ import { ensureLoaded, getSettings, listKind, saveSettings } from '../organizer/
 import { notificationsSupported } from '../organizer/reminders/ReminderRunner.jsx';
 import { TIP_CATEGORIES } from './content/tips.js';
 import { appendHistory, currentSlot, pickTip, tipPool } from './tipsLogic.js';
+import { mergeDeliveredTips } from './nativeTips.js';
 
 const LOCK_KEY = 'lix:tips:slot';
 const INTERVAL = 30_000;
@@ -41,6 +42,8 @@ export async function showTipNotification(tip) {
 /** Decide y muestra el consejo de la franja actual. Devuelve lo que hizo (para pruebas). */
 export async function runTipCheck({ now = new Date(), visible = document.visibilityState !== 'hidden', showInApp, showSystem = showTipNotification } = {}) {
   await ensureLoaded();
+  // En Android, primero se incorporan los consejos que el sistema ya mostró (evita repetirlos dentro).
+  await mergeDeliveredTips();
   const settings = getSettings('tipSettings');
   const slot = currentSlot(now, settings);
   if (!slot) return { action: 'none' };

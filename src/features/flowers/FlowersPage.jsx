@@ -5,6 +5,7 @@ import { SegmentedControl } from '../../components/common/SegmentedControl.jsx';
 import { useToast } from '../../components/feedback/ToastProvider.jsx';
 import { useReducedMotion } from '../../hooks/useReducedMotion.js';
 import { readJSON, writeJSON } from '../../services/storage/safeLocalStorage.js';
+import { isAndroidShell } from '../../services/native/androidBridge.js';
 import { cx } from '../../utils/cx.js';
 import { ModuleLayout, Section } from '../organizer/shared/ui.jsx';
 import { CreationGallery } from '../studio/shared/CreationGallery.jsx';
@@ -179,6 +180,12 @@ export default function FlowersPage() {
         if (ticket !== requestRef.current) return;
         setAnimation(result);
         setElapsed(Math.round(performance.now() - started));
+        // El widget de Android muestra un fotograma de la última animación (Glance no anima).
+        if (isAndroidShell()) {
+          const frame = result.frames[Math.floor(result.frames.length * 0.75)] ?? result.frames.at(-1);
+          writeJSON('lix:flowers:widget', { cols: result.cols, rows: result.rows, chars: frame.c, colors: frame.k, palette: result.palette, background: result.background, title: effectiveSpec.source === 'image' ? 'Mis flores' : (TEMPLATES.find((t) => t.id === effectiveSpec.template)?.label ?? 'Lix Flowers') });
+          import('../../services/native/NativeSync.jsx').then((m) => m.publishNow()).catch(() => {});
+        }
       } catch (error) {
         if (ticket !== requestRef.current) return;
         setBuildError(error.message);

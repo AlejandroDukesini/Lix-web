@@ -75,6 +75,8 @@ export function initPwa() {
 
   // En desarrollo no se registra: Vite sirve archivos que cambian a cada guardado.
   if (!import.meta.env.PROD || !state.supported || window.location.protocol === 'file:') return;
+  // Dentro de la app Android los archivos ya van en el APK: no hace falta Service Worker.
+  if (window.LixAndroid) return;
 
   const register = async () => {
     try {

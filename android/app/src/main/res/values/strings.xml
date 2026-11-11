@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Lix</string>
+    <string name="widget_tip_name">Lix · Consejo del día</string>
+    <string name="widget_tip_description">El consejo de la franja actual. Toca para abrir los consejos.</string>
+    <string name="widget_academic_name">Lix · Control académico</string>
+    <string name="widget_academic_description">Próxima clase, próxima tarea y próximo parcial.</string>
+    <string name="widget_calendar_name">Lix · Calendario académico</string>
+    <string name="widget_calendar_description">La fecha de hoy, las próximas actividades y las entregas pendientes.</string>
+    <string name="widget_flowers_name">Lix Flowers</string>
+    <string name="widget_flowers_description">Tu última animación de flores, en arte ASCII.</string>
+    <string name="channel_tips">Consejos diarios</string>
+    <string name="channel_tips_description">Un consejo breve en cada franja que elegiste en la app.</string>
+    <string name="tip_notification_title">Consejo · %1$s</string>
+    <string name="saved_download">Guardado en Descargas/Lix: %1$s</string>
+</resources>

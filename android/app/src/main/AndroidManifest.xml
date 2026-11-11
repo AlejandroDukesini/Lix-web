@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--
+      Permisos mínimos:
+        INTERNET                 lo exige el WebView para cargar páginas (aunque aquí todo se sirve desde
+                                 el propio APK) y lo usa Lix AI Studio para hablar con un servidor de IA
+                                 de tu red si lo configuras. La CSP de la web bloquea cualquier otro destino.
+        POST_NOTIFICATIONS       consejos diarios como notificación (Android 13+; se pide solo al activarlos).
+        RECEIVE_BOOT_COMPLETED   volver a programar el próximo consejo tras reiniciar el teléfono.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Lix">
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize|uiMode"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Widgets (Jetpack Glance). Cada receptor publica un widget con sus metadatos. -->
+        <receiver android:name=".widgets.TipWidgetReceiver" android:exported="true" android:label="@string/widget_tip_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_tip_info" />
+        </receiver>
+        <receiver android:name=".widgets.AcademicWidgetReceiver" android:exported="true" android:label="@string/widget_academic_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_academic_info" />
+        </receiver>
+        <receiver android:name=".widgets.CalendarWidgetReceiver" android:exported="true" android:label="@string/widget_calendar_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_calendar_info" />
+        </receiver>
+        <receiver android:name=".widgets.FlowersWidgetReceiver" android:exported="true" android:label="@string/widget_flowers_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/widget_flowers_info" />
+        </receiver>
+
+        <!-- Consejos diarios: alarma de la próxima franja y reprogramación tras reiniciar. -->
+        <receiver android:name=".tips.TipAlarmReceiver" android:exported="false" />
+        <receiver android:name=".tips.BootReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

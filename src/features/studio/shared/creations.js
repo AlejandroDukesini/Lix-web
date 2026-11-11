@@ -7,6 +7,7 @@
  */
 import { MAX_ATTACHMENT_BYTES, saveAttachment } from '../../organizer/data/attachments.js';
 import { createRecord } from '../../organizer/data/store.js';
+import { isAndroidShell, saveFileNative } from '../../../services/native/androidBridge.js';
 
 export function slugify(text, fallback = 'creacion') {
   const slug = String(text ?? '')
@@ -40,8 +41,12 @@ export async function saveCreation(blob, { origin, title, prompt = '', provider 
   });
 }
 
-/** Descarga un Blob con un nombre de archivo (sin servidor). */
+/** Descarga un Blob con un nombre de archivo (sin servidor). En Android, a Descargas/Lix. */
 export function downloadBlob(blob, filename) {
+  if (isAndroidShell()) {
+    saveFileNative(blob, filename);
+    return;
+  }
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;

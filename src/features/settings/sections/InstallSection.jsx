@@ -1,4 +1,5 @@
-import { CircleCheck, Download, MonitorSmartphone, Share, SquarePlus, WifiOff } from 'lucide-react';
+import { CircleCheck, Download, LayoutGrid, MonitorSmartphone, Share, SquarePlus, WifiOff } from 'lucide-react';
+import { isAndroidShell, pinAndroidWidget } from '../../../services/native/androidBridge.js';
 import { usePwa } from '../../../hooks/usePwa.js';
 import { Button } from '../../../components/common/Button.jsx';
 import { Badge } from '../../../components/common/Card.jsx';
@@ -47,7 +48,52 @@ function ManualSteps({ platform }) {
   );
 }
 
+const ANDROID_WIDGETS = [
+  { kind: 'tip', label: 'Consejo del día' },
+  { kind: 'academic', label: 'Control académico' },
+  { kind: 'calendar', label: 'Calendario académico' },
+  { kind: 'flowers', label: 'Lix Flowers' },
+];
+
+/** Dentro del APK: estado real de la app nativa y botones para colocar los widgets. */
+function AndroidAppSection() {
+  const notifySaved = useSavedNotice();
+  return (
+    <SettingsSection id="instalacion" icon={MonitorSmartphone} title="App de Android" description="Estás usando la app nativa de Android: todo, incluido Python, va dentro de la app.">
+      <div className="status-list">
+        <p className="status-item">
+          <CircleCheck aria-hidden="true" className="is-ok" />
+          <span>
+            <strong>Sin conexión: </strong>siempre. Los datos se guardan en este teléfono y se borran si desinstalas la app (haz copias en «Datos»).
+          </span>
+        </p>
+      </div>
+      <SettingsGroup title="Widgets para la pantalla de inicio" description="Se actualizan solos con tus datos. También puedes añadirlos manteniendo pulsada la pantalla de inicio → Widgets → Lix.">
+        <div className="widget-buttons">
+          {ANDROID_WIDGETS.map((w) => (
+            <Button
+              key={w.kind}
+              variant="secondary"
+              icon={LayoutGrid}
+              onClick={() => {
+                if (!pinAndroidWidget(w.kind)) notifySaved('Este lanzador no permite añadir widgets desde la app: hazlo desde la pantalla de inicio.');
+              }}
+            >
+              Añadir «{w.label}»
+            </Button>
+          ))}
+        </div>
+      </SettingsGroup>
+    </SettingsSection>
+  );
+}
+
 export function InstallSection() {
+  if (isAndroidShell()) return <AndroidAppSection />;
+  return <WebInstallSection />;
+}
+
+function WebInstallSection() {
   const { installStatus, platform, promptInstall, offlineReady, supported } = usePwa();
   const notifySaved = useSavedNotice();
 

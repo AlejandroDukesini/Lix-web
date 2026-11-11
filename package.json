@@ -13,6 +13,8 @@
     "test:watch": "vitest",
     "test:e2e": "node scripts/verify-offline.mjs",
     "test:python": "python -m unittest discover -s src/features/flowers/python",
+    "android:build": "npm run build && node scripts/android-build.mjs assembleDebug",
+    "android:release": "npm run build && node scripts/android-build.mjs assembleRelease",
     "icons": "node scripts/generate-icons.mjs",
     "check": "npm run test && npm run build && npm run test:e2e"
   },

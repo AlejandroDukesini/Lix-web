@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Lix" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/lix_background</item>
+        <item name="android:statusBarColor">@color/lix_background</item>
+        <item name="android:navigationBarColor">@color/lix_background</item>
+    </style>
+    <color name="lix_background">#1D1424</color>
+</resources>

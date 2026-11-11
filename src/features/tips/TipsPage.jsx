@@ -12,6 +12,7 @@ import { InputField, SelectField, TextAreaField } from '../organizer/shared/Fiel
 import { ActionMenu, DeleteDialog, EmptyState, FormDialog, ModuleLayout, Section } from '../organizer/shared/ui.jsx';
 import { dateTimeLabel } from '../organizer/shared/format.js';
 import { notificationsSupported, requestNotificationPermission } from '../organizer/reminders/ReminderRunner.jsx';
+import { isAndroidShell, nativeNotificationPermission, requestNativeNotificationPermission } from '../../services/native/androidBridge.js';
 import { TIP_CATEGORIES } from './content/tips.js';
 import { appendHistory, CATEGORY_IDS, currentSlot, findTip, FREQUENCIES, nextSlotTime, pickTip, tipPool } from './tipsLogic.js';
 import '../organizer/shared/organizer.css';
@@ -106,7 +107,8 @@ function CustomTipForm({ open, initial, onClose }) {
 
 function TipSettings({ settings, onChange }) {
   const now = useNow(60_000);
-  const [permission, setPermission] = useState(() => (notificationsSupported() ? Notification.permission : 'unsupported'));
+  const android = isAndroidShell();
+  const [permission, setPermission] = useState(() => (android ? nativeNotificationPermission() : notificationsSupported() ? Notification.permission : 'unsupported'));
   const next = nextSlotTime(now, settings);
   const toggle = (list, value) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
   return (
@@ -145,12 +147,14 @@ function TipSettings({ settings, onChange }) {
               ? 'Este navegador no admite notificaciones.'
               : permission === 'denied'
                 ? 'El navegador las tiene bloqueadas para esta app. Actívalas en los ajustes del navegador.'
-                : 'Cuando la app está en segundo plano.'
+                : android
+                  ? 'Android las muestra en cada franja, también con la app cerrada.'
+                  : 'Cuando la app está en segundo plano.'
           }
           checked={settings.notifications && permission === 'granted'}
           onChange={async (value) => {
             if (!value) return onChange({ notifications: false });
-            const result = permission === 'granted' ? 'granted' : await requestNotificationPermission();
+            const result = permission === 'granted' ? 'granted' : android ? await requestNativeNotificationPermission() : await requestNotificationPermission();
             setPermission(result);
             return onChange({ notifications: result === 'granted' });
           }}
