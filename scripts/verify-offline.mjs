@@ -666,6 +666,47 @@ try {
   await aiPage.screenshot({ path: `${SHOTS}/d-ai-server.png`, fullPage: true });
   await new Promise((resolve) => fakeSd.close(resolve));
 
+  // Widget de Windows 11: manifiesto, plantilla, instantánea en IndexedDB y datos calculados en el navegador.
+  const widgetPage = await desktop.newPage();
+  await widgetPage.goto(`${baseUrl}#/consejos`);
+  await widgetPage.locator('.tip-card').waitFor();
+  await widgetPage.waitForFunction(
+    () =>
+      new Promise((resolve) => {
+        const r = indexedDB.open('un-ano-mas-contigo');
+        r.onsuccess = () => {
+          const get = r.result.transaction('meta').objectStore('meta').get('widgetSnapshot');
+          get.onsuccess = () => resolve(Boolean(get.result?.tips?.timeline?.length));
+          get.onerror = () => resolve(false);
+        };
+        r.onerror = () => resolve(false);
+      }),
+    null,
+    { timeout: 15000, polling: 500 },
+  );
+  const widgetInfo = await widgetPage.evaluate(async () => {
+    const manifest = await (await fetch('./manifest.webmanifest')).json();
+    const template = await (await fetch(`./${manifest.widgets[0].ms_ac_template}`)).json();
+    await new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = './widgets/widget-data.js';
+      script.onload = resolve;
+      script.onerror = reject;
+      document.head.append(script);
+    });
+    const snapshot = await new Promise((resolve) => {
+      const r = indexedDB.open('un-ano-mas-contigo');
+      r.onsuccess = () => {
+        const get = r.result.transaction('meta').objectStore('meta').get('widgetSnapshot');
+        get.onsuccess = () => resolve(get.result);
+      };
+    });
+    const data = window.lixWidgetData(snapshot, new Date());
+    return { tag: manifest.widgets[0].tag, cardType: template.type, tip: data.tip, eyebrow: data.eyebrow };
+  });
+  check('Widget de Windows: manifiesto, plantilla Adaptive Card y datos desde la instantánea local', widgetInfo.tag === 'lix-dia' && widgetInfo.cardType === 'AdaptiveCard' && widgetInfo.tip.length > 10 && widgetInfo.eyebrow.startsWith('CONSEJO'), JSON.stringify(widgetInfo));
+  await widgetPage.close();
+
   // Datos corruptos no rompen la app
   await deskPage.evaluate(() => localStorage.setItem('uamc:preferences', '{esto no es json'));
   await deskPage.reload();

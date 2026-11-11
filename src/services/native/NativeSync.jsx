@@ -1,13 +1,16 @@
 /**
- * Sincronización con Android (solo dentro del APK): publica la instantánea para los widgets y
- * las notificaciones de consejos cada vez que cambian los datos, al volver a la app y cada
- * 10 minutos (para que «el consejo de ahora» y «la próxima clase» avancen solos).
+ * Publica la instantánea para los widgets cada vez que cambian los datos, al volver a la app y
+ * cada 10 minutos (para que «el consejo de ahora» y «la próxima clase» avancen solos):
+ *  - en el APK de Android, por el puente (widgets Glance y notificaciones de consejos);
+ *  - en la web/PWA, en IndexedDB (meta/widgetSnapshot), de donde la lee el Service Worker para
+ *    el widget del Tablero de Widgets de Windows 11. Se avisa al SW para que lo repinte.
  */
 import { useEffect } from 'react';
 import { readJSON } from '../storage/safeLocalStorage.js';
+import { dbPut, isIndexedDBAvailable, STORES } from '../storage/database.js';
 import { ensureLoaded, getSettings, listKind, subscribe } from '../../features/organizer/data/store.js';
 import { mergeDeliveredTips } from '../../features/tips/nativeTips.js';
-import { onNativeEvent, publishSnapshot } from './androidBridge.js';
+import { isAndroidShell, onNativeEvent, publishSnapshot } from './androidBridge.js';
 import { buildSnapshot } from './snapshot.js';
 
 export const FLOWERS_WIDGET_KEY = 'lix:flowers:widget';
@@ -17,8 +20,7 @@ const REFRESH = 10 * 60_000;
 export async function publishNow() {
   await ensureLoaded();
   const flowers = readJSON(FLOWERS_WIDGET_KEY).value;
-  return publishSnapshot(
-    buildSnapshot({
+  const snapshot = buildSnapshot({
       subjects: listKind('subject'),
       activities: listKind('activity'),
       academicDates: listKind('academicDate'),
@@ -26,8 +28,12 @@ export async function publishNow() {
       tipState: getSettings('tipState'),
       customTips: listKind('tip'),
       flowers: flowers && typeof flowers === 'object' && typeof flowers.chars === 'string' ? flowers : null,
-    }),
-  );
+  });
+  if (isAndroidShell()) return publishSnapshot(snapshot);
+  if (!isIndexedDBAvailable()) return false;
+  await dbPut(STORES.meta, 'widgetSnapshot', snapshot);
+  navigator.serviceWorker?.controller?.postMessage({ type: 'WIDGETS_REFRESH' });
+  return true;
 }
 
 export function NativeSync() {

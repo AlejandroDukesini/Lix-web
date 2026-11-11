@@ -81,3 +81,35 @@ pueden hacer con la PWA ni compilar desde el proyecto Android.**
 
 **Estado:** solo análisis. La instantánea (`snapshot.js`, versión 1) ya es el contrato que usaría
 el widget de iOS, así que no hace falta cambiar la app web para empezarlo.
+
+## 3. Windows 11: widget de la PWA
+
+**Qué se implementó** (según la guía oficial de Microsoft Edge, *Display a PWA widget in the
+Windows Widgets Board*):
+
+- `public/manifest.webmanifest` declara un widget en `widgets` con `tag: "lix-dia"`, la plantilla
+  `ms_ac_template: "widgets/lix-widget-template.json"` (Adaptive Card 1.5), una captura de 600×400,
+  `update: 1800` y `multiple: false`.
+- `public/service-worker.js` atiende `widgetinstall`, `widgetresume`, `widgetuninstall`,
+  `periodicsync` y `widgetclick` (acción `open`, que enfoca o abre la app en `#/consejos`). Para
+  pintar el widget lee la instantánea de IndexedDB (`meta/widgetSnapshot`), calcula los datos con
+  `public/widgets/widget-data.js` y llama a `self.widgets.updateByTag(tag, { template, data })`.
+- La app guarda la instantánea en IndexedDB y avisa al Service Worker (`WIDGETS_REFRESH`) cada vez
+  que cambian los datos. Si el navegador no tiene `self.widgets`, este código no hace nada.
+- El widget muestra el consejo de la franja actual y la próxima clase (con aula y edificio), la
+  próxima entrega o tarea y el próximo parcial o examen.
+
+**Qué está probado:** la plantilla y el manifiesto (pruebas unitarias), el cálculo de datos
+(prueba unitaria con el mismo script que carga el Service Worker) y, en Edge real, que la app
+guarda la instantánea y que el script produce datos válidos a partir de ella (`npm run test:e2e`).
+
+**Qué NO está probado:** la aparición del widget en el Tablero de Widgets. Según la documentación,
+requiere instalar la PWA desde un origen HTTPS público (PWABuilder no empaqueta desde
+`localhost`), WinAppSDK 1.2 y el modo de desarrollador de Windows. Esta app se sirve en local, por
+eso no se pudo verificar ahí.
+
+**Por qué no se hizo un proveedor Win32/C#:** un proveedor nativo (`IWidgetProvider`, Windows App
+SDK) exigiría empaquetar una app de escritorio MSIX y mantener una segunda base de código para leer
+unos datos que solo existen en el IndexedDB del navegador. La vía PWA reutiliza la app y la
+instantánea tal cual. Una ventana flotante propia de la app **no** sería un widget del Tablero y
+no se ha presentado como tal.

@@ -1,0 +1,45 @@
+{
+  "type": "AdaptiveCard",
+  "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+  "version": "1.5",
+  "body": [
+    {
+      "type": "TextBlock",
+      "text": "${eyebrow}",
+      "size": "Small",
+      "weight": "Bolder",
+      "color": "Accent",
+      "isSubtle": true
+    },
+    {
+      "type": "TextBlock",
+      "text": "${tip}",
+      "wrap": true,
+      "size": "Medium",
+      "spacing": "Small",
+      "maxLines": 5
+    },
+    {
+      "type": "Container",
+      "separator": true,
+      "spacing": "Medium",
+      "$when": "${hasAcademic}",
+      "items": [
+        { "type": "TextBlock", "text": "${nextClass}", "wrap": true, "size": "Small", "$when": "${nextClass != ''}" },
+        { "type": "TextBlock", "text": "${nextTask}", "wrap": true, "size": "Small", "spacing": "Small", "$when": "${nextTask != ''}" },
+        { "type": "TextBlock", "text": "${nextExam}", "wrap": true, "size": "Small", "spacing": "Small", "$when": "${nextExam != ''}" }
+      ]
+    },
+    {
+      "type": "TextBlock",
+      "text": "${footer}",
+      "size": "Small",
+      "isSubtle": true,
+      "spacing": "Medium",
+      "wrap": true
+    }
+  ],
+  "actions": [
+    { "type": "Action.Execute", "title": "Abrir Lix", "verb": "open" }
+  ]
+}

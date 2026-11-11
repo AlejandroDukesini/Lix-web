@@ -11,8 +11,6 @@ const ReminderRunner = lazy(() => import('../../features/organizer/reminders/Rem
 const TipsRunner = lazy(() => import('../../features/tips/TipsRunner.jsx').then((m) => ({ default: m.TipsRunner })));
 const NativeSync = lazy(() => import('../../services/native/NativeSync.jsx').then((m) => ({ default: m.NativeSync })));
 const RUN_REMINDERS = import.meta.env.MODE !== 'test';
-// Solo dentro de la app Android (APK): publica datos para los widgets y los consejos nativos.
-const IN_ANDROID = typeof window !== 'undefined' && Boolean(window.LixAndroid);
 
 /**
  * Estructura de las pantallas principales.
@@ -54,7 +52,7 @@ export function AppShell() {
         <Suspense fallback={null}>
           <ReminderRunner />
           <TipsRunner />
-          {IN_ANDROID && <NativeSync />}
+          <NativeSync />
         </Suspense>
       )}
     </div>
