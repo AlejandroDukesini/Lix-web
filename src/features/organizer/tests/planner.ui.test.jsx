@@ -43,13 +43,16 @@ describe('Calendario: interfaz', () => {
     expect(getRecord(task.id).completedAt).toBeTruthy();
   });
 
-  it('universidad: una entrega aparece en la agenda y una materia con actividades se puede eliminar sin perderlas', async () => {
+  it('universidad: la antigua pestaña lleva al Control académico; una entrega aparece allí y una materia con actividades se puede eliminar sin perderlas', async () => {
     await ensureLoaded();
     const subject = await createRecord('subject', { name: 'Física' });
     await createRecord('activity', { subjectId: subject.id, type: 'exam', title: 'Parcial 1', dueDate: addDays(todayISO(), 3) });
     const { user } = await openApp('#/calendario/universidad');
+    expect(await screen.findByRole('heading', { level: 1, name: 'Control académico' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Universidad' })).not.toBeInTheDocument();
     expect(await screen.findByRole('button', { name: /Examen: Parcial 1/ })).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Acciones de Física' }));
+    await user.click(screen.getByRole('link', { name: 'Asignaturas' }));
+    await user.click(await screen.findByRole('button', { name: 'Acciones de Física' }));
     await user.click(screen.getAllByRole('button', { name: 'Eliminar' })[0]);
     expect(await within(dialog()).findByText(/Se conservarán y solo perderán el vínculo: 1 actividad académica/)).toBeInTheDocument();
     await user.click(within(dialog()).getByRole('button', { name: 'Eliminar' }));

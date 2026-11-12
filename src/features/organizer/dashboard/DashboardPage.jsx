@@ -92,14 +92,14 @@ function UniversityWidget() {
     return (
       <Widget id="university" icon={GraduationCap} title="Universidad">
         <p className="org-muted">Añade tus materias con su horario y aquí verás tus próximas clases y entregas.</p>
-        <Button size="sm" variant="secondary" to="/calendario/universidad">
+        <Button size="sm" variant="secondary" to="/academico/asignaturas">
           Añadir materias
         </Button>
       </Widget>
     );
   }
   return (
-    <Widget id="university" icon={GraduationCap} title="Clases y entregas" link="/calendario/universidad" linkLabel="Universidad">
+    <Widget id="university" icon={GraduationCap} title="Clases y entregas" link="/academico" linkLabel="Control académico">
       {classes.length > 0 && (
         <ul className="org-mini-list">
           {classes.map((c) => (
@@ -301,7 +301,7 @@ const ACTIVITY_SOURCES = [
   ['transaction', 'Movimiento', '/finanzas/movimientos', (r) => r.description || 'Movimiento'],
   ['event', 'Evento', '/calendario', (r) => r.title],
   ['task', 'Tarea', '/calendario/tareas', (r) => r.title],
-  ['activity', 'Universidad', '/calendario/universidad', (r) => r.title],
+  ['activity', 'Académico', '/academico/actividades', (r) => r.title],
   ['journalEntry', 'Diario', '/diario/', (r) => r.title || `Entrada del ${shortDate(r.eventDate)}`],
 ];
 
@@ -394,11 +394,11 @@ export default function DashboardPage() {
   // En el panel, abrir un elemento lleva a su módulo (allí están sus formularios y detalles).
   const actions = useMemo(
     () => ({
-      openItem: (item) => navigate(item.type === 'payment' ? '/finanzas/pagos' : item.type === 'task' ? '/calendario/tareas' : item.type === 'activity' || item.type === 'class' ? '/calendario/universidad' : '/calendario'),
+      openItem: (item) => navigate(item.type === 'payment' ? '/finanzas/pagos' : item.type === 'task' ? '/calendario/tareas' : item.type === 'activity' ? '/academico/actividades' : item.type === 'class' ? '/academico/horario' : '/calendario'),
       openTask: () => navigate('/calendario/tareas'),
       openEvent: () => navigate('/calendario'),
-      openActivity: () => navigate('/calendario/universidad'),
-      openSubject: () => navigate('/calendario/universidad'),
+      openActivity: () => navigate('/academico/actividades'),
+      openSubject: () => navigate('/academico/asignaturas'),
     }),
     [navigate],
   );

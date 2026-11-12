@@ -53,7 +53,7 @@ export function remindersBetween(records, from, to) {
   for (const activity of records.activities ?? []) {
     if (activity.status === 'done' || activity.status === 'cancelled' || activity.dueDate < firstDay || activity.dueDate > lastDay) continue;
     for (const minutes of activity.reminders ?? []) {
-      push(`activity:${activity.id}:${activity.dueDate}:${minutes}`, at(activity.dueDate, activity.dueTime, minutes), `${ACTIVITY_LABELS[activity.type]}: ${activity.title}`, when(minutes), '/calendario/universidad');
+      push(`activity:${activity.id}:${activity.dueDate}:${minutes}`, at(activity.dueDate, activity.dueTime, minutes), `${ACTIVITY_LABELS[activity.type]}: ${activity.title}`, when(minutes), '/academico/actividades');
     }
   }
   for (const task of records.tasks ?? []) {

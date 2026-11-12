@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router';
-import { CalendarDays, CalendarPlus, GraduationCap, ListTodo, Settings2 } from 'lucide-react';
+import { CalendarDays, CalendarPlus, ListTodo, Settings2 } from 'lucide-react';
 import { Button } from '../../../components/common/Button.jsx';
 import { ModuleLayout } from '../shared/ui.jsx';
 import { PlannerActions } from './PlannerContext.js';
@@ -10,7 +10,6 @@ import { ActivityForm, SubjectForm } from './UniversityForms.jsx';
 import { ItemDialog } from './ItemDialog.jsx';
 import { CalendarView } from './views/CalendarView.jsx';
 import { Tasks } from './views/Tasks.jsx';
-import { University } from './views/University.jsx';
 import { PlannerSettings } from './views/PlannerSettings.jsx';
 import { usePlanner } from './usePlanner.js';
 import '../shared/organizer.css';
@@ -19,7 +18,6 @@ import './planner.css';
 const TABS = [
   { to: '/calendario', end: true, label: 'Calendario', icon: CalendarDays },
   { to: '/calendario/tareas', label: 'Tareas', icon: ListTodo },
-  { to: '/calendario/universidad', label: 'Universidad', icon: GraduationCap },
   { to: '/calendario/ajustes', label: 'Ajustes', icon: Settings2 },
 ];
 
@@ -80,7 +78,7 @@ export default function PlannerPage() {
         <Routes>
           <Route index element={<CalendarView />} />
           <Route path="tareas" element={<Tasks />} />
-          <Route path="universidad" element={<University />} />
+          <Route path="universidad" element={<Navigate to="/academico" replace />} />
           <Route path="ajustes" element={<PlannerSettings />} />
           <Route path="*" element={<Navigate to="/calendario" replace />} />
         </Routes>

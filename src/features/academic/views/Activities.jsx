@@ -6,7 +6,7 @@ import { ACTIVITY_TYPES } from '../../organizer/data/entities.js';
 import { SelectField } from '../../organizer/shared/Fields.jsx';
 import { EmptyState, SearchField } from '../../organizer/shared/ui.jsx';
 import { ACTIVITY_LABELS } from '../../organizer/planner/agenda.js';
-import { ActivityRow } from '../../organizer/planner/views/University.jsx';
+import { ActivityRow } from './ActivityRow.jsx';
 import { usePlannerActions } from '../../organizer/planner/PlannerContext.js';
 import { PENDING } from '../academicLogic.js';
 import { useAcademic } from '../useAcademic.js';

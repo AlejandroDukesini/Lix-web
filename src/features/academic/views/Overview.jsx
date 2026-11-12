@@ -6,7 +6,7 @@ import { useNow } from '../../../hooks/useNow.js';
 import { EmptyState, Section } from '../../organizer/shared/ui.jsx';
 import { daysFromToday, formatClock, longDate, shortDate } from '../../organizer/shared/format.js';
 import { ACTIVITY_LABELS } from '../../organizer/planner/agenda.js';
-import { ActivityRow } from '../../organizer/planner/views/University.jsx';
+import { ActivityRow } from './ActivityRow.jsx';
 import { usePlannerActions } from '../../organizer/planner/PlannerContext.js';
 import { academicDatesBetween, addDays, EVALUATION_TYPES, isoDay, nextClass, overdueActivities, upcomingActivities, WORK_TYPES } from '../academicLogic.js';
 import { useAcademic } from '../useAcademic.js';

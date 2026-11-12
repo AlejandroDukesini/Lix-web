@@ -1,4 +1,4 @@
-/* Calendario, tareas y universidad. */
+/* Calendario y tareas (los formularios de materias y actividades los reutiliza Control académico). */
 
 /* ---------- Elemento de agenda ---------- */
 .org-agenda-item {
@@ -391,71 +391,7 @@
   font-size: var(--text-xs);
 }
 
-/* ---------- Universidad ---------- */
-.org-timetable {
-  display: grid;
-  gap: var(--space-3);
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
-}
-
-.org-timetable__day {
-  display: grid;
-  align-content: start;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: var(--field-radius);
-  border: 1px solid var(--border);
-}
-
-.org-timetable__day h3 {
-  font-size: var(--text-sm);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-}
-
-.org-timetable__day ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: var(--space-2);
-}
-
-.org-timetable__day li {
-  display: grid;
-  gap: 1px;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-sm);
-  border-left: 4px solid var(--item-color);
-  background: color-mix(in oklab, var(--item-color) 12%, transparent);
-}
-
-.org-timetable__time {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  color: var(--text-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.org-timetable__name {
-  font-weight: 700;
-}
-
-.org-subject {
-  display: grid;
-  gap: var(--space-2);
-  align-content: start;
-  border-top: 5px solid var(--badge-color);
-}
-
-.org-subject__title {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
-  min-width: 0;
-}
-
+/* ---------- Formulario de materias ---------- */
 .org-slot {
   display: grid;
   gap: var(--space-2);

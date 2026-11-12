@@ -64,7 +64,7 @@ export const MODULES = [
     icon: CalendarHeart,
     status: 'available',
     group: 'organizer',
-    teaser: 'Eventos, universidad, tareas y recordatorios en un mismo lugar.',
+    teaser: 'Eventos, tareas, clases y recordatorios en un mismo lugar.',
   },
   {
     id: 'academic',

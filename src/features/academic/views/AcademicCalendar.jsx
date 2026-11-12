@@ -8,7 +8,7 @@ import { CheckboxField, InputField, SelectField, TextAreaField } from '../../org
 import { ActionMenu, DeleteDialog, FormDialog, PeriodNav, Section } from '../../organizer/shared/ui.jsx';
 import { dayHeading, formatClock, shortDate } from '../../organizer/shared/format.js';
 import { ACTIVITY_LABELS } from '../../organizer/planner/agenda.js';
-import { ActivityRow } from '../../organizer/planner/views/University.jsx';
+import { ActivityRow } from './ActivityRow.jsx';
 import { monthMatrix } from '../academicLogic.js';
 import { useAcademic } from '../useAcademic.js';
 
