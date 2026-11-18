@@ -10,6 +10,7 @@ export const logicGridManifest = {
   categories: ['logica', 'estrategia'],
   Art: LogicGridArt,
   palette: { a: '#7c5cff', b: '#ff7ab6' },
+  scene: 'day',
   facts: [`${LEVELS.length} niveles`, `${SERIES.length} reglas`, 'Sin tiempo límite'],
   objective: 'Cubrir todas las casillas del tablero sin repetir ninguna y sin superar el número de movimientos del nivel.',
   howTo: [

@@ -12,9 +12,15 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.SystemBarStyle
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebViewAssetLoader
 
 /**
@@ -22,6 +28,14 @@ import androidx.webkit.WebViewAssetLoader
  * desde https://appassets.androidplatform.net/assets/web/. No hay servidor ni descarga: todo
  * viene del propio APK. Los datos se guardan en el almacenamiento del WebView (IndexedDB y
  * localStorage) y se mantienen al cerrar la app; se borran al desinstalarla.
+ *
+ * Experiencia móvil:
+ *  - De borde a borde (obligatorio desde Android 15): el contenido se separa de las barras del
+ *    sistema, del recorte de la cámara y del teclado con márgenes calculados aquí.
+ *  - Durante una partida la web pide pantalla completa (LixAndroid.setImmersive).
+ *  - Al minimizar, el WebView se pausa: la página pasa a «oculta» y los juegos se ponen en pausa
+ *    solos (escuchan visibilitychange); el audio y los temporizadores dejan de consumir.
+ *  - El botón Atrás pregunta primero a la página (window.__lixBack): en un juego confirma la salida.
  */
 class MainActivity : ComponentActivity() {
     companion object {
@@ -38,6 +52,8 @@ class MainActivity : ComponentActivity() {
 
     lateinit var webView: WebView
         private set
+    private lateinit var root: FrameLayout
+    private var immersive = false
     private lateinit var bridge: LixBridge
     private var fileCallback: ValueCallback<Array<Uri>>? = null
 
@@ -52,6 +68,10 @@ class MainActivity : ComponentActivity() {
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         super.onCreate(savedInstanceState)
 
         // Los assets se sirven con el tipo MIME correcto: WebAssembly y los módulos .mjs (Python) lo exigen.
@@ -80,9 +100,12 @@ class MainActivity : ComponentActivity() {
 
                 override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                     val url = request.url
-                    if (url.host == Uri.parse(ORIGIN).host) return false
+                    if (url.scheme == "https" && url.host == Uri.parse(ORIGIN).host) return false
                     // Enlaces externos (p. ej. páginas oficiales de juegos): en el navegador del sistema.
-                    runCatching { startActivity(Intent(Intent.ACTION_VIEW, url)) }
+                    // Solo esquemas conocidos; nunca intent:, file: ni javascript: desde la página.
+                    if (url.scheme in setOf("https", "http", "mailto")) {
+                        runCatching { startActivity(Intent(Intent.ACTION_VIEW, url).addCategory(Intent.CATEGORY_BROWSABLE)) }
+                    }
                     return true
                 }
             }
@@ -102,11 +125,27 @@ class MainActivity : ComponentActivity() {
         }
         bridge = LixBridge(this)
         webView.addJavascriptInterface(bridge, "LixAndroid")
-        setContentView(webView)
+        root = FrameLayout(this).apply {
+            setBackgroundColor(Color.parseColor("#1d1424"))
+            addView(webView, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        }
+        setContentView(root)
+        // Márgenes de las barras del sistema, el recorte de pantalla y el teclado (adjustResize ya
+        // no redimensiona en modo de borde a borde). En pantalla completa las barras miden 0.
+        ViewCompat.setOnApplyWindowInsetsListener(root) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            view.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
+            WindowInsetsCompat.CONSUMED
+        }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                if (webView.canGoBack()) webView.goBack() else finish()
+                // La página decide primero (p. ej. confirmar la salida de una partida).
+                webView.evaluateJavascript("(function(){try{return window.__lixBack?window.__lixBack()===true:false}catch(e){return false}})()") { handled ->
+                    if (handled == "true") return@evaluateJavascript
+                    if (webView.canGoBack()) webView.goBack() else finish()
+                }
             }
         })
 
@@ -130,8 +169,39 @@ class MainActivity : ComponentActivity() {
         webView.saveState(outState)
     }
 
+    /** Pantalla completa durante las partidas; las barras reaparecen un momento al deslizar desde el borde. */
+    fun setGameFullscreen(on: Boolean) {
+        immersive = on
+        val controller = WindowInsetsControllerCompat(window, root)
+        if (on) {
+            controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            controller.hide(WindowInsetsCompat.Type.systemBars())
+        } else {
+            controller.show(WindowInsetsCompat.Type.systemBars())
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        // Al volver a la app (o tras un diálogo del sistema) se recupera la pantalla completa.
+        if (hasFocus && immersive) setGameFullscreen(true)
+    }
+
+    override fun onPause() {
+        // La página pasa a oculta (visibilitychange): los juegos se pausan y el audio se suspende.
+        webView.onPause()
+        super.onPause()
+    }
+
     override fun onResume() {
         super.onResume()
+        webView.onResume()
         bridge.emit("resume", "")
+    }
+
+    override fun onDestroy() {
+        root.removeView(webView)
+        webView.destroy()
+        super.onDestroy()
     }
 }

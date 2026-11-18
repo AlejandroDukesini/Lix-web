@@ -212,52 +212,57 @@
   list-style: none;
 }
 
-/* Plato */
+/* Plato
+ * El banco es el mostrador de cada tienda, a plena luz: pared propia, toldo a rayas, foco
+ * sobre lo que preparas y encimera abajo, donde quedan los botones. Las tres tiendas comparten
+ * la estructura y cambian materiales: damero de heladería, azulejo de trattoria, papel de salón de té.
+ */
 .ck-bench {
   grid-area: bench;
   display: grid;
   justify-items: center;
   gap: var(--space-3);
-  padding: var(--space-4);
+  padding: calc(var(--space-4) + 18px) var(--space-4) var(--space-4);
   border-radius: var(--gc-radius-lg);
-  border: var(--surface-border-width) solid var(--surface-border);
-  /* El banco es el mostrador de la tienda: azulejos de pared, foco cálido sobre
-     lo que preparas y encimera de madera abajo, donde quedan los botones. */
-  --ck-tile: #1d4552;
-  --ck-grout: rgb(255 255 255 / 0.12);
-  --ck-counter: #3b2618;
-  --ck-edge: #8a5a34;
+  border: 2px solid rgb(255 255 255 / 0.9);
+  box-shadow: 0 22px 44px -26px rgb(90 50 30 / 0.45);
+  --ck-stripe-a: #5cc6b0;
+  --ck-stripe-b: #fffaf2;
+  --ck-edge: #5cc6b0;
+  --ck-counter: linear-gradient(170deg, #ffffff, #ece7e1 60%, #f6f2ee);
+  --ck-wall:
+    conic-gradient(#d4f1e8 25%, #fff8ee 0 50%, #d4f1e8 0 75%, #fff8ee 0) 0 0 / 40px 40px;
   align-content: end;
   overflow: hidden;
   background:
-    linear-gradient(to bottom, transparent 70%, var(--ck-edge) 70%, var(--ck-edge) calc(70% + 6px), rgb(0 0 0 / 0.35) calc(70% + 6px), transparent calc(70% + 16px)),
-    linear-gradient(to bottom, transparent 70%, var(--ck-counter) 70%),
-    radial-gradient(55% 45% at 50% 42%, rgb(255 236 200 / 0.28), transparent 70%),
-    repeating-linear-gradient(90deg, var(--ck-grout) 0 2px, transparent 2px 38px),
-    repeating-linear-gradient(0deg, var(--ck-grout) 0 2px, transparent 2px 38px),
-    linear-gradient(to bottom, color-mix(in oklab, var(--ck-tile) 80%, white), var(--ck-tile));
+    repeating-linear-gradient(90deg, var(--ck-stripe-a) 0 26px, var(--ck-stripe-b) 26px 52px) top / 100% 18px no-repeat,
+    radial-gradient(50% 12px at 50% 18px, rgb(60 40 30 / 0.22), transparent) top / 100% 30px no-repeat,
+    linear-gradient(to bottom, transparent 70%, var(--ck-edge) 70%, var(--ck-edge) calc(70% + 6px), rgb(90 50 20 / 0.2) calc(70% + 6px), transparent calc(70% + 14px)),
+    radial-gradient(55% 40% at 50% 42%, rgb(255 255 255 / 0.6), transparent 70%),
+    var(--ck-counter) bottom / 100% 30% no-repeat,
+    var(--ck-wall);
 }
 
-/* Cada tienda con su pared: azul piscina, ladrillo de horno o rosa empolvado. */
 [data-game='pizzeria'] .ck-bench {
-  --ck-tile: #5a2a1e;
-  --ck-grout: rgb(255 220 190 / 0.14);
-  --ck-counter: #2e2018;
-  --ck-edge: #9b6a3c;
-  background:
-    linear-gradient(to bottom, transparent 70%, var(--ck-edge) 70%, var(--ck-edge) calc(70% + 6px), rgb(0 0 0 / 0.35) calc(70% + 6px), transparent calc(70% + 16px)),
-    linear-gradient(to bottom, transparent 70%, var(--ck-counter) 70%),
-    radial-gradient(55% 45% at 50% 42%, rgb(255 180 110 / 0.3), transparent 70%),
-    repeating-linear-gradient(0deg, var(--ck-grout) 0 2px, transparent 2px 22px),
-    repeating-linear-gradient(90deg, var(--ck-grout) 0 2px, transparent 2px 48px),
-    linear-gradient(to bottom, #6e3424, var(--ck-tile));
+  --ck-stripe-a: #d8452f;
+  --ck-stripe-b: #fff6ea;
+  --ck-edge: #8a5530;
+  /* Una sola capa: la variable se coloca con tamaño propio (abajo, 30 % del alto). */
+  --ck-counter: repeating-linear-gradient(178deg, #d6995c 0 7px, #c98a4d 7px 9px);
+  --ck-wall:
+    repeating-linear-gradient(0deg, #e3c6a8 0 2px, transparent 2px 22px),
+    repeating-linear-gradient(90deg, #e3c6a8 0 2px, transparent 2px 46px),
+    linear-gradient(180deg, #fff6e8, #f8ead6);
 }
 
 [data-game='pasteleria'] .ck-bench {
-  --ck-tile: #4a2340;
-  --ck-grout: rgb(255 210 235 / 0.14);
-  --ck-counter: #2f1b29;
-  --ck-edge: #d9b8cc;
+  --ck-stripe-a: #f28fb1;
+  --ck-stripe-b: #fff4f7;
+  --ck-edge: #d4a94a;
+  --ck-counter: linear-gradient(170deg, #fdeef2, #f3d3de 60%, #fbe6ec);
+  --ck-wall:
+    radial-gradient(circle, #ffffff 0 2.5px, transparent 3px) 0 0 / 28px 28px,
+    repeating-linear-gradient(90deg, #ffd9e5 0 14px, #ffe9f0 14px 28px);
 }
 
 .ck-bench__visual {
@@ -324,6 +329,7 @@
   background: var(--game-a);
   border-color: transparent;
   color: #2a1420;
+  box-shadow: 0 6px 14px -8px var(--game-a);
 }
 
 .ck-panel {
@@ -573,3 +579,24 @@
 .ck-feedback__items .is-extra {
   background: var(--danger-bg);
 }
+
+/* Escenario de menú y partida: suelo en damero suave de cada tienda. */
+:is([data-game='heladeria'], [data-game='pizzeria'], [data-game='pasteleria']) .game-screen__body.is-playing {
+  /* El suelo de cada tienda (baldosas en damero suave) y la luz de la mañana. */
+  --ck-floor-a: #eaf7f3;
+  --ck-floor-b: #f8fdfb;
+  background:
+    radial-gradient(70% 40% at 50% 0%, rgb(255 255 255 / 0.8), transparent 70%),
+    conic-gradient(var(--ck-floor-a) 25%, var(--ck-floor-b) 0 50%, var(--ck-floor-a) 0 75%, var(--ck-floor-b) 0) 0 0 / 64px 64px;
+}
+
+[data-game='pizzeria'] .game-screen__body.is-playing {
+  --ck-floor-a: #f6e7d4;
+  --ck-floor-b: #fcf4ea;
+}
+
+[data-game='pasteleria'] .game-screen__body.is-playing {
+  --ck-floor-a: #fbe6ee;
+  --ck-floor-b: #fff6f9;
+}
+

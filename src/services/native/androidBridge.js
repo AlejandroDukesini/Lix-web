@@ -8,7 +8,9 @@
  *  - no se registra el Service Worker (los archivos ya están dentro del APK);
  *  - las descargas se guardan en Descargas/Lix (el WebView no descarga blobs por sí solo);
  *  - la app publica una instantánea de datos para los widgets y los consejos (Snapshot.kt);
- *  - las notificaciones de consejos las programa Android, también con la app cerrada.
+ *  - las notificaciones de consejos las programa Android, también con la app cerrada;
+ *  - durante una partida se ocultan las barras del sistema (pantalla completa) y el botón
+ *    Atrás pregunta primero a la página (window.__lixBack) antes de navegar hacia atrás.
  */
 
 const listeners = new Map();
@@ -118,4 +120,28 @@ export async function saveFileNative(blob, filename) {
   } catch {
     return false;
   }
+}
+
+/** Pantalla completa inmersiva (barras del sistema ocultas; reaparecen deslizando desde el borde). */
+export function setImmersive(on) {
+  const bridge = native();
+  if (!bridge || typeof bridge.setImmersive !== 'function') return false;
+  try {
+    bridge.setImmersive(Boolean(on));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Botón Atrás de Android: el shell llama a window.__lixBack() y, si devuelve true, no navega.
+ * Solo puede haber un manejador activo (la pantalla visible); devuelve la función para retirarlo.
+ */
+export function handleNativeBack(handler) {
+  if (typeof window === 'undefined') return () => {};
+  window.__lixBack = handler;
+  return () => {
+    if (window.__lixBack === handler) delete window.__lixBack;
+  };
 }

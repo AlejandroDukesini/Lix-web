@@ -10,6 +10,7 @@ export const lavaYAguaManifest = {
   categories: ['logica', 'aventura'],
   Art: LavaArt,
   palette: { a: '#ff7a1a', b: '#3fa7ff' },
+  scene: 'day',
   facts: [`${LEVELS.length} niveles demostrados`, 'Deshacer ilimitado', '3 estrellas por nivel'],
   objective: 'Llegar a la salida luminosa sin que la lava te alcance ni la cubra. Tres estrellas si lo haces en el mínimo de turnos posible.',
   howTo: [

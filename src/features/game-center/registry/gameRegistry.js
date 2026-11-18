@@ -10,6 +10,7 @@
  *   categories                          ids de registry/categories.js
  *   Art                                 ilustración (componente SVG ligero)
  *   palette { a, b }                    colores de identidad del juego
+ *   scene: 'day'                        escenario claro: menú y partida usan tinta oscura (.game-daylight)
  *   facts, objective, howTo, controls,  pantalla de presentación
  *   difficulty
  *   load()                              import() del componente del juego (carga diferida)

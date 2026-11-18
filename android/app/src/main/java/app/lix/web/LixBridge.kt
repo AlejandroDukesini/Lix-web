@@ -21,6 +21,7 @@ import java.io.File
  *   requestNotificationPermission()  pide el permiso (Android 13+); responde con un evento
  *   saveFile(base64, name, mime)  guarda una descarga en Descargas
  *   info()                        versión y capacidades
+ *   setImmersive(on)              pantalla completa durante una partida
  * Los eventos hacia la web se envían con window.__lixNative?.(tipo, valor).
  */
 class LixBridge(private val activity: MainActivity) {
@@ -106,6 +107,11 @@ class LixBridge(private val activity: MainActivity) {
         } catch (_: Exception) {
             false
         }
+    }
+
+    @JavascriptInterface
+    fun setImmersive(on: Boolean) {
+        activity.runOnUiThread { if (!activity.isFinishing) activity.setGameFullscreen(on) }
     }
 
     /** Evento hacia la web (en el hilo principal). */

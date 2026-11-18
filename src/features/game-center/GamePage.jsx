@@ -1,4 +1,4 @@
-import { Component, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import { Component, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router';
 import { ArrowLeft, CircleHelp, Volume2, VolumeX } from 'lucide-react';
 import { Button, IconButton } from '../../components/common/Button.jsx';
@@ -11,6 +11,7 @@ import { useCenterSettings, useGameRecord } from './hooks/useGameStatistics.js';
 import { GameDetails, GameInstructions } from './components/GameDetails.jsx';
 import { OnlineGameFrame } from './components/OnlineGameFrame.jsx';
 import { ONLINE_UNAVAILABLE, onlineSourceFor } from './online/onlineSources.js';
+import { handleNativeBack, setImmersive } from '../../services/native/androidBridge.js';
 import './styles/game-center.css';
 import './styles/game-screen.css';
 
@@ -85,6 +86,23 @@ function GameScreen({ game }) {
   const exit = useCallback(() => navigate('/juegos'), [navigate]);
   const requestExit = () => (inProgress ? setDialog('exit') : exit());
 
+  // App Android: pantalla completa mientras se juega (no afecta a la web).
+  useEffect(() => {
+    if (phase !== 'playing') return undefined;
+    setImmersive(true);
+    return () => setImmersive(false);
+  }, [phase]);
+
+  // Botón Atrás de Android: cierra el diálogo abierto o actúa como la flecha de la barra
+  // (pide confirmación si hay una partida en curso) en lugar de abandonar la partida.
+  const backRef = useRef(null);
+  backRef.current = () => {
+    if (dialog) setDialog(null);
+    else requestExit();
+    return true;
+  };
+  useEffect(() => handleNativeBack(() => backRef.current()), []);
+
   const frame = useMemo(
     () => ({
       exit,
@@ -117,7 +135,7 @@ function GameScreen({ game }) {
         </div>
       </header>
 
-      <main id="contenido" className={`game-screen__body is-${phase}`} tabIndex={-1}>
+      <main id="contenido" className={`game-screen__body is-${phase}${phase === 'playing' && game.scene === 'day' ? ' game-daylight' : ''}`} tabIndex={-1}>
         {phase === 'briefing' ? (
           <div className="game-screen__scroll">
             <GameDetails

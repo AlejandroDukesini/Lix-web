@@ -4,27 +4,38 @@
  * se distinguen por forma además de por color.
  * ===================================================================== */
 
+/*
+ * Dirección: «taller de azulejos». La partida es siempre diurna (papel de mesa con manchas
+ * de pintura, bandeja de cerámica crema y muros de azulejo vidriado), en ambos temas: una
+ * losa por cubrir debe verse como una losa, no como un hueco negro. Cada serie pinta con
+ * su color: Deslizar en violeta-rosa, Trazo en turquesa-lima.
+ */
 .game-screen[data-game='logic-grid'] {
   --lg-paint-a: #7c5cff;
   --lg-paint-b: #ff7ab6;
-  --lg-cell: rgb(255 255 255 / 0.07);
-  --lg-cell-border: rgb(255 255 255 / 0.16);
-  --lg-wall: #0d0b15;
-  --lg-wall-line: rgb(255 255 255 / 0.05);
-  --lg-board: rgb(255 255 255 / 0.04);
-  --lg-target: #ffd166;
-  --lg-wall-top: #2a2537;
-  --lg-frame: #16131f;
+  --lg-cell: #fffdf8;
+  --lg-cell-border: #e2d6c2;
+  --lg-wall: #1f5560;
+  --lg-wall-top: #3f8f9a;
+  --lg-wall-line: rgb(255 255 255 / 0.12);
+  --lg-board: #efe4cf;
+  --lg-target: #c2691a;
+  --lg-frame: #d9c6a4;
 }
-[data-theme='light'] .game-screen[data-game='logic-grid'] {
-  --lg-cell: #ffffff;
-  --lg-cell-border: #d9d2c3;
-  --lg-wall: #2d2a3e;
-  --lg-wall-line: rgb(255 255 255 / 0.08);
-  --lg-board: #efe9dc;
-  --lg-target: #b7791f;
-  --lg-wall-top: #4a4560;
-  --lg-frame: #ddd4c2;
+
+.lg-play.is-path,
+.lg-series.is-path {
+  --lg-paint-a: #13a89e;
+  --lg-paint-b: #a3d84a;
+}
+
+/* Escenario de menú y partida. */
+.game-screen[data-game='logic-grid'] .game-screen__body.is-playing {
+  /* Mesa de trabajo: papel cálido con una rejilla tenue de cortar. */
+  background:
+    linear-gradient(rgb(120 90 50 / 0.06) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(90deg, rgb(120 90 50 / 0.06) 1px, transparent 1px) 0 0 / 28px 28px,
+    linear-gradient(180deg, #fbf3e4, #f3e6cd);
 }
 
 /* ---------- Selección de nivel ---------- */
@@ -177,11 +188,10 @@
   background: var(--lg-board);
   border: var(--surface-border-width) solid var(--surface-border);
   box-shadow:
-    inset 0 2px 10px rgb(0 0 0 / 0.35),
-    inset 0 1px 0 rgb(255 255 255 / 0.06),
-    0 26px 50px -28px rgb(0 0 0 / 0.8),
+    inset 0 2px 8px rgb(120 80 30 / 0.22),
+    0 26px 50px -26px rgb(110 70 30 / 0.55),
     0 0 0 6px var(--lg-frame),
-    0 0 0 7px rgb(255 255 255 / 0.06);
+    0 0 0 8px #fff;
   box-sizing: content-box;
 }
 
@@ -205,8 +215,8 @@
     var(--lg-cell);
   border: 2px solid var(--lg-cell-border);
   box-shadow:
-    inset 0 -3px 0 rgb(0 0 0 / 0.18),
-    0 1px 0 rgb(255 255 255 / 0.04);
+    inset 0 -3px 0 rgb(150 110 60 / 0.16),
+    0 1px 0 rgb(255 255 255 / 0.7);
   transition:
     background 220ms var(--ease-out) var(--delay, 0ms),
     border-color 220ms var(--ease-out) var(--delay, 0ms),
@@ -228,10 +238,14 @@
   width: calc(100% - 4px);
   height: calc(100% - 4px);
   border: none;
-  background: linear-gradient(180deg, var(--lg-wall-top) 0 74%, var(--lg-wall) 74%);
+  background:
+    radial-gradient(circle at 50% 37%, rgb(255 255 255 / 0.35) 0 9%, transparent 10%),
+    linear-gradient(45deg, transparent 46%, var(--lg-wall-line) 46% 54%, transparent 54%) 0 0 / 100% 74% no-repeat,
+    linear-gradient(-45deg, transparent 46%, var(--lg-wall-line) 46% 54%, transparent 54%) 0 0 / 100% 74% no-repeat,
+    linear-gradient(180deg, var(--lg-wall-top) 0 74%, var(--lg-wall) 74%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    0 6px 8px -3px rgb(0 0 0 / 0.55);
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 6px 8px -3px rgb(30 50 60 / 0.45);
 }
 
 /* Cubierta: pintura brillante. El degradado abarca el tablero entero (no cada
@@ -368,7 +382,7 @@
   bottom: 14%;
   height: 14%;
   border-radius: 50%;
-  background: rgb(0 0 0 / 0.45);
+  background: rgb(80 50 20 / 0.35);
   filter: blur(2px);
 }
 
@@ -382,8 +396,8 @@
     linear-gradient(150deg, color-mix(in oklab, var(--lg-paint-a) 85%, #fff), var(--lg-paint-a) 55%, color-mix(in oklab, var(--lg-paint-a) 60%, #000));
   border: 2px solid rgb(255 255 255 / 0.85);
   box-shadow:
-    0 0 0 2px #1d1a2b,
-    0 6px 14px -4px rgb(0 0 0 / 0.5);
+    0 0 0 2px #3a2a4a,
+    0 6px 14px -4px rgb(60 30 20 / 0.45);
 }
 
 .lg-board.is-path .lg-ball__body {

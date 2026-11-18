@@ -7,3 +7,7 @@ local.properties
 .kotlin/
 # Copia del build web (se genera en cada compilación)
 app/src/main/assets/web/
+# Firma de publicación: nunca en el repositorio
+keystore.properties
+*.jks
+*.keystore

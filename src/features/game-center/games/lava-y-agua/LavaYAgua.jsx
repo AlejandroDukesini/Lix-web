@@ -92,8 +92,8 @@ function nearestLava(game) {
 function Sprite({ lost }) {
   return (
     <svg viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-      <ellipse cx="20" cy="36" rx="11" ry="3" fill="rgb(0 0 0 / 0.45)" />
-      <path d="M20 4c3 4 1 6 4 8 6 2 10 8 10 14a14 11 0 0 1-28 0c0-6 4-12 10-14 3-2 1-4 4-8z" fill={lost ? '#5b5458' : 'url(#lv-body)'} />
+      <ellipse cx="20" cy="36" rx="11" ry="3" fill="rgb(60 30 10 / 0.35)" />
+      <path d="M20 4c3 4 1 6 4 8 6 2 10 8 10 14a14 11 0 0 1-28 0c0-6 4-12 10-14 3-2 1-4 4-8z" fill={lost ? '#5b5458' : 'url(#lv-body)'} stroke={lost ? '#2e282b' : '#9c4a26'} strokeWidth="1.6" strokeLinejoin="round" />
       <ellipse cx="14" cy="18" rx="4" ry="3" fill="#fff" opacity={lost ? 0.15 : 0.55} />
       {lost ? (
         <path d="M12 22l4 4m0-4l-4 4M24 22l4 4m0-4l-4 4" stroke="#1d1418" strokeWidth="2.2" strokeLinecap="round" />

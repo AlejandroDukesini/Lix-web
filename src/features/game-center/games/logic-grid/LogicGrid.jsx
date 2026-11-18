@@ -64,7 +64,7 @@ function LevelSelect({ completed, best, onPick }) {
         <p className="lg-select__text">Cada serie se desbloquea nivel a nivel. Todos tienen solución con los movimientos indicados.</p>
       </header>
       {SERIES.map((series) => (
-        <section key={series.id} className="lg-series" aria-labelledby={`series-${series.id}`}>
+        <section key={series.id} className={`lg-series is-${series.id}`} aria-labelledby={`series-${series.id}`}>
           <h3 id={`series-${series.id}`} className="lg-series__title">
             {series.name}
           </h3>
@@ -330,7 +330,7 @@ function Play({ level, onLevels, onNext, frame }) {
   const left = board.limit - state.moves;
 
   return (
-    <div className="lg-play">
+    <div className={`lg-play is-${level.rule}`}>
       <GameHUD
         onPause={session.togglePause}
         paused={session.isPaused}

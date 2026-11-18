@@ -21,11 +21,13 @@ import { contactShadow, glow, hsl, roundRect, seeded, speckle } from '../../../r
 const PX_PER_M = 36; // resolución de los sprites
 
 export function createRenderState() {
-  return { flash: 0, time: 0, sprites: createSpriteCache(60) };
+  // `ground` guarda un único fondo de pantalla completa (varios MB): no comparte la caché de sprites.
+  return { flash: 0, time: 0, sprites: createSpriteCache(60), ground: createSpriteCache(1) };
 }
 
 export function disposeRenderState(view) {
   view.sprites?.clear();
+  view.ground?.clear();
 }
 
 export function viewFor(size, level, insets = {}) {
@@ -44,7 +46,7 @@ export function viewFor(size, level, insets = {}) {
 // ---------------------------------------------------------------- texturas
 
 function paintAsphaltTile(ctx, w, h) {
-  ctx.fillStyle = '#4b4f5d';
+  ctx.fillStyle = '#5c6274';
   ctx.fillRect(0, 0, w, h);
   const rand = seeded(12);
   speckle(ctx, 0, 0, w, h, 900, ['rgba(255,255,255,0.07)', 'rgba(0,0,0,0.12)', 'rgba(170,175,190,0.08)'], rand, [0.8, 1.8]);
@@ -71,12 +73,12 @@ function paintPavingTile(ctx, w, h) {
   const rand = seeded(4);
   for (let i = 0; i < n; i += 1) {
     for (let j = 0; j < n; j += 1) {
-      const l = 40 + rand() * 5;
-      ctx.fillStyle = `hsl(30 8% ${l}%)`;
+      const l = 74 + rand() * 6;
+      ctx.fillStyle = `hsl(36 26% ${l}%)`;
       ctx.fillRect(i * t, j * t, t, t);
-      ctx.fillStyle = 'rgba(255,255,255,0.1)';
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
       ctx.fillRect(i * t + 1, j * t + 1, t - 2, 2);
-      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillStyle = 'rgba(120,90,60,0.22)';
       ctx.fillRect(i * t, j * t + t - 2, t, 2);
       ctx.fillRect(i * t + t - 2, j * t, 2, t);
     }
@@ -288,6 +290,43 @@ function paintWall(ctx, W, H) {
 
 // ---------------------------------------------------------------- dibujo
 
+/**
+ * Árboles de la acera: solo decorado. Se colocan con una semilla fija y se descartan los que
+ * tocarían el aparcamiento (más un margen), así nunca tapan la plaza ni un obstáculo.
+ */
+function drawStreetTrees(ctx, size, lot, s, controlsTop = size.height) {
+  const rand = seeded(31);
+  const margin = s * 0.9;
+  const rMin = Math.max(18, s * 1.1);
+  for (let i = 0; i < 26; i += 1) {
+    const r = rMin * (0.8 + rand() * 0.6);
+    const x = rand() * size.width;
+    const y = rand() * size.height;
+    const hue = 95 + rand() * 30;
+    const nearX = Math.max(lot.x - margin, Math.min(x, lot.x + lot.w + margin));
+    const nearY = Math.max(lot.y - margin, Math.min(y, lot.y + lot.h + margin));
+    // Ni sobre el aparcamiento ni bajo los botones táctiles (se verían a través de ellos).
+    if (Math.hypot(x - nearX, y - nearY) < r || y + r > controlsTop) continue;
+    contactShadow(ctx, x + r * 0.25, y + r * 0.35, r * 1.05, r * 0.85, 0.22);
+    const g = ctx.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+    g.addColorStop(0, hsl(hue, 55, 62));
+    g.addColorStop(0.65, hsl(hue, 45, 42));
+    g.addColorStop(1, hsl(hue, 45, 30));
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fill();
+    if (rand() < 0.4) {
+      ctx.fillStyle = rand() < 0.5 ? '#ffd1dc' : '#fff3b0';
+      for (let k = 0; k < 4; k += 1) {
+        ctx.beginPath();
+        ctx.arc(x + (rand() - 0.5) * r, y + (rand() - 0.5) * r, r * 0.09, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+}
+
 /** Coche centrado en el origen, mirando a +x (unidades en píxeles de pantalla). */
 function drawCar(ctx, view, length, width, color, { steer = 0, brake = false, reverse = false, lights = true, dpr = 1 } = {}) {
   // Sombra proyectada (abajo a la derecha, fuera de la caja de choque).
@@ -402,21 +441,32 @@ export function renderParking(ctx, size, state, view, input, insets, dt) {
   const lotH = level.height * s;
 
   // Acera de baldosas alrededor del aparcamiento.
-  const paving = view.sprites.get('paving', 64, 64, paintPavingTile, 1);
-  const pavingPattern = ctx.createPattern(paving.canvas, 'repeat');
-  ctx.fillStyle = pavingPattern ?? '#b9b2a6';
-  ctx.fillRect(0, 0, size.width, size.height);
+  // Acera y árboles no cambian durante la partida: un sprite por tamaño y encuadre.
+  view.ground ??= createSpriteCache(1);
+  const ground = view.ground.get(
+    `ground${Math.round(insets?.bottom ?? 0)}:${Math.round(size.width)}x${Math.round(size.height)}@${Math.round(ox)},${Math.round(oy)},${s.toFixed(2)}`,
+    size.width,
+    size.height,
+    (c, w, h) => {
+      const paving = view.sprites.get('paving', 64, 64, paintPavingTile, 1);
+      c.fillStyle = c.createPattern(paving.canvas, 'repeat') ?? '#d8cbb5';
+      c.fillRect(0, 0, w, h);
+      drawStreetTrees(c, { width: w, height: h }, { x: ox, y: oy, w: lotW, h: lotH }, s, h - (insets?.bottom ?? 0));
+    },
+    Math.min(2, dpr),
+  );
+  if (ground) ctx.drawImage(ground.canvas, 0, 0, size.width, size.height);
   ctx.save();
   ctx.translate(ox, oy);
 
   // Bordillo con sombra y asfalto con textura.
-  ctx.fillStyle = 'rgba(0,0,0,0.3)';
+  ctx.fillStyle = 'rgba(90,60,30,0.28)';
   ctx.fillRect(-s * 0.35 + 3, -s * 0.35 + 4, lotW + s * 0.7, lotH + s * 0.7);
   ctx.fillStyle = '#dfe1e7';
   ctx.fillRect(-s * 0.35, -s * 0.35, lotW + s * 0.7, lotH + s * 0.7);
   const asphalt = view.sprites.get('asphalt', 256, 256, paintAsphaltTile, 1);
   const asphaltPattern = ctx.createPattern(asphalt.canvas, 'repeat');
-  ctx.fillStyle = asphaltPattern ?? '#4a4e5c';
+  ctx.fillStyle = asphaltPattern ?? '#5c6274';
   ctx.fillRect(0, 0, lotW, lotH);
   // Sombra interior del bordillo: el asfalto queda un escalón más bajo.
   ctx.strokeStyle = 'rgba(0,0,0,0.25)';

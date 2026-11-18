@@ -5,7 +5,9 @@
       Permisos mínimos:
         INTERNET                 lo exige el WebView para cargar páginas (aunque aquí todo se sirve desde
                                  el propio APK) y lo usa Lix AI Studio para hablar con un servidor de IA
-                                 de tu red si lo configuras. La CSP de la web bloquea cualquier otro destino.
+                                 de tu red si lo configuras. La CSP de la web (inyectada en el build) bloquea
+                                 cualquier otro destino; los enlaces externos se abren en el navegador del sistema.
+      (WAKE_LOCK, ACCESS_NETWORK_STATE y FOREGROUND_SERVICE los añade WorkManager, que usa Glance para los widgets.)
         POST_NOTIFICATIONS       consejos diarios como notificación (Android 13+; se pide solo al activarlos).
         RECEIVE_BOOT_COMPLETED   volver a programar el próximo consejo tras reiniciar el teléfono.
     -->

@@ -22,6 +22,41 @@
   overscroll-behavior: none;
 }
 
+/*
+ * Escenario diurno: los juegos cuyo escenario es claro (tablero de lógica, isla, cocina…)
+ * redefinen aquí los tokens del marco para que HUD, botones, estado y pausa sigan legibles
+ * aunque la app esté en tema oscuro. Cada juego pinta su fondo; esto solo fija la tinta.
+ */
+.game-daylight {
+  color-scheme: light;
+  --text: #2a1d17;
+  --text-muted: #574238;
+  --text-subtle: #76625a;
+  --border: rgb(42 29 23 / 0.14);
+  --border-strong: rgb(42 29 23 / 0.3);
+  --hover: rgb(42 29 23 / 0.06);
+  --pressed: rgb(42 29 23 / 0.11);
+  --selected: color-mix(in oklab, var(--c-primary) 16%, transparent);
+  --surface: rgb(255 255 255 / 0.82);
+  --surface-strong: rgb(255 255 255 / 0.95);
+  --surface-solid: #fffaf4;
+  --surface-border: rgb(120 84 52 / 0.2);
+  --surface-shadow: 0 18px 40px -24px rgb(80 40 20 / 0.35), inset 0 1px 0 rgb(255 255 255 / 0.9);
+  --primary-text: color-mix(in oklab, var(--c-primary) 66%, black);
+  --accent-text: color-mix(in oklab, var(--c-accent) 48%, black);
+  --focus: color-mix(in oklab, var(--c-primary) 70%, black);
+  --danger: #b4232a;
+  --success: #17724a;
+  --warning: #8a5a00;
+  color: var(--text);
+}
+
+[data-style='maximal'] .game-daylight {
+  --surface: #fffaf4;
+  --surface-strong: #fff;
+  --surface-border: #2a1d17;
+}
+
 /* ---------- Barra superior ---------- */
 .game-topbar {
   display: grid;

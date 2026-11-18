@@ -1,4 +1,8 @@
-/* Lava y Agua — basalto oscuro, lava que respira, agua que brilla y piedra que se agrieta. */
+/*
+ * Lava y Agua — «isla volcánica a mediodía»: senderos de arena clara, rocas de basalto con musgo,
+ * lava que respira, agua turquesa que brilla y piedra recién enfriada que se agrieta.
+ * El escenario es diurno (.game-daylight): la lava se lee como peligro sobre un suelo luminoso.
+ */
 
 .lv-select {
   width: min(100%, 860px);
@@ -86,6 +90,13 @@
   color: var(--text-subtle);
 }
 
+/* Escenario de menú y partida (el cuerpo no se desplaza: el paisaje queda fijo detrás). */
+.game-screen[data-game='lava-y-agua'] .game-screen__body.is-playing {
+  /* Cielo cálido con el volcán humeando al fondo: el escenario cuenta de dónde viene la lava. */
+  background:
+    linear-gradient(180deg, #ffd6ad 0, #ffe6c6 30%, #f7e4c2 60%, #efd6a8 100%);
+}
+
 /* ---------- Partida ---------- */
 .lv-play {
   container: lv-play / inline-size;
@@ -95,6 +106,9 @@
   align-content: start;
   gap: var(--space-3);
   padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+  /* En la partida, el volcán humea detrás del tablero: de ahí viene la lava. */
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 170'%3E%3Cg fill='%23fff' opacity='.7'%3E%3Ccircle cx='196' cy='34' r='16'/%3E%3Ccircle cx='214' cy='24' r='20'/%3E%3Ccircle cx='236' cy='30' r='14'/%3E%3Ccircle cx='224' cy='10' r='12'/%3E%3C/g%3E%3Cpath d='M0 170 L60 150 L120 140 L170 64 Q200 52 230 64 L280 140 L340 150 L400 170Z' fill='%23b07a5e'/%3E%3Cpath d='M170 64 Q200 52 230 64 L220 74 Q200 66 180 74Z' fill='%23ff8a3c'/%3E%3Cpath d='M186 72 L176 110 L184 108 L180 132 L194 96 L188 98 L196 72Z M214 72 L224 102 L218 100 L228 124 L210 74Z' fill='%23f2602a' opacity='.85'/%3E%3Cpath d='M0 170 L80 158 L150 162 L230 152 L320 160 L400 156 L400 170Z' fill='%2387b862'/%3E%3C/svg%3E") no-repeat center 52px / min(440px, 110%) auto;
 }
 
 .lv-play > .game-hud {
@@ -107,14 +121,19 @@
 .lv-status {
   max-width: 42rem;
   min-height: 2.6em;
+  padding: var(--space-1) var(--space-4);
+  border-radius: 999px;
   text-align: center;
   color: var(--text-muted);
+  background: rgb(255 250 240 / 0.7);
   font-weight: 600;
   text-wrap: balance;
 }
 
 .lv-status.is-warn {
-  color: var(--danger);
+  color: #9b1c0c;
+  background: #ffe1cf;
+  box-shadow: inset 0 0 0 1px rgb(214 64 26 / 0.35);
 }
 
 .lv-status.is-warn::before {
@@ -134,7 +153,7 @@
 
 .lv-board {
   /* Celda: lo que quepa a lo ancho y a lo alto (dejando sitio a HUD, textos y controles), máx. 56 px. */
-  --cell: min(calc((100cqw - 8px) / var(--cols)), calc((100dvh - 360px) / var(--rows)), 56px);
+  --cell: min(calc((100cqw - 16px) / var(--cols) - 2px), calc((100dvh - 360px) / var(--rows)), 56px);
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--cols), var(--cell));
@@ -142,17 +161,17 @@
   gap: 2px;
   padding: 4px;
   border-radius: var(--gc-radius-md);
-  /* Lecho de basalto con un resplandor rojizo: la cueva está caliente. */
-  background:
-    radial-gradient(120% 90% at 50% 110%, rgb(255 90 30 / 0.16), transparent 60%),
-    #0e0a0c;
+  /* Meseta de la isla: borde de roca rojiza con hierba en el canto y juntas de tierra entre losas. */
+  background: #b98a5c;
+  border: 3px solid #8a5a3a;
   box-shadow:
-    0 24px 60px -30px rgb(255 90 30 / 0.6),
-    inset 0 0 0 1px rgb(255 255 255 / 0.05);
+    0 -4px 0 #7fb158,
+    0 10px 0 #6e4630,
+    0 26px 40px -16px rgb(110 60 30 / 0.55);
 }
 
 .lv-play.has-touch .lv-board {
-  --cell: min(calc((100cqw - 8px) / var(--cols)), calc((100dvh - 520px) / var(--rows)), 52px);
+  --cell: min(calc((100cqw - 16px) / var(--cols) - 2px), calc((100dvh - 520px) / var(--rows)), 52px);
 }
 
 .lv-cell {
@@ -182,29 +201,29 @@
 .lv-cell.is-wall {
   border-radius: 4px;
   background:
-    radial-gradient(ellipse 34% 22% at var(--a), rgb(255 255 255 / 0.07), transparent),
-    radial-gradient(ellipse 30% 20% at var(--b), rgb(0 0 0 / 0.25), transparent),
-    linear-gradient(180deg, #4a3f45, #342a30);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.1);
+    radial-gradient(ellipse 30% 18% at var(--a), rgb(255 255 255 / 0.18), transparent),
+    radial-gradient(ellipse 30% 20% at var(--b), rgb(40 25 20 / 0.3), transparent),
+    linear-gradient(180deg, #8bbd5e 0 16%, #6a9a45 16% 22%, #7a6a63 22%, #5e4f4a);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.25);
 }
 
 .lv-cell.is-wall.has-face {
   z-index: 1;
   background:
-    radial-gradient(ellipse 34% 18% at var(--a), rgb(255 255 255 / 0.07), transparent),
-    linear-gradient(180deg, #4a3f45 0 68%, #241c21 68%);
+    radial-gradient(ellipse 30% 14% at var(--a), rgb(255 255 255 / 0.18), transparent),
+    linear-gradient(180deg, #8bbd5e 0 12%, #6a9a45 12% 17%, #7a6a63 17% 68%, #4a3b37 68%);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    0 4px 6px -2px rgb(0 0 0 / 0.55);
+    inset 0 1px 0 rgb(255 255 255 / 0.25),
+    0 4px 6px -2px rgb(80 40 20 / 0.45);
 }
 
 /* Suelo: losas hundidas con una junta en cruz. */
 .lv-cell.is-floor {
   background:
-    linear-gradient(90deg, transparent 49%, rgb(0 0 0 / 0.18) 49% 51%, transparent 51%),
-    linear-gradient(transparent 49%, rgb(0 0 0 / 0.14) 49% 51%, transparent 51%),
-    linear-gradient(160deg, #2b2227, #221a1f);
-  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.45);
+    radial-gradient(circle at var(--b), rgb(160 110 60 / 0.35) 0 1.5px, transparent 2px),
+    radial-gradient(circle at var(--a), rgb(255 255 255 / 0.5) 0 1px, transparent 1.5px),
+    linear-gradient(160deg, #fbe9c4, #efd29c);
+  box-shadow: inset 0 -2px 0 rgb(170 120 60 / 0.25);
 }
 
 .lv-cell.is-adjacent {
@@ -216,7 +235,7 @@
   position: absolute;
   inset: 3px;
   border-radius: 5px;
-  border: 2px dashed rgb(255 231 166 / 0.28);
+  border: 2px dashed rgb(150 90 40 / 0.45);
   pointer-events: none;
 }
 
@@ -230,7 +249,7 @@
     radial-gradient(ellipse 28% 34% at var(--b), var(--crust), transparent 75%),
     radial-gradient(ellipse 60% 40% at 50% 50%, rgb(255 220 120 / 0.5), transparent 70%),
     linear-gradient(135deg, #ff9a2b, #e8401b 60%, #b9230f);
-  box-shadow: 0 0 14px 1px rgb(255 100 30 / 0.5);
+  box-shadow: 0 0 10px 1px rgb(255 100 30 / 0.55);
 }
 
 .lv-cell.is-lava::after {
@@ -286,8 +305,8 @@
   overflow: hidden;
   background:
     repeating-radial-gradient(circle at 30% 120%, transparent 0 7px, rgb(255 255 255 / 0.12) 7px 8px),
-    linear-gradient(170deg, #5cc0ff, #1f6fd1 70%, #1a55a8);
-  box-shadow: inset 0 2px 5px rgb(0 20 60 / 0.4);
+    linear-gradient(170deg, #7fe3f0, #26a9d8 60%, #1878c0);
+  box-shadow: inset 0 2px 5px rgb(0 40 80 / 0.3);
 }
 
 .lv-cell.is-water::after {
@@ -316,8 +335,8 @@
   background:
     linear-gradient(115deg, transparent 46%, rgb(0 0 0 / 0.4) 47% 50%, transparent 51%),
     linear-gradient(35deg, transparent 60%, rgb(0 0 0 / 0.35) 61% 63%, transparent 64%),
-    radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.12), transparent 50%),
-    linear-gradient(160deg, #7e7f88, #4f5059);
+    radial-gradient(circle at 30% 25%, rgb(255 255 255 / 0.22), transparent 50%),
+    linear-gradient(160deg, #a2a6b4, #6f7383);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.12),
     inset 0 -3px 0 rgb(0 0 0 / 0.3);
@@ -430,8 +449,8 @@
   position: absolute;
   inset: 8%;
   border-radius: 50%;
-  background: radial-gradient(circle, #fffbe0 0 18%, #9be7ff 38%, rgb(80 170 255 / 0.25) 60%, transparent 72%);
-  box-shadow: 0 0 16px rgb(155 231 255 / 0.7);
+  background: radial-gradient(circle, #fffbe0 0 18%, #6fd8ff 38%, rgb(30 140 230 / 0.35) 60%, transparent 72%);
+  box-shadow: 0 0 14px rgb(40 170 240 / 0.7);
   animation: lv-beacon 1.8s ease-in-out infinite alternate;
 }
 
@@ -440,7 +459,7 @@
   position: absolute;
   inset: 20%;
   border-radius: 50%;
-  border: 2px solid rgb(220 245 255 / 0.7);
+  border: 2px solid rgb(20 120 200 / 0.75);
 }
 
 .lv-cell.is-exit.is-lava::before {
@@ -466,7 +485,7 @@
   pointer-events: none;
   transform: translate(calc(var(--px) * (var(--cell) + 2px)), calc(var(--py) * (var(--cell) + 2px)));
   transition: transform 140ms var(--ease-out);
-  filter: drop-shadow(0 0 8px rgb(255 220 160 / 0.55));
+  filter: drop-shadow(0 2px 3px rgb(90 40 10 / 0.35));
 }
 
 .lv-player__hop {
@@ -509,7 +528,7 @@
 }
 
 .lv-player.is-won {
-  filter: drop-shadow(0 0 14px rgb(155 231 255 / 0.9));
+  filter: drop-shadow(0 0 10px rgb(40 160 220 / 0.9));
 }
 
 /* Cruceta táctil con botón de esperar en el centro-izquierda. */
@@ -528,19 +547,19 @@
   width: 60px;
   height: 60px;
   border-radius: 18px;
-  color: #f3e6dc;
-  border-color: rgb(255 255 255 / 0.08);
-  background: linear-gradient(180deg, #43383e, #2c2328);
+  color: #fff8ef;
+  border-color: rgb(255 255 255 / 0.2);
+  background: linear-gradient(180deg, #d0764a, #b25530);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    0 4px 0 #1a1317;
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 4px 0 #7e3517;
 }
 
 .lv-btn.hold-btn:active {
   transform: translateY(3px);
   box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.08),
-    0 1px 0 #1a1317;
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    0 1px 0 #7e3517;
 }
 
 .lv-btn.hold-btn svg {
@@ -550,6 +569,13 @@
 
 .lv-btn--wait {
   grid-area: wait;
+}
+
+.lv-btn--wait.hold-btn {
+  background: linear-gradient(180deg, #3fb0d8, #1f86b8);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    0 4px 0 #13597d;
 }
 .lv-btn--up {
   grid-area: up;

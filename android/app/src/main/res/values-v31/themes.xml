@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: pantalla de inicio del sistema con el icono de la app sobre el color de la app. -->
+    <style name="Theme.Lix" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/lix_background</item>
+        <item name="android:windowSplashScreenBackground">@color/lix_background</item>
+    </style>
+</resources>

@@ -11,6 +11,7 @@ export const despejarManifest = {
   categories: ['logica', 'estrategia'],
   Art: JamArt,
   palette: { a: '#5ce39a', b: '#ffb347' },
+  scene: 'day',
   facts: [`${LEVELS.length} niveles`, 'Todos con solución comprobada', 'Deshacer ilimitado'],
   objective: 'Vaciar el aparcamiento: sacar todos los coches por las salidas marcadas en el borde.',
   howTo: [

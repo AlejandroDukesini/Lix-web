@@ -8,7 +8,7 @@ const MAP = [
   '#..SWW..E#',
   '##########',
 ];
-const FILL = { '#': '#2a2026', '.': '#3a2f35', L: 'url(#lv-lava)', S: '#7c808b', W: 'url(#lv-water)', P: '#3a2f35', E: '#3a2f35' };
+const FILL = { '#': '#6f625c', '.': '#f3ddb0', L: 'url(#lv-lava)', S: '#9aa0ae', W: 'url(#lv-water)', P: '#f3ddb0', E: '#f3ddb0' };
 
 export function LavaArt({ className }) {
   return (
@@ -28,12 +28,12 @@ export function LavaArt({ className }) {
           <stop offset="1" stopColor="#9be7ff" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <rect width="400" height="250" fill="#170f13" />
+      <rect width="400" height="250" fill="#ffe0bd" />
       <g transform="translate(30 23)">
         {MAP.map((row, y) =>
           [...row].map((ch, x) => <rect key={`${x}-${y}`} x={x * C + 1} y={y * C + 1} width={C - 2} height={C - 2} rx="6" fill={FILL[ch]} />),
         )}
-        <path d="M108 80 l10 12 l-6 10 M112 116 l8 8" stroke="#3e4049" strokeWidth="2" fill="none" />
+        <path d="M108 80 l10 12 l-6 10 M112 116 l8 8" stroke="#5d6170" strokeWidth="2" fill="none" />
         <circle cx={8 * C + C / 2} cy={4 * C + C / 2} r="16" fill="url(#lv-exit)" />
         <circle cx={6 * C + C / 2} cy={2 * C + C / 2} r="11" fill="#ffe7a6" stroke="#1a0f16" strokeWidth="3" />
         <circle cx={6 * C + C / 2} cy={2 * C + C / 2} r="20" fill="#ffd9a0" opacity="0.18" />
