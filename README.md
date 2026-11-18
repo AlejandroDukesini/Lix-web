@@ -27,7 +27,7 @@ juegos, documentos, diario, calendario y finanzas (ya todos disponibles).
 | **Consejos diarios** (v1.2.0): 120 consejos en 10 categorías, propios, franjas, historial, favoritos y notificaciones | ✅ Funcional (con la app abierta en la web; también cerrada en Android) |
 | **Lix Flowers** (v1.2.0): animaciones de flores en arte ASCII generadas con Python (Pyodide + Pillow) sin conexión | ✅ Funcional |
 | **Lix AI Studio** (v1.2.0): pintor procedural (no es IA) o IA real con un servidor propio | ✅ Funcional (IA real probada solo con un servidor simulado) |
-| **App Android** (v1.2.0): app nativa en Kotlin con 4 widgets Jetpack Glance | ✅ Funcional en emulador (API 34); sin probar en teléfono físico |
+| **App Android** (v1.2.1): APK nativo en Kotlin (WebView + 4 widgets Jetpack Glance), pantalla completa en partidas, pausa al minimizar, firma de publicación | ✅ APK debug y release probados en emulador (API 34); sin probar en teléfono físico |
 | **Widget de Windows 11** (v1.2.0) e **iPhone** | Windows: implementado, sin verificar en el Tablero · iPhone: análisis |
 
 Todo lo nuevo de la versión 1.2.0 (arquitectura, compilación, instalación de widgets, pruebas y límites) está en
@@ -127,12 +127,119 @@ Alternativas válidas:
 direcciones, o *Configuración → Instalar y usar sin Internet → Instalar aplicación* cuando el navegador lo ofrece.
 Firefox de escritorio no instala PWAs (se puede usar en una pestaña).
 
-**Android (Chrome):** menú ⋮ → *Instalar aplicación* / *Añadir a pantalla de inicio*.
+**Android:** instala el APK (ver «App Android (APK)» más abajo) o, sin APK, desde Chrome: menú ⋮ → *Instalar
+aplicación* / *Añadir a pantalla de inicio*.
 
 **iPhone / iPad:** iOS no tiene botón de instalación automático. Abre la app en **Safari** → botón **Compartir** →
 **Añadir a pantalla de inicio** → **Añadir**. La app no muestra un botón «Instalar» en iOS porque no podría cumplirlo;
 en su lugar enseña estos pasos. Probada en simulación de iPhone XS (375 × 812) con áreas seguras (`viewport-fit=cover`
 + `env(safe-area-inset-*)`).
+
+## App Android (APK)
+
+La misma app web empaquetada en un APK instalable, con todos los juegos y sin necesitar Internet ni servidor.
+
+### Descargar la app
+
+**[⬇ Descargar Lix para Android (APK)](https://github.com/AlejandroDukesini/Lix-web/releases/latest/download/Lix.apk)**
+— siempre la última versión publicada. Todas las versiones y sus notas: [Releases](https://github.com/AlejandroDukesini/Lix-web/releases).
+
+1. Abre el enlace desde el teléfono (o descárgalo en el computador y pásalo por cable, Drive o correo).
+2. Toca el archivo `Lix.apk`. Android pedirá permitir «Instalar apps desconocidas» para el navegador o el gestor de
+   archivos con el que lo abres; actívalo solo para esa app y vuelve atrás.
+3. Toca **Instalar** y abre **Lix** desde su icono. Requiere Android 8.0 o superior.
+
+**Actualizar:** descarga el APK nuevo e instálalo encima; los datos se conservan porque todas las versiones van
+firmadas con la misma clave. Si Play Protect avisa de una app desconocida, es porque no se distribuye por Google Play:
+elige *Instalar de todas formas*.
+
+**Publicar una versión nueva** (mantenedor): sube `version` en `package.json`, ejecuta `npm run android:release` y crea
+la *release* adjuntando el APK con el nombre `Lix.apk` para que el enlace de arriba apunte a ella:
+
+```bash
+cp android/app/build/outputs/apk/release/app-release.apk Lix.apk
+gh release create v1.2.1 Lix.apk --title "Lix 1.2.1" --notes-file notas.md
+```
+
+### Compilar el APK
+
+**Arquitectura.** `android/` es un *shell* nativo en Kotlin: una `Activity` con un WebView que sirve el build web
+(`dist/`, copiado dentro del APK por la tarea Gradle `syncWebAssets`) desde `https://appassets.androidplatform.net`
+con `WebViewAssetLoader`. Se mantuvo frente a Capacitor, React Native o Tauri porque reutiliza el 100 % del código web
+(React + Vite, juegos en Canvas/DOM/SVG) sin capas intermedias y ya integra lo que necesita código nativo: widgets
+Jetpack Glance, consejos con la app cerrada y descargas (puente `window.LixAndroid`, `LixBridge.kt`). Capacitor haría
+lo mismo que este WebView, pero añadiría dependencias y obligaría a migrar los widgets. Detalle de widgets y puente:
+[`docs/MULTIPLATAFORMA.md`](docs/MULTIPLATAFORMA.md).
+
+**Experiencia móvil (`MainActivity.kt`):**
+
+- De borde a borde (obligatorio desde Android 15): el contenido se separa de la barra de estado, la de navegación, el
+  recorte de la cámara y el teclado con márgenes nativos.
+- **Pantalla completa durante las partidas** (`LixAndroid.setImmersive`, llamado desde `GamePage.jsx`); las barras
+  reaparecen un momento deslizando desde el borde y vuelven al salir del juego.
+- **Al minimizar se pausa el WebView**: la página pasa a oculta y los juegos se ponen en pausa solos (escuchan
+  `visibilitychange`); al volver se reanuda en el mismo punto.
+- **Botón Atrás**: primero pregunta a la página (`window.__lixBack`). En un juego cierra el diálogo abierto o pide
+  confirmar la salida si hay una partida en curso; fuera de los juegos navega hacia atrás y, al final, cierra la app.
+- Rotación sin recargar (la `Activity` gestiona el cambio de orientación); los juegos ya tenían diseño horizontal.
+- Enlaces externos (p. ej. la versión online de un juego): en el navegador del sistema, solo `https`, `http` y `mailto`.
+
+**Requisitos:** Node.js 20+ (probado con 24), JDK 17+ (probado con 21) y Android SDK con *platform* 36 y *build-tools*
+(Android Studio los instala; ruta en `android/local.properties` → `sdk.dir=…`, o la variable `ANDROID_HOME`). Gradle no
+hay que instalarlo: va el *wrapper* (8.14.3).
+
+**Desde cero:**
+
+```bash
+git clone <repo> && cd WEB-NOVIA-WF
+npm install
+npm run android:build        # build web + APK de pruebas (debug)
+npm run android:keystore     # solo la primera vez: crea tu clave de publicación
+npm run android:release      # build web + APK de publicación (release, firmado)
+```
+
+**Dónde queda cada APK** (rutas comprobadas):
+
+| Tipo | Archivo | Paquete |
+| --- | --- | --- |
+| Debug | `android/app/build/outputs/apk/debug/app-debug.apk` (~24 MB) | `app.lix.web.debug` |
+| Release | `android/app/build/outputs/apk/release/app-release.apk` (~16 MB) | `app.lix.web` |
+
+**Debug y release.** El de depuración permite inspeccionar el WebView desde `chrome://inspect`, va firmado con la
+clave de depuración del SDK y lleva el sufijo `.debug`, así que convive con el de publicación en el mismo teléfono
+(son apps distintas, con datos distintos). El de publicación no es depurable, pasa por R8 (código nativo reducido;
+`proguard-rules.pro` conserva el puente JS) y va firmado con tu clave: es el de uso diario.
+
+**Instalar en el teléfono:**
+
+1. Copia el APK al teléfono (cable USB, Drive, correo…) o, con la depuración USB activada:
+   `adb install -r android/app/build/outputs/apk/release/app-release.apk`.
+2. Ábrelo; Android pedirá permitir «Instalar apps desconocidas» para la app con la que lo abres (solo esa vez).
+3. Abre **Lix** desde su icono. No pide permisos al iniciar; las notificaciones, solo si activas los consejos.
+
+**Firma de publicación.** `npm run android:keystore` crea `~/.lix-android/lix-release.jks` (RSA 4096, contraseña
+aleatoria) y `android/keystore.properties` con su ruta y contraseñas. **Ninguno de los dos va al repositorio**
+(`android/.gitignore`). Guarda una copia de ambos (p. ej. en tu gestor de contraseñas): Android solo instala una
+versión nueva encima de la anterior si está firmada con la misma clave; si se pierde, hay que desinstalar y se pierden
+los datos de la app. En CI, en lugar del archivo, define `LIX_KEYSTORE`, `LIX_KEYSTORE_PASSWORD`, `LIX_KEY_ALIAS` y
+`LIX_KEY_PASSWORD`. Sin firma, `assembleRelease` se detiene con un mensaje en vez de producir un APK sin firmar.
+
+**Nuevas versiones.** Sube `version` en `package.json` y ejecuta `npm run android:release`. La versión del APK sale de
+ahí: `versionName` = `1.2.0` y `versionCode` = mayor·10000 + menor·100 + parche (1.2.0 → 10200), así cada versión
+instala encima de la anterior **conservando los datos**. Se instala igual que la primera vez (o `adb install -r`).
+
+**Datos.** Puntuaciones, récords, progreso y preferencias se guardan en el almacenamiento del WebView (IndexedDB y
+localStorage), privado de la app: sobreviven a cerrarla, reiniciar el teléfono y actualizar, y se borran al
+desinstalarla (`allowBackup="false"`: no van a la copia de Google). Son independientes de los del navegador del mismo
+teléfono; para moverlos usa la copia JSON de Configuración.
+
+**Sin Internet** funciona todo salvo las versiones online opcionales de algunos juegos (abren su web oficial) y Lix
+AI Studio cuando apunta a un servidor de tu red. **Permisos:** `INTERNET`, `POST_NOTIFICATIONS` (consejos; se pide al
+activarlos) y `RECEIVE_BOOT_COMPLETED`; WorkManager (lo usa Glance) añade `WAKE_LOCK`, `ACCESS_NETWORK_STATE` y
+`FOREGROUND_SERVICE`. Ni cámara, ni ubicación, ni contactos, ni micrófono, ni almacenamiento.
+
+**Identificador:** `app.lix.web` (dominio invertido de la app, el mismo desde v1.2.0). No se cambia: hacerlo crearía
+otra app y la instalada dejaría de actualizarse.
 
 ---
 
@@ -392,6 +499,27 @@ encaja.
 - **Despejar, HexaStack y cocina:** coches nuevos (`components/CarArt.jsx`), fichas hexagonales con volumen y comida
   dibujada con más detalle.
 
+### Escenarios diurnos (v1.2.1)
+
+Segunda pasada sobre los juegos cuyo escenario era casi negro (losas al 7 % de blanco, asfalto gris, mostradores azul
+marino). Mecánicas, controles, puntuación y niveles no cambian.
+
+- **Lava y Agua → «isla volcánica a mediodía»:** senderos de arena, rocas de basalto con musgo, lava viva, agua
+  turquesa, cielo cálido y el volcán humeando detrás del tablero; cruceta de terracota y botón de esperar en azul.
+- **Cubrir el espacio → «taller de azulejos»:** bandeja de cerámica crema sobre papel con rejilla y muros de azulejo
+  vidriado azul petróleo; Deslizar pinta en violeta-rosa y Trazo en turquesa-lima (también en el menú).
+- **Despejar → aparcamiento de barrio:** acera de baldosas, seto alrededor, asfalto azulado con líneas amarillas y
+  jardineras como obstáculos.
+- **Aparcar el carro:** acera clara y árboles de calle (fuera del aparcamiento y de los botones táctiles), pintados una
+  vez en un fondo cacheado aparte (un solo elemento: no llena la caché de sprites con imágenes de pantalla completa).
+- **Heladería, Pizzería y Pastelería:** cada tienda con su mostrador (damero menta y mármol blanco; azulejo de
+  trattoria y madera; papel rayado rosa y mármol rosado con canto dorado), toldo a rayas y suelo propio.
+
+En estos seis juegos el manifiesto declara `scene: 'day'`: `GamePage` añade `.game-daylight` al cuerpo durante el juego
+(menú de niveles incluido), que redefine los tokens de texto y superficie (`styles/game-screen.css`). Así HUD, botones,
+pausa y resultados se leen sobre fondo claro aunque la app esté en tema oscuro, sin reescribir cada componente. La
+barra superior y la presentación siguen el tema de la app.
+
 **Principios:** las animaciones se disparan solo con cambios reales del estado (claves de React o comparación con el
 estado anterior), nunca en bucle sin motivo. El movimiento reducido (preferencia del sistema o de la app) las desactiva
 con la regla global de `styles/base.css`. Cada juego conserva un solo bucle `requestAnimationFrame`, que se cancela al
@@ -645,8 +773,13 @@ casuales y así se explica en la interfaz. El Markdown nunca se interpreta como 
   hay ninguno verificado. Las sesiones online no se registran: la app no puede medir su duración ni conocer resultados.
 - **Game Center:** sin multijugador remoto por diseño (los rivales son bots locales). El ajedrez a dos jugadores es por
   turnos en el mismo dispositivo. Las estadísticas de juegos no van en la copia JSON descargable. Los controles
-  táctiles se han validado con emulación móvil en Edge, **no en un Android ni en un iPhone físicos** (pendiente:
-  latencia táctil, rendimiento del lienzo en gama baja, Safari iOS).
+  táctiles se han validado con emulación móvil en Edge y en el emulador de Android (API 34, GPU por software), **no
+  en un Android ni en un iPhone físicos** (pendiente: latencia táctil, rendimiento del lienzo en gama baja, Safari iOS).
+- **APK:** probado en emulador (instalación, apertura, navegación, partida con toques, Atrás, minimizar y reanudar con
+  pausa automática, rotación, persistencia tras forzar el cierre). Los widgets con R8 solo se comprobaron forzando su
+  actualización sin errores, no colocándolos en el escritorio. Las 6 alertas «high» de `npm audit` son de herramientas
+  de desarrollo (Vite, Vitest, undici de jsdom) y no van en el APK; actualizarlas queda pendiente de una pasada propia
+  (`npm audit fix` sube Vite; el arreglo de Vitest es un cambio de versión mayor).
 - **Fase 3:** Frente Abierto es por turnos contra una IA local; no reproduce el multijugador en tiempo real de
   OpenFront.io (para eso está el enlace a la original). En mapas grandes en un teléfono vertical el mapa se desplaza
   en horizontal dentro de su marco para que cada casilla mida al menos ~36 px. En Saltos de Lumi, en un teléfono en

@@ -1,5 +1,19 @@
 # Historial de versiones
 
+## 1.2.1 — 17 de noviembre de 2026
+
+**Rediseño UI/UX de juegos (escenarios diurnos) y APK de Android descargable.**
+
+- **Juegos:** Lava y Agua («isla volcánica a mediodía»), Cubrir el espacio («taller de azulejos»), Despejar
+  (aparcamiento de barrio), Aparcar el carro (acera y árboles de calle) y Heladería, Pizzería y Pastelería (mostrador,
+  toldo y suelo propios). Mecánicas, controles, puntuación y niveles sin cambios.
+- **Android:** pantalla completa durante las partidas, botón Atrás con confirmación si hay partida en curso, diseño de
+  borde a borde, pausa automática al minimizar, enlaces externos restringidos, APK de publicación reducido con R8 y
+  firmado con clave propia (`npm run android:keystore`).
+- **Descarga:** el APK se publica en GitHub Releases como `Lix.apk`; instrucciones en el README («Descargar la app»).
+
+Validado con `npm run check` (822 pruebas, build y 104 comprobaciones E2E) y el APK release en emulador (API 34).
+
 ## 1.2.0 — 11 de noviembre de 2026
 
 **Taller creativo, Control académico, Consejos diarios y app Android con widgets.**
