@@ -6,6 +6,7 @@ import { createDefaultPreferences } from '../../../services/preferences/defaults
 import { PREFERENCES_KEY } from '../../../services/preferences/preferencesService.js';
 import { embedOrigins, iframeAllow, isTrustedSource, ONLINE_SOURCES, onlineSourceFor, PROVIDERS } from '../online/onlineSources.js';
 import { OnlineGameFrame } from '../components/OnlineGameFrame.jsx';
+import { GAMES } from '../registry/gameRegistry.js';
 import { CONTENT_SECURITY_POLICY } from '../../../../scripts/vite-plugin-offline.js';
 
 const setOnline = (value) => Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => value });
@@ -24,8 +25,25 @@ describe('fuentes online (configuración)', () => {
     });
   });
 
+  it('el catálogo externo: cada enlace es válido, de un proveedor conocido, de un juego existente y sin duplicados', () => {
+    const urls = Object.values(ONLINE_SOURCES).map((s) => s.url);
+    expect(new Set(urls).size).toBe(urls.length);
+    for (const [id, source] of Object.entries(ONLINE_SOURCES)) {
+      expect(source.gameId).toBe(id);
+      expect(GAMES.some((g) => g.id === id), id).toBe(true);
+      expect(isTrustedSource(source), id).toBe(true);
+      expect(source.method).toBe('external');
+      expect(source.title && source.developer && source.verifiedOn).toBeTruthy();
+    }
+    // Enlaces pedidos expresamente para esta ampliación del catálogo.
+    expect(onlineSourceFor('gato-largo').url).toBe('https://poki.com/es/g/longcat');
+    expect(onlineSourceFor('tunnel-runner').url).toBe('https://www.crazygames.com/es/game/tunnel-runner');
+    expect(onlineSourceFor('bloques').url).toBe('https://play.tetris.com/');
+    expect(onlineSourceFor('lava-y-agua').url).toBe('https://www.crazygames.com/es/game/lava-and-aqua');
+  });
+
   it('los juegos sin versión online verificada no tienen fuente', () => {
-    for (const id of ['chess', 'tunnel-runner', 'logic-grid', 'io-games', 'no-existe']) expect(onlineSourceFor(id)).toBeNull();
+    for (const id of ['chess', 'logic-grid', 'io-games', 'no-existe']) expect(onlineSourceFor(id)).toBeNull();
   });
 
   it('rechaza cualquier URL fuera de la lista permitida del proveedor y del método', () => {

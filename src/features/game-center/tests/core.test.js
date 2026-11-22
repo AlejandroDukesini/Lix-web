@@ -89,13 +89,13 @@ describe('almacenamiento de juegos', () => {
   });
 
   it('cuenta partidas, partidas terminadas, tiempo y progreso por juego', async () => {
-    await recordGameStart('logic-grid');
-    await recordGameResult('logic-grid', {
+    await recordGameStart('gato-largo');
+    await recordGameResult('gato-largo', {
       completed: true,
       durationMs: 30_000,
       progress: (p) => ({ ...p, completed: { 'slide-01': true } }),
     });
-    const record = await readGameRecord('logic-grid');
+    const record = await readGameRecord('gato-largo');
     expect(record).toMatchObject({ plays: 1, completions: 1, totalTimeMs: 30_000, progress: { completed: { 'slide-01': true } } });
     expect(record.lastPlayedAt).not.toBeNull();
     // Los datos de un juego no tocan a los demás.
@@ -132,13 +132,16 @@ describe('almacenamiento de juegos', () => {
 const PHASE_2_IDS = ['cruce-del-pollo', 'resolver-casos', 'sudokus', 'aparcar', 'despejar'];
 const PHASE_3_IDS = ['hexastack', 'traffic-rider', 'frente-abierto', 'saltos-de-lumi'];
 const PHASE_4_IDS = ['reino-de-ladrillos', 'bloques', 'lava-y-agua', 'stellarium', 'heladeria', 'pizzeria', 'pasteleria'];
+const PHASE_5_IDS = ['gato-largo', 'botica', 'cochera', 'hamburgueseria'];
 
 describe('registro de juegos', () => {
-  it('tiene los juegos de las Fases 1 a 4, con manifiesto completo', () => {
-    expect(GAMES.filter((g) => g.phase === 1).map((g) => g.id)).toEqual(['aquapark', 'io-games', 'logic-grid', 'chess', 'tunnel-runner']);
+  it('tiene los juegos de las Fases 1 a 5, con manifiesto completo', () => {
+    expect(GAMES.filter((g) => g.phase === 1).map((g) => g.id)).toEqual(['aquapark', 'io-games', 'chess', 'tunnel-runner']);
     expect(GAMES.filter((g) => g.phase === 2).map((g) => g.id)).toEqual(PHASE_2_IDS);
     expect(GAMES.filter((g) => g.phase === 3).map((g) => g.id)).toEqual(PHASE_3_IDS);
     expect(GAMES.filter((g) => g.phase === 4).map((g) => g.id)).toEqual(PHASE_4_IDS);
+    expect(GAMES.filter((g) => g.phase === 5).map((g) => g.id)).toEqual(PHASE_5_IDS);
+    expect(GAMES.some((g) => g.id === 'logic-grid')).toBe(false); // sustituido por Gato largo
     expect(new Set(GAMES.map((g) => g.id)).size).toBe(GAMES.length);
     const categoryIds = CATEGORIES.map((c) => c.id);
     for (const game of GAMES) {
@@ -169,7 +172,7 @@ describe('registro de juegos', () => {
   it('busca por nombre y categoría, sin distinguir tildes ni mayúsculas', () => {
     const titles = (query, category) => filterGames(GAMES, { query, category }, categoryLabel).map((g) => g.title);
     expect(titles('AJEDREZ')).toEqual(['Ajedrez']);
-    expect(titles('logica')).toEqual(['Cubrir el espacio', 'Ajedrez', 'Resolver casos', 'Sudokus', 'Despejar el estacionamiento', 'HexaStack', 'Bloques que caen', 'Lava y Agua']);
+    expect(titles('logica')).toEqual(['Ajedrez', 'Resolver casos', 'Sudokus', 'Despejar el estacionamiento', 'HexaStack', 'Bloques que caen', 'Lava y Agua', 'Gato largo', 'Botica de colores', 'Salida de la cochera']);
     expect(titles('', 'carreras')).toEqual(['Aquapark', 'Tunnel Runner', 'Aparcar el carro', 'Traffic Rider']);
     expect(titles('tunnel', 'logica')).toEqual([]);
     expect(titles('zzz')).toEqual([]);
@@ -184,8 +187,8 @@ describe('registro de juegos', () => {
     expect(summary).toMatchObject({ plays: 4, completions: 2, totalTimeMs: 60_000, lastPlayed: { id: 'tunnel-runner' } });
     // 1 nivel de IA (guardado con el id antiguo «novato», que equivale a «Niño») + 2 hitos de distancia.
     expect(summary.milestonesDone).toBe(3);
-    // Fase 1: 6 circuitos + 3 minijuegos + 20 niveles + 5 niveles de IA + 3 hitos; más los de cada juego nuevo.
+    // Fase 1: 6 circuitos + 3 minijuegos + 5 niveles de IA + 3 hitos («Cubrir el espacio» ya no está); más los de cada juego nuevo.
     const phase2 = GAMES.filter((g) => g.phase >= 2).reduce((sum, g) => sum + g.progress(null).total, 0);
-    expect(summary.milestonesTotal).toBe(6 + 3 + 20 + 5 + 3 + phase2);
+    expect(summary.milestonesTotal).toBe(6 + 3 + 5 + 3 + phase2);
   });
 });

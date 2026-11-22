@@ -1,0 +1,472 @@
+/*
+ * Salida de la cochera — vista cenital de una cochera de autobuses a media
+ * tarde: hormigón claro con plazas pintadas, un carril amarillo hacia la
+ * salida y, fuera, la parada con los pasajeros esperando. Los vehículos son
+ * botones que se arrastran solo por su eje (touch-action: none solo en ellos).
+ */
+
+/* ---------- Niveles ---------- */
+.ch-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.ch-select__title {
+  font-size: var(--text-3xl);
+}
+
+.ch-select__text {
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.ch-tier {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.ch-tier__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.ch-tier__title small {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.ch-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.ch-level {
+  width: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 2px;
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width, 1px) solid var(--surface-border);
+  background:
+    linear-gradient(transparent calc(50% - 10px), rgb(242 180 23 / 0.18) calc(50% - 10px) calc(50% + 10px), transparent calc(50% + 10px)),
+    var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.ch-level:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.ch-level:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.ch-level:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ch-level.is-done {
+  border-color: color-mix(in oklab, #f2b417 60%, var(--surface-border));
+}
+
+.ch-level__number {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  line-height: 1;
+}
+
+.ch-level__meta {
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+}
+
+.ch-level__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ch-stars {
+  display: inline-flex;
+}
+
+.ch-stars svg {
+  width: 12px;
+  height: 12px;
+  color: var(--text-subtle);
+}
+
+.ch-stars svg.is-on {
+  color: #f2b417;
+  fill: #f2b417;
+}
+
+/* ---------- Partida ---------- */
+.ch-play {
+  position: relative;
+  min-height: 100%;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+  background:
+    radial-gradient(70% 50% at 50% 0%, rgb(255 244 214 / 0.8), transparent 70%),
+    linear-gradient(#e9f0e2, #d9e4cf);
+}
+
+.ch-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+/* Muro perimetral de la cochera, con hueco de salida a la derecha. */
+.ch-depot {
+  position: relative;
+  width: min(100% - 46px, calc(100dvh - 300px), 520px);
+  min-width: min(100% - 46px, 260px);
+  margin-right: 46px;
+  padding: 12px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #b9bfc6, #8e959e);
+  box-shadow:
+    inset 0 2px 0 rgb(255 255 255 / 0.5),
+    inset 0 -4px 0 rgb(0 0 0 / 0.18),
+    0 22px 36px -22px rgb(40 50 40 / 0.65);
+}
+
+.ch-board {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  background:
+    /* plazas pintadas */
+    linear-gradient(90deg, rgb(255 255 255 / 0.55) 2px, transparent 2px) 0 0 / calc(100% / 6) calc(100% / 6),
+    linear-gradient(rgb(255 255 255 / 0.18) 1px, transparent 1px) 0 0 / calc(100% / 6) calc(100% / 6),
+    /* manchas del hormigón */
+    radial-gradient(ellipse 18% 10% at 30% 70%, rgb(60 66 74 / 0.18), transparent 70%),
+    radial-gradient(ellipse 14% 8% at 75% 20%, rgb(60 66 74 / 0.14), transparent 70%),
+    #a4abb4;
+  box-shadow: inset 0 3px 8px rgb(20 30 40 / 0.3);
+}
+
+/* Carril de salida: franjas amarillas que llevan a la puerta. */
+.ch-lane {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: repeating-linear-gradient(90deg, rgb(242 180 23 / 0.55) 0 18px, transparent 18px 30px) 0 50% / 100% 4px no-repeat;
+  pointer-events: none;
+}
+
+.ch-exit {
+  position: absolute;
+  right: -12px;
+  width: 14px;
+  display: grid;
+  place-items: center;
+  background: #a4abb4;
+  pointer-events: none;
+}
+
+.ch-exit span {
+  position: absolute;
+  left: calc(100% + 4px);
+  writing-mode: vertical-rl;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #2b6a3b;
+}
+
+.ch-exit::before,
+.ch-exit::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  width: 16px;
+  height: 6px;
+  border-radius: 3px;
+  background: repeating-linear-gradient(90deg, #e0392b 0 4px, #fff 4px 8px);
+}
+
+.ch-exit::before {
+  top: -3px;
+}
+
+.ch-exit::after {
+  bottom: -3px;
+}
+
+/* Parada fuera de la cochera, con los pasajeros que esperan. */
+.ch-stop {
+  position: absolute;
+  left: calc(100% + 10px);
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+.ch-stop__sign {
+  padding: 1px 4px;
+  border-radius: 4px;
+  background: #2b6a3b;
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 800;
+}
+
+.ch-stop__people {
+  display: grid;
+  gap: 3px;
+}
+
+.ch-stop__people i {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #f2c9a0 0 30%, transparent 32%), var(--c, #e86a5a);
+  box-shadow: 0 2px 3px rgb(0 0 0 / 0.25);
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.ch-stop__people i:nth-child(2) {
+  --c: #3f7fd8;
+  transition-delay: 0.12s;
+}
+
+.ch-stop__people i:nth-child(3) {
+  --c: #8a5bd0;
+  transition-delay: 0.24s;
+}
+
+.ch-stop__people.is-boarding i {
+  transform: translateX(-26px) scale(0.4);
+  opacity: 0;
+}
+
+/* Bolardo de hormigón con franjas. */
+.ch-bollard {
+  position: absolute;
+  display: grid;
+  place-items: center;
+}
+
+.ch-bollard::before {
+  content: '';
+  width: 52%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: repeating-conic-gradient(#f2b417 0 45deg, #2a2d33 45deg 90deg);
+  box-shadow: 0 4px 6px rgb(0 0 0 / 0.35), inset 0 0 0 3px rgb(255 255 255 / 0.4);
+}
+
+/* ---------- Vehículos ---------- */
+.ch-vehicle {
+  position: absolute;
+  padding: 3%;
+  border: 0;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+  transition: transform 0.18s cubic-bezier(0.3, 0.8, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+  z-index: 1;
+}
+
+.ch-vehicle.is-h {
+  padding: 4px 3px;
+}
+
+.ch-vehicle.is-v {
+  padding: 0;
+}
+
+.ch-vehicle.is-dragging {
+  transition: none;
+  cursor: grabbing;
+  z-index: 2;
+}
+
+.ch-vehicle:disabled {
+  cursor: default;
+}
+
+.ch-vehicle:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: -2px;
+  border-radius: 12px;
+}
+
+.ch-vehicle__body {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 4px 3px rgb(20 25 35 / 0.35));
+}
+
+.ch-vehicle.is-dragging .ch-vehicle__body {
+  filter: drop-shadow(0 9px 6px rgb(20 25 35 / 0.35));
+}
+
+.ch-vehicle__body svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Los verticales usan el mismo dibujo, girado: el cuerpo mide lo que el botón de alto. */
+.ch-vehicle.is-v .ch-vehicle__body {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(var(--len) * 100% - 6px);
+  height: calc(100% / var(--len) - 8px);
+  translate: -50% -50%;
+  rotate: 90deg;
+}
+
+.ch-vehicle.is-selected .ch-vehicle__body {
+  filter: drop-shadow(0 0 0 #fff) drop-shadow(0 0 4px rgb(255 255 255 / 0.95)) drop-shadow(0 6px 4px rgb(20 25 35 / 0.35));
+}
+
+.ch-vehicle.is-target .ch-vehicle__body {
+  filter: drop-shadow(0 0 6px rgb(255 214 90 / 0.9)) drop-shadow(0 4px 3px rgb(20 25 35 / 0.35));
+}
+
+.ch-vehicle.is-bumped .ch-vehicle__body {
+  animation: ch-bump 0.3s ease;
+}
+
+.ch-vehicle.is-escaping {
+  transition: transform var(--drive-ms) cubic-bezier(0.5, 0, 0.75, 0.2);
+  z-index: 3;
+}
+
+@keyframes ch-bump {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(calc(var(--bump) * 6px), 0) rotate(calc((1 - var(--bump) * var(--bump)) * 3deg));
+  }
+  70% {
+    transform: translate(calc(var(--bump) * -2px), 0);
+  }
+}
+
+.ch-vehicle.is-v.is-bumped .ch-vehicle__body {
+  animation-name: ch-bump-v;
+}
+
+@keyframes ch-bump-v {
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+  35% {
+    transform: translate(calc(var(--bump) * 6px), 0) rotate(calc((1 - var(--bump) * var(--bump)) * 3deg));
+  }
+}
+
+/* Pista: un aro pulsante y una flecha hacia el sentido sugerido. */
+.ch-vehicle.is-hinted::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  box-shadow: 0 0 0 3px rgb(64 160 255 / 0.85);
+  animation: ch-pulse 1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.ch-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 26px;
+  height: 26px;
+  margin: -13px;
+  border-radius: 50%;
+  background: #1d74e8 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12h14M13 6l6 6-6 6'/%3E%3C/svg%3E") center / 70% no-repeat;
+  box-shadow: 0 3px 8px rgb(0 0 0 / 0.3);
+  pointer-events: none;
+}
+
+.ch-vehicle.is-h .ch-hint.is-back {
+  rotate: 180deg;
+}
+
+.ch-vehicle.is-v .ch-hint.is-fwd {
+  rotate: 90deg;
+}
+
+.ch-vehicle.is-v .ch-hint.is-back {
+  rotate: -90deg;
+}
+
+@keyframes ch-pulse {
+  50% {
+    box-shadow: 0 0 0 6px rgb(64 160 255 / 0.25);
+  }
+}
+
+.ch-notice {
+  min-height: 2.6em;
+  max-width: 48ch;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.ch-notice span {
+  animation: ch-notice 0.3s ease;
+}
+
+@keyframes ch-notice {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.ch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ch-vehicle,
+  .ch-vehicle.is-escaping {
+    transition: none;
+  }
+  .ch-vehicle.is-bumped .ch-vehicle__body,
+  .ch-vehicle.is-hinted::after {
+    animation: none;
+  }
+}

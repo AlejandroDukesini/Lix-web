@@ -492,6 +492,29 @@
   backdrop-filter: blur(8px);
 }
 
+/* Tiene versión original online (enlace externo): un sello discreto en la esquina. */
+.game-card__online {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px 2px 6px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text);
+  background: color-mix(in oklab, var(--surface-solid) 80%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.game-card__online svg {
+  width: 13px;
+  height: 13px;
+}
+
 .game-card__body {
   display: grid;
   align-content: start;
@@ -1094,6 +1117,19 @@
     min-height: 100%;
   }
   .game-card__status {
+    top: 6px;
+    left: 6px;
+    padding: 1px 6px;
+    font-size: 0.62rem;
+  }
+  .game-card__online {
+    top: auto;
+    right: auto;
+    bottom: 6px;
+    left: 6px;
+    padding: 3px;
+  }
+  .game-card__online span {
     display: none;
   }
   .game-card__body {

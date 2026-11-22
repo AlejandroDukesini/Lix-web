@@ -1,0 +1,359 @@
+/*
+ * Gato largo — un salón con suelo de tarima, cojines, macetas y cajas.
+ * El gato es un tubo naranja con rayas que crece desde su rincón; cada
+ * estirón se dibuja con un trazo animado y la cabeza lo acompaña.
+ */
+
+/* ---------- Habitaciones ---------- */
+.lc-select {
+  width: min(100%, 860px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.lc-select__title {
+  font-size: var(--text-3xl);
+}
+
+.lc-select__text {
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.lc-tier {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.lc-tier__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.lc-tier__title small {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.lc-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.2rem, 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.lc-level {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: var(--space-2);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width, 1px) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.lc-level:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+
+.lc-level:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.lc-level:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lc-level.is-done {
+  border-color: color-mix(in oklab, #f0913a 60%, var(--surface-border));
+}
+
+.lc-level__mini {
+  display: grid;
+  gap: 1px;
+  width: 56px;
+  padding: 3px;
+  border-radius: 6px;
+  background: #e9c999;
+}
+
+.lc-level__mini i {
+  aspect-ratio: 1;
+  border-radius: 1px;
+}
+
+.lc-level__mini i.is-wall {
+  background: #b58a5c;
+}
+
+.lc-level__mini i.is-cat {
+  background: #f0913a;
+  border-radius: 50%;
+}
+
+.lc-level__number {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
+.lc-level__meta {
+  min-height: 14px;
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+}
+
+.lc-level__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.lc-stars {
+  display: inline-flex;
+}
+
+.lc-stars svg {
+  width: 12px;
+  height: 12px;
+  color: var(--text-subtle);
+}
+
+.lc-stars svg.is-on {
+  color: #f0913a;
+  fill: #f0913a;
+}
+
+/* ---------- Partida ---------- */
+.lc-play {
+  position: relative;
+  min-height: 100%;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+  background:
+    radial-gradient(60% 40% at 20% 0%, rgb(255 238 204 / 0.9), transparent 70%),
+    linear-gradient(#f5ebe0, #ecdccb);
+}
+
+.lc-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+/* Zócalo de la habitación alrededor del suelo. */
+.lc-room {
+  width: min(100%, calc(100dvh - 340px), 560px);
+  min-width: min(100%, 260px);
+  padding: 10px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #fff8ee, #e6d2b8);
+  box-shadow:
+    inset 0 0 0 2px rgb(150 100 60 / 0.25),
+    0 22px 34px -24px rgb(90 50 20 / 0.6);
+}
+
+.lc-board {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 10px;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.lc-dot {
+  fill: rgb(150 100 60 / 0.28);
+}
+
+.lc-body__fur {
+  fill: none;
+  stroke: #f6a04d;
+  stroke-width: 66;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lc-body__stripes {
+  fill: none;
+  stroke: #e07a2a;
+  stroke-width: 54;
+  stroke-dasharray: 9 34;
+  stroke-linejoin: round;
+  opacity: 0.75;
+}
+
+.lc-body__fur.is-fresh,
+.lc-body__stripes.is-fresh {
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  animation: lc-draw var(--draw-ms) cubic-bezier(0.3, 0.7, 0.4, 1) forwards;
+}
+
+.lc-body__stripes.is-fresh {
+  stroke-dasharray: 0.04 0.12;
+  stroke-dashoffset: 0;
+  animation-name: lc-fade-in;
+}
+
+@keyframes lc-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lc-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+.lc-head {
+  transition: transform var(--move-ms) cubic-bezier(0.3, 0.7, 0.4, 1);
+}
+
+.lc-head__turn {
+  transition: transform 0.12s ease;
+}
+
+.lc-board.is-stuck .lc-head__turn {
+  animation: lc-shake 0.4s ease 2;
+}
+
+.lc-board.is-won .lc-body__fur {
+  animation: lc-purr 0.5s ease-in-out 3;
+}
+
+@keyframes lc-shake {
+  25% {
+    translate: -6px 0;
+  }
+  75% {
+    translate: 6px 0;
+  }
+}
+
+@keyframes lc-purr {
+  50% {
+    stroke: #ffb066;
+  }
+}
+
+.lc-hint {
+  animation: lc-hint 0.9s ease-in-out infinite;
+}
+
+@keyframes lc-hint {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.lc-notice {
+  min-height: 2.6em;
+  max-width: 46ch;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.lc-notice span {
+  animation: lc-fade-in 0.3s ease;
+}
+
+/* Cruceta táctil (también sirve con ratón). */
+.lc-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(2, 46px);
+  grid-template-areas:
+    '. up .'
+    'left down right';
+  gap: 6px;
+}
+
+.lc-pad__btn {
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface-strong);
+  box-shadow: inset 0 -3px 0 rgb(120 84 52 / 0.25), 0 4px 10px -6px rgb(80 40 20 / 0.4);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.lc-pad__btn:active {
+  transform: translateY(2px);
+}
+
+.lc-pad__btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.lc-pad__btn:disabled {
+  opacity: 0.5;
+}
+
+.lc-pad__btn.is-up {
+  grid-area: up;
+}
+
+.lc-pad__btn.is-left {
+  grid-area: left;
+}
+
+.lc-pad__btn.is-down {
+  grid-area: down;
+}
+
+.lc-pad__btn.is-right {
+  grid-area: right;
+}
+
+.lc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+@media (pointer: fine) and (min-width: 900px) {
+  .lc-pad {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lc-head,
+  .lc-head__turn {
+    transition: none;
+  }
+  .lc-body__fur.is-fresh,
+  .lc-board.is-stuck .lc-head__turn,
+  .lc-board.is-won .lc-body__fur,
+  .lc-hint {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}

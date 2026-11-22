@@ -167,8 +167,6 @@
 }
 
 .game-screen__scroll,
-.game-screen__body.is-playing > .lg-select,
-.game-screen__body.is-playing > .lg-play,
 .game-screen__body.is-playing > .chess,
 .game-screen__body.is-playing > .io-menu,
 .game-screen__body.is-playing > .aq-menu,
@@ -177,6 +175,12 @@
   height: 100%;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* Hamburguesería: la jornada ocupa la pantalla y solo se desplaza la estación de en medio. */
+.game-screen__body.is-playing > .bg-play {
+  height: 100%;
+  overflow: hidden;
 }
 
 /* ---------- Presentación del juego ---------- */

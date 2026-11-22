@@ -1,0 +1,357 @@
+/*
+ * Lava y Agua · modo Dúo — una cueva vista de lado: roca con vetas, charcos
+ * brillantes en el suelo, placas de piedra, compuertas de barrotes y dos
+ * puertas arqueadas (roja para Brasa, azul para Gota).
+ */
+
+/* Pestañas de modo en la pantalla de niveles. */
+.lv-modes {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: var(--surface-border-width, 1px) solid var(--surface-border);
+  justify-self: start;
+}
+
+.lv-mode {
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lv-mode.is-on {
+  background: linear-gradient(90deg, #ff7a1a, #3fa7ff);
+  color: #fff;
+}
+
+.lv-mode:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.lv-level.is-duo .lv-level__n {
+  background: linear-gradient(135deg, #ff7a1a 50%, #3fa7ff 50%);
+  color: #fff;
+}
+
+/* ---------- Tablero ---------- */
+.duo-wrap {
+  width: min(100%, 760px);
+  padding: 10px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #4b3a33, #2e2420);
+  box-shadow: 0 22px 34px -24px rgb(30 15 10 / 0.8);
+}
+
+.duo-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), 1fr);
+  aspect-ratio: var(--cols) / var(--rows);
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    radial-gradient(70% 60% at 50% 40%, #6a5a6e, #3d3346);
+}
+
+.duo-cell {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.duo-cell.is-rock {
+  background:
+    linear-gradient(135deg, transparent 45%, rgb(255 255 255 / 0.06) 45% 55%, transparent 55%) 0 0 / 50% 50%,
+    #7b675b;
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.2);
+}
+
+.duo-cell.is-rock.has-top {
+  background:
+    linear-gradient(#a58d77 0 18%, transparent 18%),
+    linear-gradient(135deg, transparent 45%, rgb(255 255 255 / 0.06) 45% 55%, transparent 55%) 0 0 / 50% 50%,
+    #7b675b;
+}
+
+/* Charcos: ocupan la mitad inferior de la casilla y brillan. */
+.duo-cell.is-lava,
+.duo-cell.is-water,
+.duo-cell.is-acid {
+  background: linear-gradient(transparent 46%, var(--pool) 46%);
+}
+
+.duo-cell.is-lava {
+  --pool: #ff6a1a;
+  box-shadow: inset 0 -12px 18px -6px #ffc23d;
+}
+
+.duo-cell.is-water {
+  --pool: #2f8fe6;
+  box-shadow: inset 0 -12px 18px -6px #8fd3ff;
+}
+
+.duo-cell.is-acid {
+  --pool: #58c22b;
+  box-shadow: inset 0 -12px 18px -6px #c7ff6b;
+}
+
+.duo-cell.is-lava::after,
+.duo-cell.is-water::after,
+.duo-cell.is-acid::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 40%;
+  height: 14%;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--pool) 60%, white);
+  animation: duo-ripple 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes duo-ripple {
+  to {
+    transform: translateY(8%) scaleX(0.92);
+  }
+}
+
+/* Placa: losa en el suelo que se hunde al pisarla. */
+.duo-cell.is-plate::after {
+  content: attr(data-letter);
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: 0;
+  height: 18%;
+  border-radius: 4px 4px 0 0;
+  background: #e3c15a;
+  color: #5a4300;
+  font-size: 0.55rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1;
+  transition: height 0.15s ease;
+}
+
+.duo-cell.is-plate.is-pressed::after {
+  height: 8%;
+  background: #9fe36a;
+  color: transparent;
+}
+
+/* Compuerta: barrotes que suben cuando está abierta. */
+.duo-cell.is-door {
+  background: rgb(0 0 0 / 0.15);
+}
+
+.duo-cell.is-door::before {
+  content: '';
+  position: absolute;
+  inset: 0 8%;
+  background: repeating-linear-gradient(90deg, #c7ccd3 0 14%, transparent 14% 28%);
+  border-top: 4px solid #8d949d;
+  transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.duo-cell.is-door::after {
+  content: attr(data-letter);
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  translate: -50% 0;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.duo-cell.is-door.is-open::before {
+  transform: translateY(-86%);
+  opacity: 0.35;
+}
+
+/* Puertas de salida. */
+.duo-cell.is-exit-brasa::before,
+.duo-cell.is-exit-gota::before {
+  content: '';
+  position: absolute;
+  inset: 8% 14% 0;
+  border-radius: 999px 999px 0 0;
+  background: var(--door);
+  box-shadow: inset 0 0 0 3px rgb(255 255 255 / 0.35), 0 0 14px var(--door);
+}
+
+.duo-cell.is-exit-brasa {
+  --door: #e2552a;
+}
+
+.duo-cell.is-exit-gota {
+  --door: #2f7fd8;
+}
+
+/* ---------- Personajes ---------- */
+.duo-hero {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: calc(100% / var(--cols));
+  aspect-ratio: 1;
+  transform: translate(calc(var(--px) * 100%), calc(var(--py) * 100%));
+  transition: transform var(--move-ms) cubic-bezier(0.3, 0.7, 0.4, 1);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.duo-hero svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 3px 3px rgb(0 0 0 / 0.35));
+}
+
+.duo-hero.is-brasa svg {
+  filter: drop-shadow(0 0 6px #ffb347) drop-shadow(0 3px 3px rgb(0 0 0 / 0.35));
+}
+
+.duo-hero.is-gota svg {
+  filter: drop-shadow(0 0 6px #8fd3ff) drop-shadow(0 3px 3px rgb(0 0 0 / 0.35));
+}
+
+.duo-hero.is-active::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -14%;
+  width: 18%;
+  aspect-ratio: 1;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px #fff;
+}
+
+.duo-hero.is-dead svg {
+  animation: duo-fizzle 0.6s ease forwards;
+}
+
+.duo-hero.is-won svg {
+  animation: duo-bounce 0.5s ease-in-out 3;
+}
+
+@keyframes duo-fizzle {
+  to {
+    transform: scaleY(0.2) translateY(60%);
+    opacity: 0.3;
+  }
+}
+
+@keyframes duo-bounce {
+  50% {
+    transform: translateY(-14%);
+  }
+}
+
+/* ---------- Controles ---------- */
+.duo-notice {
+  min-height: 2.6em;
+  max-width: 52ch;
+  text-align: center;
+}
+
+.duo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.duo-switch {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--surface);
+  border: var(--surface-border-width, 1px) solid var(--surface-border);
+}
+
+.duo-switch__btn {
+  display: grid;
+  justify-items: center;
+  min-width: 84px;
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.duo-switch__btn kbd {
+  font-size: 0.62rem;
+  opacity: 0.7;
+}
+
+.duo-switch__btn.is-on.is-brasa {
+  background: #ff7a1a;
+  color: #fff;
+}
+
+.duo-switch__btn.is-on.is-gota {
+  background: #2f8fe6;
+  color: #fff;
+}
+
+.duo-switch__btn:focus-visible,
+.duo-pad__btn:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.duo-pad {
+  display: grid;
+  grid-template-columns: repeat(4, 52px);
+  gap: 6px;
+}
+
+.duo-pad__btn {
+  display: grid;
+  place-items: center;
+  height: 48px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--surface-strong);
+  box-shadow: inset 0 -3px 0 rgb(0 0 0 / 0.15), 0 4px 10px -6px rgb(0 0 0 / 0.4);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.duo-pad__btn:active {
+  transform: translateY(2px);
+}
+
+.duo-pad__btn:disabled {
+  opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .duo-hero {
+    transition: none;
+  }
+  .duo-cell.is-lava::after,
+  .duo-cell.is-water::after,
+  .duo-cell.is-acid::after,
+  .duo-hero.is-dead svg,
+  .duo-hero.is-won svg {
+    animation: none;
+  }
+}

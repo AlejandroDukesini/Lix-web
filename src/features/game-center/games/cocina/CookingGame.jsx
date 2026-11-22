@@ -197,6 +197,8 @@ function Station({ recipe, level, build, setBuild, stepIndex, setStepIndex, plac
     if (step.kind === 'single') {
       setBuild(setSingle(build, step.id, id));
       audio.play(SFX.pick);
+      // Elegido lo único que pide este paso, se pasa solo al siguiente (como en una cocina real).
+      if (value !== id && stepIndex < steps.length - 1) setTimeout(() => setStepIndex((i) => (i === stepIndex ? i + 1 : i)), 260);
     } else if (step.kind === 'sequence') {
       const next = pushItem(build, step, id, level);
       if (next !== build) audio.play(SFX.add);
@@ -223,7 +225,7 @@ function Station({ recipe, level, build, setBuild, stepIndex, setStepIndex, plac
             className={cx('ck-step', i === stepIndex && 'is-current', filled(s) && 'is-filled')}
             onClick={() => setStepIndex(i)}
           >
-            {filled(s) && <Check aria-hidden="true" />}
+            {filled(s) ? <Check aria-hidden="true" /> : <span className="ck-step__n" aria-hidden="true">{i + 1}</span>}
             {s.label}
           </button>
         ))}
@@ -274,6 +276,13 @@ function Station({ recipe, level, build, setBuild, stepIndex, setStepIndex, plac
                 </button>
               );
             })}
+          </div>
+        )}
+        {stepIndex < steps.length - 1 && filled(step) && (
+          <div className="ck-next">
+            <Button size="sm" variant="secondary" iconEnd={ChevronRight} onClick={() => setStepIndex(stepIndex + 1)}>
+              Siguiente: {steps[stepIndex + 1].label}
+            </Button>
           </div>
         )}
         {step.kind === 'sequence' && (
@@ -453,6 +462,8 @@ function Shift({ gameId, recipe, Visual, texts, level, frame, onMenu }) {
     return () => window.removeEventListener('keydown', onKey);
   }, [phase]);
 
+  // Cada cambio en lo que hay sobre la encimera (no el horno) relanza una pequeña animación de «colocar».
+  const buildKey = JSON.stringify(steps.filter((st) => st.kind !== 'bake').map((st) => build[st.id]));
   const last = shift.last;
   const pointsSoFar = shift.results.reduce((a, r) => a + r.points, 0);
   const lowTime = config.timeLimit && timeLeft <= 10;
@@ -473,7 +484,9 @@ function Shift({ gameId, recipe, Visual, texts, level, frame, onMenu }) {
       <div className="ck-layout">
         <Ticket recipe={recipe} level={level} order={order} Visual={Visual} index={Math.min(shift.index, shift.orders.length - 1)} total={shift.orders.length} />
         <section className="ck-bench" aria-label={`Tu ${recipe.noun}`}>
-          <Visual spec={build} bakeValue={bakeStep ? (build[bakeStep.id] ?? undefined) : undefined} className={cx('ck-bench__visual', baking && 'is-baking')} />
+          <span key={buildKey} className="ck-bench__pop">
+            <Visual spec={build} bakeValue={bakeStep ? (build[bakeStep.id] ?? undefined) : undefined} className={cx('ck-bench__visual', baking && 'is-baking')} />
+          </span>
           <div className="ck-bench__actions">
             <Button
               variant="ghost"

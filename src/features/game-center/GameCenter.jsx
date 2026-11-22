@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
-import { History, Play, ShieldCheck } from 'lucide-react';
+import { Globe, History, Play, ShieldCheck } from 'lucide-react';
 import { usePreferences } from '../../app/providers/PreferencesProvider.jsx';
 import { Button } from '../../components/common/Button.jsx';
 import { SectionHeader } from '../../components/common/Card.jsx';
@@ -8,12 +8,15 @@ import { GAMES, filterGames, findGame } from './registry/gameRegistry.js';
 import { CATEGORIES, categoryLabel } from './registry/categories.js';
 import { ROADMAP } from './registry/roadmap.js';
 import { formatLastPlayed } from './services/gameLifecycle.js';
+import { onlineSourceFor } from './online/onlineSources.js';
 import { summarizeRecords, useCenterSettings, useGameRecords } from './hooks/useGameStatistics.js';
 import { GameFilters } from './components/GameFilters.jsx';
 import { GameLibrary } from './components/GameLibrary.jsx';
 import { PlannedGameCard } from './components/GameCard.jsx';
 import { GameStats, SoundSettings } from './components/GameStats.jsx';
 import './styles/game-center.css';
+
+const ONLINE_FILTER = { id: 'online', label: 'También online', icon: Globe };
 
 /** Cabecera: la marquesina de un salón recreativo, con el saludo personal. */
 function Marquee({ nickname, summary }) {
@@ -128,8 +131,15 @@ export default function GameCenter() {
   const [category, setCategory] = useState('all');
 
   const summary = useMemo(() => summarizeRecords(records, GAMES), [records]);
-  const results = useMemo(() => filterGames(GAMES, { query, category }, categoryLabel), [query, category]);
-  const usedCategories = useMemo(() => CATEGORIES.filter((c) => GAMES.some((g) => g.categories.includes(c.id))), []);
+  // «También online» no es una categoría del juego: agrupa los que tienen la versión original como enlace externo.
+  const results = useMemo(
+    () =>
+      category === ONLINE_FILTER.id
+        ? filterGames(GAMES, { query }, categoryLabel).filter((g) => onlineSourceFor(g.id))
+        : filterGames(GAMES, { query, category }, categoryLabel),
+    [query, category],
+  );
+  const usedCategories = useMemo(() => [...CATEGORIES.filter((c) => GAMES.some((g) => g.categories.includes(c.id))), ONLINE_FILTER], []);
   const recent = useMemo(
     () =>
       GAMES.filter((game) => records[game.id]?.lastPlayedAt)
@@ -150,7 +160,7 @@ export default function GameCenter() {
           id="gc-library-title"
           eyebrow="Biblioteca"
           title="Todos los juegos"
-          description="Elige uno para ver cómo se juega y empezar una partida. Todo funciona sin conexión."
+          description="Elige uno para ver cómo se juega y empezar una partida. Todo funciona sin conexión; los marcados «Online» además enlazan a su versión original."
         />
         <GameFilters
           query={query}

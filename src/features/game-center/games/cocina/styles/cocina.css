@@ -600,3 +600,64 @@
   --ck-floor-b: #fff6f9;
 }
 
+
+/* ---------- Flujo de cocina (v1.3) ----------
+ * Pasos numerados que avanzan solos al elegir, botón «Siguiente» y una pequeña
+ * animación al colocar cada cosa. En el móvil, la comanda se compacta para que
+ * la encimera y los ingredientes quepan sin tanto desplazamiento.
+ */
+.ck-step__n {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.08);
+  font-size: 0.68rem;
+  font-weight: 800;
+}
+
+.ck-next {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--space-2);
+}
+
+.ck-bench__pop {
+  display: contents;
+}
+
+.ck-bench__pop > * {
+  animation: ck-place 0.32s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+@keyframes ck-place {
+  from {
+    transform: translateY(-10px) scale(0.97);
+  }
+}
+
+@container ck-play (max-width: 639px) {
+  .ck-ticket {
+    grid-template-columns: 64px minmax(0, 1fr);
+    padding: var(--space-3);
+    border-top-width: 6px;
+  }
+  .ck-ticket__visual {
+    max-height: 64px;
+  }
+  .ck-ticket__lines {
+    font-size: var(--text-xs);
+    grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+    column-gap: var(--space-3);
+  }
+  .ck-bench__visual {
+    max-height: 32dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ck-bench__pop > * {
+    animation: none;
+  }
+}

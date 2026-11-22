@@ -6,7 +6,7 @@ import { chromium } from 'playwright-core';
 
 const OUT = process.env.OUT ?? 'test-results/games';
 mkdirSync(OUT, { recursive: true });
-const ALL = ['aquapark', 'io-games', 'logic-grid', 'chess', 'tunnel-runner', 'cruce-del-pollo', 'resolver-casos', 'sudokus', 'aparcar', 'despejar', 'hexastack', 'traffic-rider', 'frente-abierto', 'saltos-de-lumi', 'reino-de-ladrillos', 'bloques', 'lava-y-agua', 'stellarium', 'heladeria', 'pizzeria', 'pasteleria'];
+const ALL = ['aquapark', 'io-games', 'chess', 'tunnel-runner', 'cruce-del-pollo', 'resolver-casos', 'sudokus', 'aparcar', 'despejar', 'hexastack', 'traffic-rider', 'frente-abierto', 'saltos-de-lumi', 'reino-de-ladrillos', 'bloques', 'lava-y-agua', 'stellarium', 'heladeria', 'pizzeria', 'pasteleria', 'gato-largo', 'botica', 'cochera', 'hamburgueseria'];
 const games = process.env.GAMES ? process.env.GAMES.split(',') : ALL;
 const [w, h] = (process.env.VP ?? '390x844').split('x').map(Number);
 const WAIT = Number(process.env.WAIT ?? 2500);

@@ -23,7 +23,6 @@
 import { lazy } from 'react';
 import { aquaparkManifest } from '../games/aquapark/manifest.js';
 import { ioGamesManifest } from '../games/io-games/manifest.js';
-import { logicGridManifest } from '../games/logic-grid/manifest.js';
 import { chessManifest } from '../games/chess/manifest.js';
 import { tunnelRunnerManifest } from '../games/tunnel-runner/manifest.js';
 import { chickenCrossingManifest } from '../games/cruce-del-pollo/manifest.js';
@@ -39,12 +38,14 @@ import { reinoDeLadrillosManifest } from '../games/reino-de-ladrillos/manifest.j
 import { bloquesManifest } from '../games/bloques/manifest.js';
 import { lavaYAguaManifest } from '../games/lava-y-agua/manifest.js';
 import { stellariumManifest } from '../games/stellarium/manifest.js';
-import { heladeriaManifest, pasteleriaManifest, pizzeriaManifest } from '../games/cocina/manifest.js';
+import { boticaManifest } from '../games/botica/manifest.js';
+import { hamburgueseriaManifest, heladeriaManifest, pasteleriaManifest, pizzeriaManifest } from '../games/cocina/manifest.js';
+import { cocheraManifest } from '../games/cochera/manifest.js';
+import { gatoLargoManifest } from '../games/gato-largo/manifest.js';
 
 const MANIFESTS = [
   aquaparkManifest,
   ioGamesManifest,
-  logicGridManifest,
   chessManifest,
   tunnelRunnerManifest,
   // Fase 2
@@ -66,6 +67,11 @@ const MANIFESTS = [
   heladeriaManifest,
   pizzeriaManifest,
   pasteleriaManifest,
+  // Fase 5
+  gatoLargoManifest,
+  boticaManifest,
+  cocheraManifest,
+  hamburgueseriaManifest,
 ];
 
 export const GAMES = Object.freeze(

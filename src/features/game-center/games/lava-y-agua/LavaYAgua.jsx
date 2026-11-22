@@ -13,6 +13,7 @@ import { useKeyboard } from '../../hooks/useKeyboard.js';
 import { cx } from '../../../../utils/cx.js';
 import { act, cellAt, createGame, starsFor, undo } from './engine/lavaEngine.js';
 import { LEVELS, TIER_LABELS } from './levels/levels.js';
+import { DuoPlay, DuoSelect } from './Duo.jsx';
 import './styles/lava-y-agua.css';
 
 const GAME_ID = 'lava-y-agua';
@@ -41,15 +42,11 @@ function LevelSelect({ record, onPick }) {
   const completed = record?.progress?.completed ?? {};
   const best = record?.progress?.stars ?? {};
   return (
-    <div className="lv-select game-scroll">
-      <header>
-        <p className="eyebrow">Lava y Agua</p>
-        <h2 className="lv-select__title">Encuentra la ruta segura</h2>
-        <p className="lv-select__text">
-          Por cada paso que das, la lava avanza uno. El agua la enfría y la vuelve piedra. Piensa antes de moverte: puedes
-          esperar, deshacer y volver a empezar.
-        </p>
-      </header>
+    <>
+      <p className="lv-select__text">
+        Por cada paso que das, la lava avanza uno. El agua la enfría y la vuelve piedra. Piensa antes de moverte: puedes
+        esperar, deshacer y volver a empezar.
+      </p>
       <ol className="lv-levels">
         {LEVELS.map((level, i) => {
           const unlocked = i === 0 || completed[LEVELS[i - 1].id];
@@ -74,7 +71,7 @@ function LevelSelect({ record, onPick }) {
           );
         })}
       </ol>
-    </div>
+    </>
   );
 }
 
@@ -369,11 +366,33 @@ function Play({ index, frame, onMenu, onNext }) {
   );
 }
 
-/** Lava y Agua: rompecabezas por turnos con 12 niveles demostrados. */
+/** Lava y Agua: modo en solitario (la lava avanza) y modo Dúo (Brasa y Gota cooperan). */
 export default function LavaYAgua() {
   const frame = useGameFrame();
   const record = useGameRecord(GAME_ID);
+  const [mode, setMode] = useState('solo');
   const [level, setLevel] = useState(null);
-  if (level === null) return <LevelSelect record={record} onPick={setLevel} />;
+  if (level === null) {
+    return (
+      <div className="lv-select game-scroll">
+        <header>
+          <p className="eyebrow">Lava y Agua</p>
+          <h2 className="lv-select__title">{mode === 'solo' ? 'Encuentra la ruta segura' : 'Brasa y Gota'}</h2>
+        </header>
+        <div className="lv-modes" role="tablist" aria-label="Modo de juego">
+          {[
+            ['solo', 'En solitario'],
+            ['duo', 'Dúo cooperativo'],
+          ].map(([id, label]) => (
+            <button key={id} type="button" role="tab" aria-selected={mode === id} className={cx('lv-mode', mode === id && 'is-on')} onClick={() => setMode(id)}>
+              {label}
+            </button>
+          ))}
+        </div>
+        {mode === 'solo' ? <LevelSelect record={record} onPick={setLevel} /> : <DuoSelect done={record?.progress?.duo ?? {}} onPick={setLevel} />}
+      </div>
+    );
+  }
+  if (mode === 'duo') return <DuoPlay key={`duo-${level}`} index={level} gameId={GAME_ID} frame={frame} onMenu={() => setLevel(null)} onNext={setLevel} />;
   return <Play key={level} index={level} frame={frame} onMenu={() => setLevel(null)} onNext={setLevel} />;
 }

@@ -7,6 +7,8 @@ import { PREFERENCES_KEY } from '../../../services/preferences/preferencesServic
 import { readGameRecord } from '../services/gameStorage.js';
 import { GAMES } from '../registry/gameRegistry.js';
 import { ROADMAP } from '../registry/roadmap.js';
+import { parseLevel, solve } from '../games/gato-largo/engine/catEngine.js';
+import { LEVELS as CAT_LEVELS } from '../games/gato-largo/levels/levels.js';
 
 /** Arranca la app con la presentación ya vista, en la ruta indicada. */
 async function openApp(hash = '#/juegos') {
@@ -124,29 +126,30 @@ describe('Game Center: partida', () => {
     expect(await screen.findByRole('heading', { level: 1, name: /Game Center/ })).toBeInTheDocument();
   });
 
-  it('lógica: resuelve el primer nivel con el teclado, pausa, y guarda el progreso', async () => {
-    const user = await openApp('#/juegos/logic-grid');
+  it('lógica (Gato largo): resuelve la primera habitación con el teclado, pausa, y guarda el progreso', async () => {
+    const user = await openApp('#/juegos/gato-largo');
     await user.click(await screen.findByRole('button', { name: 'Jugar' }));
-    await screen.findByRole('heading', { name: 'Elige un nivel' });
-    expect(screen.getByRole('button', { name: /^Nivel 2: Escalón/ })).toBeDisabled();
-    await user.click(screen.getByRole('button', { name: /^Nivel 1: Primer trazo/ }));
+    await screen.findByRole('heading', { name: '¿Dónde se estira hoy?' });
+    expect(screen.getByRole('button', { name: /^Habitación 2,/ })).toBeDisabled();
+    await user.click(screen.getByRole('button', { name: /^Habitación 1,/ }));
 
-    // Pausa real: el tablero no acepta movimientos.
+    // Pausa real: la habitación no acepta movimientos.
     await user.click(screen.getByRole('button', { name: 'Pausar (Esc)' }));
     const pause = screen.getByRole('dialog', { name: 'Pausa' });
     await user.click(within(pause).getByRole('button', { name: 'Continuar' }));
 
-    // «Primer trazo»: izquierda, abajo, derecha (sin repetir ninguna casilla).
-    for (const key of ['{ArrowLeft}', '{ArrowDown}', '{ArrowRight}']) {
-      await user.keyboard(key);
-      await act(() => new Promise((resolve) => setTimeout(resolve, 400)));
+    const { solution } = solve(parseLevel(CAT_LEVELS[0]));
+    const KEYS = { up: '{ArrowUp}', down: '{ArrowDown}', left: '{ArrowLeft}', right: '{ArrowRight}' };
+    for (const dir of solution) {
+      await user.keyboard(KEYS[dir]);
+      await act(() => new Promise((resolve) => setTimeout(resolve, 650)));
     }
-    expect(await screen.findByRole('heading', { name: '¡Tablero cubierto!' })).toBeInTheDocument();
-    await waitFor(async () => expect((await readGameRecord('logic-grid')).progress.completed?.['deslizar-01']).toBe(true));
-    expect(Number.isFinite((await readGameRecord('logic-grid')).best['time:deslizar-01'])).toBe(true);
+    expect(await screen.findByRole('heading', { name: /^Habitación 1: ★★★/ })).toBeInTheDocument();
+    await waitFor(async () => expect((await readGameRecord('gato-largo')).progress.completed?.[CAT_LEVELS[0].id]).toBe(3));
+    expect(Number.isFinite((await readGameRecord('gato-largo')).best[`time:${CAT_LEVELS[0].id}`])).toBe(true);
 
-    await user.click(screen.getByRole('button', { name: 'Siguiente nivel' }));
-    expect(await screen.findByText('Escalón')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Siguiente habitación' }));
+    await waitFor(() => expect(screen.getByText(/^Habitación ·/).nextElementSibling).toHaveTextContent(/^2$/));
   });
 
   it('Tunnel Runner: cuenta atrás, partida, pausa y salida sin dejar bucles activos', async () => {

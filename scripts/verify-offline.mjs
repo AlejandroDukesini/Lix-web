@@ -308,7 +308,7 @@ try {
       (await page.getByRole('link', { name: 'Abrir en CrazyGames' }).count()) === 0 &&
       (await page.getByRole('button', { name: 'Jugar', exact: true }).isEnabled()),
   );
-  for (const id of ['aquapark', 'io-games', 'logic-grid', 'tunnel-runner', 'cruce-del-pollo', 'resolver-casos', 'sudokus', 'aparcar', 'despejar', 'hexastack', 'traffic-rider', 'frente-abierto', 'saltos-de-lumi', 'reino-de-ladrillos', 'bloques', 'lava-y-agua', 'stellarium', 'heladeria', 'pizzeria', 'pasteleria']) {
+  for (const id of ['aquapark', 'io-games', 'tunnel-runner', 'cruce-del-pollo', 'resolver-casos', 'sudokus', 'aparcar', 'despejar', 'hexastack', 'traffic-rider', 'frente-abierto', 'saltos-de-lumi', 'reino-de-ladrillos', 'bloques', 'lava-y-agua', 'stellarium', 'heladeria', 'pizzeria', 'pasteleria', 'gato-largo', 'botica', 'cochera', 'hamburgueseria']) {
     await page.goto(`${baseUrl}#/juegos`);
     await page.goto(`${baseUrl}#/juegos/${id}`);
     await page.getByRole('button', { name: 'Jugar', exact: true }).click();

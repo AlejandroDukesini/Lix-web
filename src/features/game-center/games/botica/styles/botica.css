@@ -1,0 +1,500 @@
+/*
+ * Botica de colores — el estante de una botica antigua a media mañana:
+ * pared de yeso cálido, una ventana con luz, baldas de madera y frascos de
+ * vidrio con tapón de corcho. Las tinturas son capas fijas (una por hueco)
+ * que crecen o se vacían desde abajo con una transición; el frasco que vierte
+ * viaja sobre el destino y se inclina hacia él.
+ */
+
+/* ---------- Niveles ---------- */
+.bt-select {
+  width: min(100%, 880px);
+  margin-inline: auto;
+  padding: var(--space-6) var(--gutter) var(--space-10);
+  display: grid;
+  align-content: start;
+  gap: var(--space-5);
+}
+
+.bt-select__title {
+  font-size: var(--text-3xl);
+}
+
+.bt-select__text {
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.bt-tier {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.bt-tier__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-size: var(--text-lg);
+}
+
+.bt-tier__title small {
+  font-size: var(--text-sm);
+  font-weight: 400;
+  color: var(--text-subtle);
+}
+
+.bt-levels {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.bt-level {
+  position: relative;
+  width: 100%;
+  min-height: 6.4rem;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  padding: var(--space-2);
+  border-radius: var(--gc-radius-md);
+  border: var(--surface-border-width, 1px) solid var(--surface-border);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.bt-level:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -14px rgb(80 40 20 / 0.5);
+}
+
+.bt-level:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.bt-level:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bt-level.is-done {
+  border-color: color-mix(in oklab, #d99a1e 60%, var(--surface-border));
+}
+
+/* Un frasquito con las primeras tinturas del nivel. */
+.bt-level__flask {
+  width: 18px;
+  height: 30px;
+  display: flex;
+  flex-direction: column-reverse;
+  overflow: hidden;
+  border: 2px solid rgb(90 60 40 / 0.35);
+  border-top-width: 0;
+  border-radius: 3px 3px 9px 9px;
+  background: rgb(255 255 255 / 0.5);
+}
+
+.bt-level__flask i {
+  flex: 1;
+}
+
+.bt-level__number {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  line-height: 1;
+}
+
+.bt-level__meta {
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+}
+
+.bt-level__meta svg {
+  width: 14px;
+  height: 14px;
+}
+
+.bt-stars {
+  display: inline-flex;
+}
+
+.bt-stars svg {
+  width: 12px;
+  height: 12px;
+  color: var(--text-subtle);
+}
+
+.bt-stars svg.is-on {
+  color: #e0a21a;
+  fill: #e0a21a;
+}
+
+/* ---------- Partida ---------- */
+.bt-play {
+  position: relative;
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: var(--space-3);
+  padding: calc(var(--space-3) + 64px) var(--gutter) calc(var(--space-6) + var(--safe-bottom));
+  background:
+    radial-gradient(60% 40% at 80% 0%, rgb(255 236 190 / 0.7), transparent 70%),
+    linear-gradient(#f6ead8, #efdcc2);
+  min-height: 100%;
+}
+
+.bt-play > .game-hud {
+  position: absolute;
+  top: var(--space-3);
+  left: calc(var(--safe-left) + var(--space-3));
+  right: calc(var(--safe-right) + var(--space-3));
+}
+
+/* Estante: yeso, una ventana con luz cálida y una o dos baldas de madera. */
+.bt-shelf {
+  --flask-w: clamp(40px, calc((min(100vw, 760px) - 2 * var(--gutter) - 48px) / var(--per-row) - 14px), 62px);
+  --flask-h: calc(var(--flask-w) * 3.3);
+  position: relative;
+  width: min(100%, 760px);
+  padding: 64px 18px 22px;
+  border-radius: var(--gc-radius-lg);
+  background:
+    radial-gradient(circle at 12% 18%, rgb(255 255 255 / 0.35) 0 1px, transparent 2px) 0 0 / 23px 19px,
+    linear-gradient(170deg, #f9efe1, #ecd9bf);
+  box-shadow:
+    inset 0 0 0 1px rgb(140 96 60 / 0.18),
+    0 24px 40px -28px rgb(90 50 20 / 0.6);
+  overflow: hidden;
+}
+
+.bt-shelf.is-tall {
+  --flask-h: calc(var(--flask-w) * 3.9);
+}
+
+.bt-shelf__window {
+  position: absolute;
+  top: 12px;
+  right: 5%;
+  width: min(18%, 120px);
+  aspect-ratio: 3 / 4;
+  border-radius: 999px 999px 6px 6px;
+  background:
+    linear-gradient(90deg, transparent calc(50% - 2px), #c59a6a calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px)),
+    linear-gradient(transparent 46%, #c59a6a 46% 49%, transparent 49%),
+    linear-gradient(180deg, #bfe6ff, #fff3d6 80%);
+  box-shadow: inset 0 0 0 5px #c59a6a, 0 0 60px 20px rgb(255 236 180 / 0.55);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.bt-flasks {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--per-row), var(--flask-w));
+  justify-content: center;
+  column-gap: 14px;
+  row-gap: 34px;
+  padding-bottom: 6px;
+}
+
+/* La balda: un listón de madera bajo cada fila de frascos. */
+.bt-flasks::after {
+  content: '';
+  position: absolute;
+  inset: auto -18px -10px;
+  height: 14px;
+  border-radius: 3px;
+  background: linear-gradient(#b98552, #8b5a32);
+  box-shadow: 0 8px 12px -6px rgb(70 40 15 / 0.55);
+}
+
+.bt-flasks:has(> :nth-child(8))::before {
+  content: '';
+  position: absolute;
+  inset: calc(var(--flask-h) + 26px + 10px) -18px auto;
+  height: 12px;
+  border-radius: 3px;
+  background: linear-gradient(#b98552, #8b5a32);
+  box-shadow: 0 8px 12px -6px rgb(70 40 15 / 0.5);
+}
+
+/* ---------- Frasco ---------- */
+.bt-flask {
+  --glass: rgb(255 255 255 / 0.32);
+  position: relative;
+  width: var(--flask-w);
+  height: calc(var(--flask-h) + 18px);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: 50% 20%;
+  transition: transform 0.24s cubic-bezier(0.3, 0.8, 0.3, 1);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bt-flask:disabled {
+  cursor: default;
+}
+
+.bt-flask:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 12px;
+}
+
+.bt-flask__cork {
+  position: absolute;
+  top: 0;
+  left: 26%;
+  right: 26%;
+  height: 14px;
+  border-radius: 4px 4px 2px 2px;
+  background: linear-gradient(90deg, #a87a4e, #d2a676 45%, #a87a4e);
+  box-shadow: inset 0 -2px 0 rgb(80 50 20 / 0.3);
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1);
+}
+
+.bt-flask.is-sealed .bt-flask__cork {
+  opacity: 1;
+  transform: none;
+}
+
+.bt-flask__glass {
+  position: absolute;
+  top: 12px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  border: 2.5px solid rgb(255 255 255 / 0.85);
+  border-top-width: 0;
+  border-radius: 6px 6px calc(var(--flask-w) / 2) calc(var(--flask-w) / 2);
+  background: linear-gradient(90deg, rgb(255 255 255 / 0.5), rgb(255 255 255 / 0.22) 60%, rgb(255 255 255 / 0.4));
+  box-shadow:
+    inset 0 0 0 1px rgb(120 90 60 / 0.25),
+    inset -6px 0 10px -6px rgb(120 90 60 / 0.25),
+    0 10px 14px -10px rgb(70 40 15 / 0.45);
+}
+
+/* Boca del frasco: un aro de vidrio más grueso. */
+.bt-flask__glass::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -3px;
+  right: -3px;
+  height: 5px;
+  border-radius: 3px;
+  background: rgb(255 255 255 / 0.9);
+  box-shadow: 0 1px 0 rgb(120 90 60 / 0.3);
+  z-index: 2;
+}
+
+.bt-flask__shine {
+  position: absolute;
+  top: 10%;
+  bottom: 14%;
+  left: 18%;
+  width: 14%;
+  border-radius: 999px;
+  background: linear-gradient(rgb(255 255 255 / 0.75), rgb(255 255 255 / 0.1));
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Cada capa ocupa un hueco fijo; se llena y se vacía desde abajo. */
+.bt-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--slot) * (100% - 8px) / var(--cap));
+  height: calc((100% - 8px) / var(--cap) + 1px);
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(90deg, rgb(0 0 0 / 0.12), transparent 30% 70%, rgb(0 0 0 / 0.16)),
+    var(--ink);
+  transform: scaleY(0);
+  transform-origin: 50% 100%;
+  transition: transform 0.18s ease-in calc(var(--slot) * 0.06s), background-color 0s;
+}
+
+.bt-layer.is-full {
+  transform: scaleY(1);
+  transition: transform 0.22s ease-out calc(var(--slot) * 0.07s);
+}
+
+/* La superficie de la tintura de arriba: menisco claro. */
+.bt-layer.is-top::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  height: 6px;
+  border-radius: 50%;
+  background: color-mix(in oklab, var(--ink) 65%, white);
+}
+
+.bt-layer__glyph {
+  font-size: calc(var(--flask-w) * 0.26);
+  line-height: 1;
+  color: rgb(255 255 255 / 0.62);
+  text-shadow: 0 1px 0 rgb(0 0 0 / 0.18);
+  pointer-events: none;
+}
+
+.bt-flask.is-selected:not(.is-pouring) {
+  transform: translateY(-16px);
+}
+
+.bt-flask.is-selected .bt-flask__glass {
+  border-color: #fff;
+  box-shadow:
+    inset 0 0 0 1px rgb(120 90 60 / 0.25),
+    0 0 0 3px color-mix(in oklab, #f2b33d 70%, transparent),
+    0 16px 20px -12px rgb(70 40 15 / 0.5);
+}
+
+.bt-flask.is-hinted .bt-flask__glass {
+  animation: bt-hint 1.1s ease-in-out infinite;
+}
+
+.bt-flask.is-shaking {
+  animation: bt-shake 0.38s ease;
+}
+
+.bt-flask.is-pouring {
+  transition: transform 0.26s cubic-bezier(0.45, 0.05, 0.3, 1);
+}
+
+.bt-flask.is-sealed .bt-flask__glass {
+  box-shadow:
+    inset 0 0 0 1px rgb(120 90 60 / 0.25),
+    0 0 18px 2px rgb(255 226 150 / 0.65),
+    0 10px 14px -10px rgb(70 40 15 / 0.45);
+}
+
+.bt-flask__tag {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 4px);
+  translate: -50% 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #fffaf2;
+  color: #4a3326;
+  font-size: 0.7rem;
+  white-space: nowrap;
+  box-shadow: 0 4px 10px -6px rgb(70 40 15 / 0.6);
+  pointer-events: none;
+}
+
+/* El chorro: cae desde la boca inclinada hasta el destino. */
+.bt-stream {
+  position: absolute;
+  width: 6px;
+  margin-left: -3px;
+  border-radius: 3px;
+  background: linear-gradient(color-mix(in oklab, var(--ink) 80%, white), var(--ink));
+  transform-origin: 50% 0;
+  animation: bt-stream var(--pour-ms) ease-in-out both;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes bt-stream {
+  0% {
+    transform: scaleY(0);
+    opacity: 1;
+  }
+  25%,
+  75% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1) translateY(30%);
+    opacity: 0;
+  }
+}
+
+@keyframes bt-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-6px) rotate(-3deg);
+  }
+  40% {
+    transform: translateX(6px) rotate(3deg);
+  }
+  60% {
+    transform: translateX(-4px) rotate(-2deg);
+  }
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@keyframes bt-hint {
+  0%,
+  100% {
+    box-shadow: inset 0 0 0 1px rgb(120 90 60 / 0.25), 0 0 0 0 rgb(64 170 255 / 0);
+  }
+  50% {
+    box-shadow: inset 0 0 0 1px rgb(120 90 60 / 0.25), 0 0 0 5px rgb(64 170 255 / 0.55);
+  }
+}
+
+.bt-notice {
+  min-height: 2.6em;
+  max-width: 46ch;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+}
+
+.bt-notice span {
+  animation: bt-notice 0.3s ease;
+}
+
+@keyframes bt-notice {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+.bt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bt-flask,
+  .bt-layer,
+  .bt-layer.is-full {
+    transition: none;
+  }
+  .bt-flask.is-shaking,
+  .bt-flask.is-hinted .bt-flask__glass {
+    animation: none;
+  }
+}

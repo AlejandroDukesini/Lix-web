@@ -1,12 +1,20 @@
 import { Link } from 'react-router';
-import { Clock, Play } from 'lucide-react';
+import { Clock, Globe, Play } from 'lucide-react';
 import { Badge } from '../../../components/common/Card.jsx';
 import { categoryById, categoryLabel } from '../registry/categories.js';
 import { formatLastPlayed } from '../services/gameLifecycle.js';
+import { onlineSourceFor } from '../online/onlineSources.js';
 import { cx } from '../../../utils/cx.js';
 
+/** Etiquetas de novedad (manifest.badge). Todos los juegos de la biblioteca están disponibles. */
+const BADGES = {
+  new: { label: 'Nuevo', tone: 'success' },
+  updated: { label: 'Actualizado', tone: 'soon' },
+};
+
 /**
- * Tarjeta de un juego disponible. Toda la tarjeta responde al puntero (el
+ * Tarjeta de un juego disponible. Interno siempre; «Online» indica que además
+ * tiene la versión original como enlace externo. Toda la tarjeta responde al puntero (el
  * enlace "Jugar" se extiende sobre ella), pero solo hay un elemento enfocable.
  */
 export function GameCard({ game, record, headingLevel = 3 }) {
@@ -15,16 +23,28 @@ export function GameCard({ game, record, headingLevel = 3 }) {
   const last = formatLastPlayed(record?.lastPlayedAt);
   const highlight = record ? game.highlight(record) : null;
   const progress = game.progress(record);
+  const online = onlineSourceFor(game.id);
   return (
     <article className="game-card" style={{ '--game-a': game.palette.a, '--game-b': game.palette.b }} aria-labelledby={`card-${game.id}`}>
       <div className="game-card__art">
         <Art className="game-art" />
-        <Badge tone="success" className="game-card__status">
-          Disponible
-        </Badge>
+        {BADGES[game.badge] && (
+          <Badge tone={BADGES[game.badge].tone} className="game-card__status">
+            {BADGES[game.badge].label}
+          </Badge>
+        )}
+        {online && (
+          <span className="game-card__online" title={`También en ${online.providerName} (enlace externo)`}>
+            <Globe aria-hidden="true" />
+            <span>Online</span>
+          </span>
+        )}
       </div>
       <div className="game-card__body">
-        <p className="game-card__categories">{game.categories.map(categoryLabel).join(' · ')}</p>
+        <p className="game-card__categories">
+          {game.categories.map(categoryLabel).join(' · ')}
+          {online && <span className="sr-only"> · También online (enlace externo a {online.providerName})</span>}
+        </p>
         <Heading id={`card-${game.id}`} className="game-card__title">
           {game.title}
         </Heading>

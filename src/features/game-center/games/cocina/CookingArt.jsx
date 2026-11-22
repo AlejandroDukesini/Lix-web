@@ -1,5 +1,6 @@
 /** Ilustraciones de portada de los juegos de cocina: la comanda junto al plato terminado. */
 import { CakeVisual, IceCreamVisual, PizzaVisual } from './components/FoodVisuals.jsx';
+import { LAYER_HEIGHT, Layer } from './components/BurgerParts.jsx';
 
 function Scene({ className, id, from, to, children, lines }) {
   return (
@@ -50,6 +51,28 @@ export function CakeArt({ className }) {
   return (
     <Scene className={className} id="pas" from="#f9e1ff" to="#b48cff" lines={['Redondo', '1. Chocolate', '2. Vainilla', 'Relleno de fresa', 'Cobertura fresa', '«Un año más»']}>
       <CakeVisual spec={{ forma: 'redondo', capas: ['chocolate', 'vainilla'], relleno: 'fresa', cobertura: 'fresa', decoracion: ['fresas', 'velas'], mensaje: 'un-ano-mas' }} x="180" y="10" width="215" height="225" />
+    </Scene>
+  );
+}
+
+const ART_BURGER = ['pan-base', 'ketchup', 'carne', 'queso', 'lechuga', 'tomate', 'cebolla', 'pan-tapa'];
+
+export function BurgerArt({ className }) {
+  // Capas apiladas de abajo arriba, solapadas un poco, sobre una tabla de madera.
+  let y = 214;
+  const placed = ART_BURGER.map((id) => {
+    const h = LAYER_HEIGHT[id];
+    y -= h - 3;
+    return { id, y };
+  });
+  return (
+    <Scene className={className} id="bur" from="#ffe3b3" to="#d8402b" lines={['Pan', 'Kétchup', 'Carne al punto', 'Queso', 'Lechuga', 'Tomate', 'Cebolla']}>
+      <rect x="196" y="214" width="190" height="16" rx="8" fill="#b9773f" />
+      {placed.map(({ id, y: top }, i) => (
+        <g key={i} transform={`translate(196 ${top}) scale(0.95)`}>
+          <Layer id={id} doneness="perfecta" />
+        </g>
+      ))}
     </Scene>
   );
 }
