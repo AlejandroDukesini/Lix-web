@@ -1,5 +1,34 @@
 # Historial de versiones
 
+## 1.3.0 — 23 de noviembre de 2026
+
+**Game Center ampliado y app Android revisada (compatibilidad, seguridad, dependencias y publicación).**
+
+- **Juegos nuevos:** Botica de colores (ordenar líquidos, 24 niveles con solución comprobada), Salida de la cochera
+  (sacar el microbús del atasco, 30 niveles con mínimo exacto), Hamburguesería por estaciones (pedidos, parrilla en
+  tiempo real, montaje y entrega puntuada; días, monedas, ingredientes y mejoras) y Gato largo (30 habitaciones), que
+  **sustituye a «Cubrir el espacio»** (sus estadísticas antiguas quedan guardadas pero ya no se muestran).
+- **Lava y Agua:** modo **Dúo** cooperativo (Brasa y Gota): gravedad, saltos, placas y compuertas; 7 niveles que
+  exigen cooperar.
+- **Cocina:** Heladería, Pizzería y Pastelería con pasos numerados que avanzan solos, botón «Siguiente» y comanda
+  compacta en el móvil.
+- **Catálogo:** enlaces a versiones originales de Longcat, Tunnel Runner, Tetris, Lava and Aqua, Water Sort, Bus
+  Escape y los juegos de Papa's; sello «Online», filtro «También online» y etiquetas Nuevo / Actualizado.
+- **Android:** aviso nativo si el WebView es anterior al 111, tráfico HTTP prohibido también en Android 8, rutas de
+  widgets validadas al arrancar, instantánea de widgets limitada a 1 MB, mensaje correcto al exportar en Android 8–9,
+  dependencias AndroidX actualizadas (core 1.18.0, activity 1.13.0, webkit 1.18.0) y suma SHA-256 del wrapper de Gradle.
+- **Dependencias web:** parches y menores (Vite 8.3.8, React 19.3.1, React Router 7.18.6…); `npm audit` pasa de 2
+  vulnerabilidades altas (solo de desarrollo) a 0.
+- **Documentación:** README nuevo y conciso; documentación técnica en `docs/developer/` (arquitectura, construcción,
+  publicación, seguridad con OWASP MASVS, dependencias, compatibilidad, pruebas, problemas frecuentes);
+  `THIRD_PARTY_NOTICES.md`; se retira `DOCUMENTACION_NUEVAS_FUNCIONES_LIX.txt` (su contenido útil pasó a `docs/`).
+- **CI:** GitHub Actions para pruebas, build y APK debug en cada cambio, y release en borrador (solo si pasan las
+  pruebas) al etiquetar.
+
+Validado con `npm run check` (839 pruebas, build y 107 comprobaciones E2E) y en emulador Android 14 (API 34):
+actualización encima de la 1.2.1 conservando los datos, navegación, rutas de widgets, rotación y segundo plano.
+Android 8–13 y 15–16 y teléfonos físicos: **no evaluados** (ver `docs/developer/COMPATIBILITY.md`).
+
 ## 1.2.1 — 17 de noviembre de 2026
 
 **Rediseño UI/UX de juegos (escenarios diurnos) y APK de Android descargable.**
@@ -31,8 +60,8 @@ Validado con `npm run check` (822 pruebas, build y 104 comprobaciones E2E) y el 
 - **iPhone:** análisis de viabilidad (requiere app nativa; sin implementar).
 
 Validado con `npm run check` (822 pruebas, build y 104 comprobaciones E2E), `npm run test:python` y pruebas
-en emulador Android (API 34). Detalle completo en `DOCUMENTACION_NUEVAS_FUNCIONES_LIX.txt` y
-`docs/MULTIPLATAFORMA.md`.
+en emulador Android (API 34). Detalle técnico (consolidado en 1.3.0): `docs/developer/ARCHITECTURE.md` y
+`docs/developer/MULTIPLATAFORMA.md`.
 
 ## 1.1.0 — 19 de octubre de 2026
 

@@ -1,7 +1,7 @@
 {
   "name": "un-ano-mas-contigo",
   "private": true,
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "Un regalo digital privado, offline-first: nuestro espacio.",
   "type": "module",
   "scripts": {
