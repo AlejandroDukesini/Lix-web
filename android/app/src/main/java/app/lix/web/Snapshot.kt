@@ -17,9 +17,11 @@ import java.time.OffsetDateTime
  */
 object SnapshotStore {
     private const val FILE = "widget_snapshot.json"
+    private const val MAX_CHARS = 1_000_000
 
     fun write(context: Context, json: String) {
-        // Se valida antes de guardar: un JSON roto nunca sustituye al último bueno.
+        // Se valida antes de guardar: un JSON roto (o desmesurado) nunca sustituye al último bueno.
+        require(json.length <= MAX_CHARS) { "Instantánea demasiado grande" }
         JSONObject(json)
         val target = File(context.filesDir, FILE)
         val tmp = File(context.filesDir, "$FILE.tmp")

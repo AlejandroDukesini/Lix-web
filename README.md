@@ -1,811 +1,110 @@
-# Un año más contigo
+# Lix · Un año más contigo
 
-Un regalo digital de Año Nuevo: una aplicación **privada**, **instalable** y **100 % local** (sin servidores, sin
-nube, sin Internet después de la primera carga) que irá creciendo por fases hasta convertirse en nuestro espacio:
-juegos, documentos, diario, calendario y finanzas (ya todos disponibles).
+Un regalo digital convertido en app: **privada**, **instalable** y **100 % local**. Juegos, lectura, organización
+personal y un taller creativo, sin cuentas, sin servidores y sin Internet después de instalarla. Funciona como app
+web instalable (PWA) y como **app Android** (APK).
 
----
-
-## Qué incluye
-
-| Área | Estado |
-| --- | --- |
-| Presentación de Año Nuevo: **viaje astral** guiado por el desplazamiento (Fase 1 revisada) | ✅ Funcional |
-| Inicio personalizado (saludo, apodos animados, tiempo juntos, cuenta atrás de Año Nuevo) | ✅ Funcional |
-| Configuración completa (apodos, textos, estilo, tema, colores, calendario, fechas, datos) | ✅ Funcional |
-| Dos estilos visuales (Glassmorphism y Maximalismo) × dos temas (claro y oscuro) | ✅ Funcional |
-| Persistencia local (localStorage + copia en IndexedDB, migraciones, reparación) | ✅ Funcional |
-| PWA: manifest, iconos, Service Worker con precarga total, funcionamiento sin conexión | ✅ Funcional |
-| **Game Center — Fase 1**: Aquapark, Arena .io (3 minijuegos), Cubrir el espacio, Ajedrez, Tunnel Runner | ✅ Funcional (ver [Game Center](#game-center)) |
-| **Game Center — Fase 2**: Pollo pasando la calle sangriento, Resolver casos, Sudokus, Aparcar el carro, Despejar el estacionamiento | ✅ Funcional |
-| **Game Center — Fase 3**: HexaStack, Traffic Rider, Frente Abierto (inspirado en Open Front), Saltos de Lumi (plataformas originales) | ✅ Funcional |
-| **Game Center — Fase 4**: Reino de Ladrillos (homenaje al plataformas clásico), Bloques que caen (encajar piezas), Lava y Agua, Stellarium (observatorio), Heladería, Pizzería y Pastelería | ✅ Funcional |
-| **Game Center — Rediseño visual (v1.1.0)**: arte, iluminación, animaciones y rendimiento móvil nuevos en los 21 juegos, sin cambiar sus reglas | ✅ Funcional (ver [Rediseño visual](#rediseño-visual-v110)) |
-| **Biblioteca**: 4 estantes y 60 capítulos narrativos (cosmos y física, criminalística, idiomas, religiones), lector con índice, favoritos, marcadores, progreso, glosario y frases para escuchar | ✅ Funcional (ver [Biblioteca](#biblioteca)) |
-| **Organización personal**: panel del día, Finanzas, Calendario (universidad, tareas, recordatorios), Notas, Diario y Diario emocional, con PIN opcional y copias selectivas | ✅ Funcional (ver [Organización personal](#organización-personal)) |
-| **Control académico** (v1.2.0): asignaturas, actividades en 8 categorías, horario semanal con choques, calendario con festivos y cuadernos por asignatura | ✅ Funcional |
-| **Consejos diarios** (v1.2.0): 120 consejos en 10 categorías, propios, franjas, historial, favoritos y notificaciones | ✅ Funcional (con la app abierta en la web; también cerrada en Android) |
-| **Lix Flowers** (v1.2.0): animaciones de flores en arte ASCII generadas con Python (Pyodide + Pillow) sin conexión | ✅ Funcional |
-| **Lix AI Studio** (v1.2.0): pintor procedural (no es IA) o IA real con un servidor propio | ✅ Funcional (IA real probada solo con un servidor simulado) |
-| **App Android** (v1.2.1): APK nativo en Kotlin (WebView + 4 widgets Jetpack Glance), pantalla completa en partidas, pausa al minimizar, firma de publicación | ✅ APK debug y release probados en emulador (API 34); sin probar en teléfono físico |
-| **Widget de Windows 11** (v1.2.0) e **iPhone** | Windows: implementado, sin verificar en el Tablero · iPhone: análisis |
-
-Todo lo nuevo de la versión 1.2.0 (arquitectura, compilación, instalación de widgets, pruebas y límites) está en
-[`DOCUMENTACION_NUEVAS_FUNCIONES_LIX.txt`](DOCUMENTACION_NUEVAS_FUNCIONES_LIX.txt) y [`docs/MULTIPLATAFORMA.md`](docs/MULTIPLATAFORMA.md).
-
-### La presentación: «Bitácora de observación»
-
-Un viaje por el universo que se recorre desplazándose hacia abajo. No es una animación que se mira, es un registro
-astronómico que se va completando: cada capítulo tiene su texto, su ilustración y su movimiento de cámara.
-
-| Capítulo | Qué ocurre |
-| --- | --- |
-| **Prólogo** | Cielo profundo con estrellas en tres profundidades, nebulosas y planetas lejanos. Las frases aparecen con pausas narrativas («Hay millones de estrellas en el universo...»). Dedicatoria con los apodos animados. |
-| **I · La galaxia** | Miles de puntos luminosos dispersos por el cielo se reúnen con el scroll —cada uno con su propio retardo— en los brazos de una **galaxia espiral** que gira en el centro; con el capítulo II se aleja a una esquina. Paralaje, polvo cósmico y estrellas fugaces. |
-| **II · Constelaciones** | Las líneas se dibujan con el scroll como **una línea de tiempo real**: nacen en la estrella *21 jul 2025 · el comienzo* (fecha configurada) y un contador acompaña la punta del trazo sumando los días hasta *hoy*. Al cerrarse el travesaño, la constelación forma —sin decirlo— una **«A»**. |
-| **III · La Tierra** | Un punto azul lejano crece hasta ser el **planeta Tierra** (océanos, continentes con coordenadas reales, nubes, casquetes, atmósfera y terminador día/noche) que gira con el scroll de África hacia las Américas. Al final la cámara desciende: el globo se inclina hacia el ecuador y su borde se convierte en el horizonte sobre el que aparece el telescopio. |
-| **IV · Telescopio** | En un planeta diminuto con atmósfera y un observatorio con la rendija iluminada se alza un refractor sobre montura ecuatorial: tubo esmaltado, anillos de latón, buscador, lente con reflejos, contrapeso, trípode, una linterna roja (detalle real de astrónomos) y notas manuscritas. Del ocular escapa una luz cálida. |
-| **V · Asomarse** | La cámara viaja hasta el ocular, el campo de visión se estrecha en un iris y el universo se atenúa. Aparece una vista circular con retícula graduada; el enfoque se ajusta con el scroll («Enfocando… 64 %»). |
-| **VI · La vela** | En el centro, una vela de cera con textura y llama viva lleva la **letra «A» grabada en oro**. Ficha del objeto: *Objeto A · Magnitud: incalculable · Distancia: aquí*. La «A» de la constelación reaparece enmarcando el ocular. Tras una pausa: **«Otro año juntos»**. |
-| **VII · La sorpresa** | El iris se abre, el universo recupera la luz y la vela queda encendida junto al mensaje final, la firma y **«Entrar a nuestro universo»**. |
-
-Detalles de la experiencia:
-
-- **Distancia al destino**: un contador desciende de 13.800 millones de años luz hasta «Has llegado».
-- **Control total**: se avanza y retrocede con rueda, teclado, gestos o el índice de capítulos (I–VII); botón
-  «Siguiente capítulo», «Saltar presentación» y «Volver a empezar el viaje». El scroll nunca se bloquea.
-- **Sin permisos**: no usa micrófono ni cámara (la versión anterior de la vela tenía soplido experimental por
-  micrófono; se retiró).
-- **Movimiento reducido**: sin acercamientos ni cámara; cada capítulo se muestra en su composición clave.
-- **Estilos y temas**: en Glass los textos van en paneles esmerilados y la lente tiene reflejos; en Maximal todo es una
-  carta estelar impresa (tinta gruesa, numerales gigantes, telescopio esmaltado en el color primario). El tema claro es
-  un «universo luminoso» al amanecer. Todo cambia al momento.
-
-Aparece sola la primera vez. Después se puede repetir desde el Inicio o desde Configuración sin cambiar nada, y se
-puede «restablecer» para que vuelva a aparecer en el siguiente inicio. Sus textos y la letra de la vela son editables.
+**[⬇ Descargar para Android (Lix.apk)](https://github.com/AlejandroDukesini/Lix-web/releases/latest/download/Lix.apk)**
+· [Todas las versiones](https://github.com/AlejandroDukesini/Lix-web/releases) · [Historial de cambios](CHANGELOG.md)
 
 ---
+
+## Funciones
+
+| Espacio | Qué ofrece |
+| --- | --- |
+| **Presentación** | «Bitácora de observación»: un viaje astral por capítulos que se recorre desplazándose. |
+| **Inicio** | Saludo con apodos, tiempo juntos y cuenta atrás de Año Nuevo. |
+| **Game Center** | 24 juegos originales sin conexión: arcade, lógica, estrategia, carreras, plataformas y cocina. Algunos enlazan también a su versión original online. |
+| **Biblioteca** | 60 capítulos en 4 estantes, con lector, favoritos, marcadores, glosario y lectura en voz alta. |
+| **Organización personal** | Panel del día, finanzas, calendario, tareas, notas, diario y diario emocional, con PIN opcional. |
+| **Control académico** | Asignaturas, actividades, horario con choques, calendario y cuadernos. |
+| **Consejos diarios** | 120 consejos en franjas, con notificaciones (en Android, también con la app cerrada). |
+| **Taller creativo** | Lix Flowers (animaciones de flores con Python en el dispositivo) y Lix AI Studio. |
+| **Android** | 4 widgets de pantalla de inicio, pantalla completa en las partidas y pausa automática al minimizar. |
+| **Personalización** | Dos estilos (Glass y Maximal) × tema claro/oscuro, colores, textos y fechas. |
+
+Detalle de cada espacio: [docs/FUNCIONES.md](docs/FUNCIONES.md) · Juegos: [docs/developer/GAME-CENTER.md](docs/developer/GAME-CENTER.md).
+
+**Novedades 1.3.0:** Botica de colores (ordenar líquidos), Salida de la cochera (sacar el autobús del atasco),
+Hamburguesería por estaciones (pedidos, parrilla, montaje y entrega), Gato largo (sustituye a «Cubrir el
+espacio»), modo **Dúo** cooperativo en Lava y Agua, cocina más fluida y enlaces a versiones originales
+(Longcat, Tunnel Runner, Tetris, Lava and Aqua…).
 
 ## Tecnologías
 
-- **React 19** + **Vite** (JavaScript moderno, sin TypeScript: el dominio es pequeño y la validación en tiempo de
-  ejecución ya protege los datos guardados).
-- **React Router** (`HashRouter`: funciona igual en el servidor local, en la app instalada y en cualquier carpeta, sin
-  configuración de servidor).
-- **lucide-react** para iconos (se empaquetan localmente, solo los usados).
-- **CSS propio** con tokens y variables (sin frameworks), fuentes **locales** (OFL, ver `src/assets/fonts/LICENSE.md`).
-- **localStorage** (preferencias, lectura síncrona sin parpadeos) + **IndexedDB** (copia de seguridad y base para las
-  próximas fases).
-- **Service Worker propio** + **Web App Manifest**.
-- **Vitest** + **Testing Library** (unitarias e integración) y **Playwright-core** con el Edge/Chrome instalado (E2E real).
+React 19 · Vite 8 · React Router 7 · CSS propio · IndexedDB/localStorage · Service Worker propio · Pyodide (Python
+en WebAssembly) · Android nativo en Kotlin (WebView + Jetpack Glance) · Vitest, Testing Library y Playwright.
 
-No hay backend, API, analítica, CDN, Google Fonts ni ninguna petición externa. Una **Content-Security-Policy**
-(`default-src 'self'`) lo garantiza en el build: el navegador bloquearía cualquier intento de cargar algo de fuera.
+Sin backend, analítica, CDN ni peticiones externas: una Content-Security-Policy (`default-src 'self'`) lo garantiza.
 
----
+## Instalación en Android
 
-## Requisitos y comandos
+1. Descarga **[Lix.apk](https://github.com/AlejandroDukesini/Lix-web/releases/latest/download/Lix.apk)** desde el
+   teléfono (o pásalo por cable, Drive o correo).
+2. Ábrelo y permite «Instalar apps desconocidas» **solo** para la app con la que lo abres.
+3. Toca **Instalar** y abre **Lix**. Si Play Protect avisa de una app desconocida (no se distribuye por Google Play),
+   elige *Instalar de todas formas*.
 
-Requiere **Node.js 20+** (probado con Node 24) y npm.
+**Actualizar:** instala el APK nuevo encima. Los datos se conservan (misma firma, `versionCode` mayor). Desinstalar
+sí borra los datos: antes, exporta una copia desde *Configuración → Datos*.
+
+Cada release publica el **SHA-256** del APK para comprobarlo: `certutil -hashfile Lix.apk SHA256` (Windows) o
+`sha256sum Lix.apk`.
+
+## Compatibilidad
+
+| | Mínimo | Objetivo |
+| --- | --- | --- |
+| Android | **8.0 (API 26)** | API 36 (Android 16) |
+| Android System WebView / Chrome | **111** (si es anterior, la app explica cómo actualizarlo) | — |
+| Navegador (PWA) | Chrome/Edge 111+, Safari 16.4+, Firefox 121+ (estimado por las funciones CSS/JS usadas) | — |
+
+Qué se ha probado y qué no: [docs/developer/COMPATIBILITY.md](docs/developer/COMPATIBILITY.md).
+
+## Ejecutar y compilar
+
+Requisitos: Node.js 20+; para el APK, además JDK 17+ y Android SDK (platform 36).
 
 ```bash
-npm install          # instalar dependencias (única vez que se necesita Internet)
-npm run dev          # desarrollo con recarga en caliente → http://localhost:5173  (sin Service Worker)
-npm run build        # versión de producción en dist/
-npm run preview      # sirve dist/ en http://localhost:4173 (con Service Worker y modo offline)
-npm start            # build + preview y abre el navegador: lo más cómodo para usarla en el computador
-npm test             # pruebas unitarias y de integración (Vitest)
-npm run test:e2e     # verificación en navegador real (requiere build previo; usa Edge o Chrome instalados)
-npm run check        # todo lo anterior: test + build + e2e
-npm run icons        # regenera los iconos PNG desde el diseño SVG
+npm ci                  # dependencias exactas
+npm start               # build + vista previa en http://localhost:4173 (instalable como PWA)
+npm run check           # pruebas unitarias, build y E2E en navegador real
+npm run android:build   # APK de pruebas (debug)
+npm run android:release # APK de publicación (firmado; la primera vez: npm run android:keystore)
 ```
 
-### Desarrollo ≠ producción
-
-- `npm run dev` es para programar: no registra el Service Worker (los archivos cambian a cada guardado).
-- `npm run build` + `npm run preview` (o `npm start`) sirve la versión real. Es un servidor **local** en tu propio
-  computador; no publica nada en Internet.
-
-### Usarla sin abrir una terminal
-
-Una PWA necesita un origen `http://localhost` o `https://` para registrar el Service Worker y poder instalarse:
-abrir `dist/index.html` con doble clic (`file://`) **no** es compatible con Service Worker ni con la instalación.
-Alternativas válidas:
-
-1. **Instalarla (recomendado).** Ejecuta `npm start` una vez, instálala (ver abajo) y desde entonces ábrela desde el
-   menú Inicio / escritorio / pantalla de inicio: el Service Worker la sirve desde la caché **sin servidor y sin
-   Internet**.
-2. **Para el teléfono**, sirve la carpeta `dist/` en la red local con HTTPS o publícala en un alojamiento estático
-   privado de tu elección; tras la primera carga, la app funciona sin conexión y los datos siguen solo en el teléfono.
-   (Safari exige HTTPS para el Service Worker fuera de `localhost`.)
-
----
-
-## Instalación como aplicación
-
-**Computador (Chrome / Edge):** con la app abierta (`npm start`), pulsa el icono de instalar al final de la barra de
-direcciones, o *Configuración → Instalar y usar sin Internet → Instalar aplicación* cuando el navegador lo ofrece.
-Firefox de escritorio no instala PWAs (se puede usar en una pestaña).
-
-**Android:** instala el APK (ver «App Android (APK)» más abajo) o, sin APK, desde Chrome: menú ⋮ → *Instalar
-aplicación* / *Añadir a pantalla de inicio*.
-
-**iPhone / iPad:** iOS no tiene botón de instalación automático. Abre la app en **Safari** → botón **Compartir** →
-**Añadir a pantalla de inicio** → **Añadir**. La app no muestra un botón «Instalar» en iOS porque no podría cumplirlo;
-en su lugar enseña estos pasos. Probada en simulación de iPhone XS (375 × 812) con áreas seguras (`viewport-fit=cover`
-+ `env(safe-area-inset-*)`).
-
-## App Android (APK)
-
-La misma app web empaquetada en un APK instalable, con todos los juegos y sin necesitar Internet ni servidor.
-
-### Descargar la app
-
-**[⬇ Descargar Lix para Android (APK)](https://github.com/AlejandroDukesini/Lix-web/releases/latest/download/Lix.apk)**
-— siempre la última versión publicada. Todas las versiones y sus notas: [Releases](https://github.com/AlejandroDukesini/Lix-web/releases).
-
-1. Abre el enlace desde el teléfono (o descárgalo en el computador y pásalo por cable, Drive o correo).
-2. Toca el archivo `Lix.apk`. Android pedirá permitir «Instalar apps desconocidas» para el navegador o el gestor de
-   archivos con el que lo abres; actívalo solo para esa app y vuelve atrás.
-3. Toca **Instalar** y abre **Lix** desde su icono. Requiere Android 8.0 o superior.
-
-**Actualizar:** descarga el APK nuevo e instálalo encima; los datos se conservan porque todas las versiones van
-firmadas con la misma clave. Si Play Protect avisa de una app desconocida, es porque no se distribuye por Google Play:
-elige *Instalar de todas formas*.
-
-**Publicar una versión nueva** (mantenedor): sube `version` en `package.json`, ejecuta `npm run android:release` y crea
-la *release* adjuntando el APK con el nombre `Lix.apk` para que el enlace de arriba apunte a ella:
-
-```bash
-cp android/app/build/outputs/apk/release/app-release.apk Lix.apk
-gh release create v1.2.1 Lix.apk --title "Lix 1.2.1" --notes-file notas.md
-```
-
-### Compilar el APK
-
-**Arquitectura.** `android/` es un *shell* nativo en Kotlin: una `Activity` con un WebView que sirve el build web
-(`dist/`, copiado dentro del APK por la tarea Gradle `syncWebAssets`) desde `https://appassets.androidplatform.net`
-con `WebViewAssetLoader`. Se mantuvo frente a Capacitor, React Native o Tauri porque reutiliza el 100 % del código web
-(React + Vite, juegos en Canvas/DOM/SVG) sin capas intermedias y ya integra lo que necesita código nativo: widgets
-Jetpack Glance, consejos con la app cerrada y descargas (puente `window.LixAndroid`, `LixBridge.kt`). Capacitor haría
-lo mismo que este WebView, pero añadiría dependencias y obligaría a migrar los widgets. Detalle de widgets y puente:
-[`docs/MULTIPLATAFORMA.md`](docs/MULTIPLATAFORMA.md).
-
-**Experiencia móvil (`MainActivity.kt`):**
-
-- De borde a borde (obligatorio desde Android 15): el contenido se separa de la barra de estado, la de navegación, el
-  recorte de la cámara y el teclado con márgenes nativos.
-- **Pantalla completa durante las partidas** (`LixAndroid.setImmersive`, llamado desde `GamePage.jsx`); las barras
-  reaparecen un momento deslizando desde el borde y vuelven al salir del juego.
-- **Al minimizar se pausa el WebView**: la página pasa a oculta y los juegos se ponen en pausa solos (escuchan
-  `visibilitychange`); al volver se reanuda en el mismo punto.
-- **Botón Atrás**: primero pregunta a la página (`window.__lixBack`). En un juego cierra el diálogo abierto o pide
-  confirmar la salida si hay una partida en curso; fuera de los juegos navega hacia atrás y, al final, cierra la app.
-- Rotación sin recargar (la `Activity` gestiona el cambio de orientación); los juegos ya tenían diseño horizontal.
-- Enlaces externos (p. ej. la versión online de un juego): en el navegador del sistema, solo `https`, `http` y `mailto`.
-
-**Requisitos:** Node.js 20+ (probado con 24), JDK 17+ (probado con 21) y Android SDK con *platform* 36 y *build-tools*
-(Android Studio los instala; ruta en `android/local.properties` → `sdk.dir=…`, o la variable `ANDROID_HOME`). Gradle no
-hay que instalarlo: va el *wrapper* (8.14.3).
-
-**Desde cero:**
-
-```bash
-git clone <repo> && cd WEB-NOVIA-WF
-npm install
-npm run android:build        # build web + APK de pruebas (debug)
-npm run android:keystore     # solo la primera vez: crea tu clave de publicación
-npm run android:release      # build web + APK de publicación (release, firmado)
-```
-
-**Dónde queda cada APK** (rutas comprobadas):
-
-| Tipo | Archivo | Paquete |
-| --- | --- | --- |
-| Debug | `android/app/build/outputs/apk/debug/app-debug.apk` (~24 MB) | `app.lix.web.debug` |
-| Release | `android/app/build/outputs/apk/release/app-release.apk` (~16 MB) | `app.lix.web` |
-
-**Debug y release.** El de depuración permite inspeccionar el WebView desde `chrome://inspect`, va firmado con la
-clave de depuración del SDK y lleva el sufijo `.debug`, así que convive con el de publicación en el mismo teléfono
-(son apps distintas, con datos distintos). El de publicación no es depurable, pasa por R8 (código nativo reducido;
-`proguard-rules.pro` conserva el puente JS) y va firmado con tu clave: es el de uso diario.
-
-**Instalar en el teléfono:**
-
-1. Copia el APK al teléfono (cable USB, Drive, correo…) o, con la depuración USB activada:
-   `adb install -r android/app/build/outputs/apk/release/app-release.apk`.
-2. Ábrelo; Android pedirá permitir «Instalar apps desconocidas» para la app con la que lo abres (solo esa vez).
-3. Abre **Lix** desde su icono. No pide permisos al iniciar; las notificaciones, solo si activas los consejos.
-
-**Firma de publicación.** `npm run android:keystore` crea `~/.lix-android/lix-release.jks` (RSA 4096, contraseña
-aleatoria) y `android/keystore.properties` con su ruta y contraseñas. **Ninguno de los dos va al repositorio**
-(`android/.gitignore`). Guarda una copia de ambos (p. ej. en tu gestor de contraseñas): Android solo instala una
-versión nueva encima de la anterior si está firmada con la misma clave; si se pierde, hay que desinstalar y se pierden
-los datos de la app. En CI, en lugar del archivo, define `LIX_KEYSTORE`, `LIX_KEYSTORE_PASSWORD`, `LIX_KEY_ALIAS` y
-`LIX_KEY_PASSWORD`. Sin firma, `assembleRelease` se detiene con un mensaje en vez de producir un APK sin firmar.
-
-**Nuevas versiones.** Sube `version` en `package.json` y ejecuta `npm run android:release`. La versión del APK sale de
-ahí: `versionName` = `1.2.0` y `versionCode` = mayor·10000 + menor·100 + parche (1.2.0 → 10200), así cada versión
-instala encima de la anterior **conservando los datos**. Se instala igual que la primera vez (o `adb install -r`).
-
-**Datos.** Puntuaciones, récords, progreso y preferencias se guardan en el almacenamiento del WebView (IndexedDB y
-localStorage), privado de la app: sobreviven a cerrarla, reiniciar el teléfono y actualizar, y se borran al
-desinstalarla (`allowBackup="false"`: no van a la copia de Google). Son independientes de los del navegador del mismo
-teléfono; para moverlos usa la copia JSON de Configuración.
-
-**Sin Internet** funciona todo salvo las versiones online opcionales de algunos juegos (abren su web oficial) y Lix
-AI Studio cuando apunta a un servidor de tu red. **Permisos:** `INTERNET`, `POST_NOTIFICATIONS` (consejos; se pide al
-activarlos) y `RECEIVE_BOOT_COMPLETED`; WorkManager (lo usa Glance) añade `WAKE_LOCK`, `ACCESS_NETWORK_STATE` y
-`FOREGROUND_SERVICE`. Ni cámara, ni ubicación, ni contactos, ni micrófono, ni almacenamiento.
-
-**Identificador:** `app.lix.web` (dominio invertido de la app, el mismo desde v1.2.0). No se cambia: hacerlo crearía
-otra app y la instalada dejaría de actualizarse.
-
----
-
-## Arquitectura
-
-```
-public/
-  service-worker.js        Ciclo de vida del SW; la lista de precarga se inyecta en el build
-  manifest.webmanifest     Nombre, iconos, colores, modo standalone
-  boot.js                  Aplica estilo/tema guardados antes del primer pintado (sin destellos)
-  offline.html             Recuperación si se abre sin conexión antes de la primera carga completa
-  icons/                   Iconos PWA (generados por scripts/generate-icons.mjs)
-scripts/
-  vite-plugin-offline.js   Inyecta la CSP y genera la precarga + versión del Service Worker
-  vite-plugin-library.js   Construye el índice de la biblioteca (virtual:library-index) desde los .md
-  generate-icons.mjs       SVG → PNG (192, 512, maskable, apple-touch-icon, favicon)
-  verify-offline.mjs       E2E en navegador real
-src/
-  main.jsx                 Punto de entrada (estilos globales, PWA, React)
-  app/
-    App.jsx                Proveedores, rutas y puerta del primer inicio
-    modules.js             Registro de áreas: genera navegación e inicio (activos y «próximamente»)
-    providers/             PreferencesProvider (estado + guardado), AppearanceSync (tokens → <html>)
-  components/
-    common/                Button, IconButton, Card, Badge, SectionHeader, Dialog, ConfirmDialog,
-                           TextField, SegmentedControl, Switch, ColorField
-    feedback/              ToastProvider, ErrorBoundary, AppNotices
-    layout/                AppShell, AmbientBackground
-    navigation/            Barra lateral, barra superior, barra inferior, hoja «Espacios»
-    presentation/          Candle (vela con monograma), NicknameCarousel (apodos animados)
-  features/
-    presentation/          PresentationExperience (orquesta el viaje) + astral.css
-      story/               timeline.js        escenas, progreso por scroll y cálculo puro de cada fotograma
-                           useScrollStory.js  scroll → progreso por escena (rAF, sin bloquear el scroll)
-                           applyFrame.js      escribe el fotograma en el DOM (sin re-render de React)
-                           CosmosCanvas.jsx   estrellas, polvo, estrellas fugaces y galaxia (Canvas 2D)
-                           SkyLayers.jsx      cielo, nebulosas y planetas
-                           Constellation.jsx  la línea del tiempo que forma la «A»
-                           Telescope.jsx      planeta, observatorio y telescopio (SVG)
-                           EyepieceView.jsx   iris, retícula, enfoque, ficha y la vela
-    home/                  HomePage
-    settings/              SettingsPage + una sección por archivo
-    library/               Biblioteca: LibraryPage, ReaderPage, GlossaryPage
-      content/<estante>/   Un .md por capítulo (cosmos, criminalistica, idiomas, creencias)
-      engine/markdown.js   Formato de los documentos: parser puro (lo usan el plugin y el lector)
-      registry/            shelves.js (estantes y recorridos), catalog.js (catálogo, búsqueda, glosario)
-      services/            libraryStorage (favoritos, progreso, marcadores, tamaño de texto)
-    organizer/             Organización personal (ver la sección propia)
-      data/                entities (catálogo y relaciones), store (IndexedDB, transacciones), fields, recurrence,
-                           tags, csv, attachments, seeds, hooks
-      shared/              UI común (campos, formularios, borrado con integridad, gráficos), markdown seguro,
-                           editor con guardado automático, papelera, PIN de privacidad
-      finance/ planner/ notes/ journal/ emotions/ dashboard/ reminders/
-      tests/               lógica pura, almacén, copias e interfaz de cada módulo
-  hooks/                   useMediaQuery, useReducedMotion, useNow, usePwa
-  services/
-    storage/               safeLocalStorage, database (IndexedDB + migraciones), storageStatus
-    preferences/           defaults, validation, migrations, preferencesService
-    pwa/                   pwaStore (registro del SW, actualizaciones, instalación)
-  styles/                  fonts, tokens, themes, base, components, layout
-  utils/                   dates, color, cx
-  tests/                   setup + integración de la app
-```
-
-**Viaje astral (narrativa persistente):** un contenedor alto (`.astral__track`, (duración + 1) pantallas) con un
-escenario `position: sticky` del alto de la pantalla (`.astral__stage`, `100dvh`). El escenario es una rejilla
-—cabecera / zona visual / narrativa / progreso— que nunca sale de la pantalla: los textos de todos los capítulos
-comparten la misma celda (siempre visibles, nunca dos a la vez) y la ilustración se compone dentro del rectángulo
-medido de la zona visual, así que texto e imagen no se pisan en ningún tamaño. `useScrollStory` (un solo listener
-pasivo agrupado en `requestAnimationFrame` + `ResizeObserver`) convierte el desplazamiento en un progreso global
-0–1 y por capítulo; `computeFrame` (función pura y probada) lo traduce a estado visual y `applyFrame` lo escribe
-directamente en el DOM, solo cuando un valor cambia. React solo se renderiza al cambiar de capítulo. En vertical
-la tarjeta final se ancla abajo fuera del cálculo de la fila (no encoge la zona visual de los demás capítulos) y la
-cámara sube la vela al hueco libre de encima (`finalArea`).
-
-**Flujo de datos:** los componentes nunca tocan el almacenamiento. Llaman a `update(sección, cambios)` del
-`PreferencesProvider`, que valida (`validation.js`), guarda (`preferencesService.js`) y publica el nuevo estado.
-`AppearanceSync` traduce la apariencia a atributos (`data-style`, `data-theme`, `data-motion`) y variables CSS.
-
----
-
-## Game Center
-
-Ruta `#/juegos` (biblioteca, dentro del marco de la app) y `#/juegos/:id` (pantalla de juego a pantalla completa,
-fuera del marco, como la presentación). Todo en `src/features/game-center/`.
-
-```
-game-center/
-  GameCenter.jsx   biblioteca: marquesina, destacado, recientes, búsqueda, filtros, estadísticas, hoja de ruta
-  GamePage.jsx     marco de partida: barra superior, presentación previa, ayuda, salida con confirmación, audio
-  registry/        gameRegistry.js (lista de manifiestos; cada uno declara su fase), categories.js, roadmap.js (hoy vacía)
-  online/          onlineSources.js (proveedores y fuentes online verificadas, lista permitida)
-  services/        gameStorage.js (IndexedDB), gameLifecycle.js (estados, formato, RNG con semilla), gameAudio.js
-  hooks/           useGameSession, useGameLoop, useKeyboard, useCanvas, useGameStatistics, useGameFrame, useGameAudio
-  render/          utilidades de dibujo compartidas por los juegos en lienzo: paint.js (formas, semillas, color),
-                   sprites.js (caché de sprites), particles.js (reserva fija de partículas), quality.js (DPR y calidad)
-  components/      GameCard, GameLibrary, GameFilters, GameDetails, GameHUD, GameOverlay (pausa), GameResults,
-                   Countdown, TouchControls (botones mantenidos, joystick, cruceta, deslizamientos, conducción,
-                   plataformas con dos dedos)
-  games/<id>/      manifest.js, componente del juego, Art (SVG original), engine/, styles/, tests/
-  games/cocina/    excepción deliberada: tres juegos (heladeria, pizzeria, pasteleria) que comparten motor de pedidos
-                   (engine/orders.js), recetas declarativas (recipes/), dibujos (components/FoodVisuals.jsx) y un
-                   único componente (CookingGame.jsx); cada uno tiene su manifiesto y sus propias estadísticas
-  styles/          game-center.css (biblioteca), game-screen.css (marco, HUD, overlays, controles táctiles)
-```
-
-**Ciclo de vida común** (`READY → PLAYING ⇄ PAUSED → COMPLETED | GAME_OVER`), usado cuando tiene sentido (el ajedrez no
-pausa). La sesión mide solo el tiempo activo, se pausa sola al ocultar la pestaña, silencia el audio en pausa y, al
-salir con la partida abierta, guarda el tiempo jugado como partida no terminada. Al desmontar un juego se cancelan el
-`requestAnimationFrame`, los listeners de teclado, los temporizadores, el `AudioContext` y el Worker de la IA (una
-prueba comprueba que no quedan fotogramas programados).
-
-**Los juegos** (motores puros sin DOM, probados por separado de la interfaz):
-
-| Juego | Mecánica | Controles | Se guarda |
-| --- | --- | --- | --- |
-| **Aquapark** | Tobogán pseudo-3D (segmentos proyectados, curvas acumuladas). Fuerza centrífuga, flotadores que frenan, flechas de impulso, rampas, tramos sin paredes con caída al agua y vuelta al punto de control, 3 bots rivales y puesto. 3 circuitos (fácil → difícil) que se desbloquean en orden. | ← → / A D; táctil: **arrastrar a izquierda/derecha** (proporcional, con zona muerta contra toques accidentales e indicador bajo el dedo) o botones ‹ › | mejor tiempo y mejor puesto por circuito |
-| **Arena .io** | Tres minijuegos distintos: **Órbita** (recolectar y crecer; absorber bots ≥ 20 % menores), **Territorio** (cuadrícula 40×40, rastro, captura por relleno, cortar rastros), **Señuelo** (sobrevivir 90 s a drones de giro limitado que se destruyen al chocar entre sí). Bots locales siempre identificados como «Bot …». | Flechas/WASD, ratón (sigue al puntero), joystick táctil; Territorio: deslizar o cruceta | mejor puntuación y victoria por minijuego |
-| **Cubrir el espacio** | Dos reglas: *Deslizar* (avanzar hasta el muro) y *Trazo único* (sin repisar). 20 niveles con límite = solución óptima demostrada. Destinos marcados, deshacer, pista (del solucionador) y «sin salida» cuando el solucionador demuestra que ya no hay solución. | Flechas/WASD, clic en celda marcada, deslizar; Z deshacer, R reiniciar | niveles superados, mejor tiempo por nivel |
-| **Ajedrez** | Motor propio con todas las reglas (enroque, al paso, promoción con elección, jaque, mate, ahogado, 50 movimientos, triple repetición, material insuficiente), notación SAN, historial, capturas, giro de tablero. IA alfa-beta con búsqueda de quietud en un **Web Worker**, con **5 niveles: Bebé, Niño, Adolescente, Joven y Adulto** (cambian profundidad, quietud y probabilidad de jugadas imprecisas; Bebé es apto para aprender). Capturas compactas agrupadas por tipo con contador. | Clic/toque pieza → destino; tablero navegable con Tab y flechas; en móvil horizontal el panel va al lado del tablero | victorias/tablas/derrotas ante la IA, niveles vencidos, último modo |
-| **Tunnel Runner** | Túnel de 12 caras en perspectiva; la nave gira por la pared. Velocidad y densidad crecientes por sectores, huecos más estrechos, anillos giratorios. El generador garantiza un hueco alcanzable. | ← → / A D; táctil: **arrastrar a izquierda/derecha** o botones ‹ › | récord de distancia, hitos 500 / 1 500 / 3 000 m |
-| **Pollo pasando la calle sangriento** | Cuadrícula de 9 columnas con hierba, carreteras (coches, furgonetas, camiones) y ríos con troncos que arrastran. 10 rondas con más carriles y velocidad; río desde la 3.ª; nunca más de 3 carriles seguidos sin hierba. Caja de choque más estrecha que la casilla (colisiones justas). Derrota caricaturesca: plumas y ojos en espiral, sin gore. | Flechas/WASD; táctil: toque corto = avanzar, deslizar en 4 direcciones o cruceta | récord de puntos y de rondas, victorias |
-| **Resolver casos** | 6 casos originales (cocina → faro) con escenario ilustrado, objetos que se examinan, declaraciones, coartadas y expediente. Para acusar hacen falta las pistas imprescindibles, y hay que elegir culpable **y** la prueba que desmiente su declaración. Fallar o pedir ayuda cuesta una estrella sin borrar lo investigado. | Toque/clic; móvil con pestañas Escena · Expediente · Resolver; teclado (Tab/Intro) | casos resueltos y estrellas |
-| **Sudokus** | 4 dificultades medidas por la técnica necesaria (candidato único → suposiciones). Banco de 48 tableros con solución única + variaciones equivalentes (miles de tableros). Notas, resaltados, conflictos sin tapar el número, comprobar, 3 pistas, deshacer, pausa (oculta el tablero) y partida guardada. | Clic/toque + teclado numérico en pantalla; 1–9, flechas, Retroceso, N, Z | mejor tiempo y resueltos por dificultad, partida en curso |
-| **Aparcar el carro** | Vista cenital con modelo de bicicleta (gira solo en marcha), aceleración progresiva, freno y marcha atrás; colisiones con rectángulos orientados (un golpe por contacto, 3 = fin). 8 niveles: conos, esquina, batería, marcha atrás, en línea, pasillo y final. Aparcado = dentro, orientado y parado 0,8 s. | ↑↓←→/WASD, R; táctil: volante ‹ › a la izquierda y pedales a la derecha, mantenidos (se sueltan solos al pausar o perder el foco) | estrellas y mejor tiempo por nivel |
-| **Despejar el estacionamiento** | Coches de 2 o 3 casillas que solo avanzan en su eje hacia su flecha y solo salen por una salida marcada de su línea. 15 niveles (5×5 → 7×7 con pilares). Arrastrar elige cuánto avanza; tocar, todo lo posible. Detecta «sin salida» (resolvedor) y ofrece deshacer. | Arrastrar o tocar; Tab + Intro, flecha de su dirección, Z, R | estrellas, menos movimientos y mejor tiempo por nivel |
-| **HexaStack** | Panal de celdas hexagonales; se colocan pilas de 3 en mano. Las vecinas con el mismo color arriba pasan sus fichas (en cascada); con 10 del mismo color arriba se despejan. Cadenas multiplican puntos y las jugadas seguidas que despejan suman racha. Partida libre y 8 desafíos (de 3 colores a 6 con celdas bloqueadas). Previsualización de dónde cae y qué se junta. Reglas al empezar la primera vez. | Clic en pila y celda, arrastrar, teclas 1-3; táctil: tocar celda = previsualizar, segundo toque = colocar, o arrastrar | récord por modo, desafíos superados, racha máxima |
-| **Traffic Rider** | Moto en carretera pseudo-3D de 4 carriles: aceleración progresiva, frenada, tráfico que sigue al de delante y deja siempre 2 carriles libres, adelantamientos (ajustados a más de 100 km/h valen más). Escenario cambia cada 2,5 km. Carrera libre y 6 misiones (distancia, adelantamientos, contrarreloj, velocidad sostenida…). | ↑ acelerar, ↓ frenar, ← → carril; táctil: dirección a la izquierda y pedales a la derecha, mantenidos | récord de distancia y puntos, misiones, adelantamientos |
-| **Frente Abierto** (inspirado en Open Front) | Estrategia territorial **por turnos** en una isla hexagonal generada por semilla: refuerzos (territorios ÷ 3, mínimo 3, + 2 por ciudad), mover y atacar a vecinos (cada territorio actúa una vez por turno), sin dados: el resultado se ve **antes** de confirmar. Fortalezas ×1,5. IA local con 3 niveles de comportamiento distinto; sus jugadas se ven una a una. Tutorial guiado, partida rápida (mapa S/M/L, 1–3 rivales, dificultad) y 5 escenarios en orden. | Clic/toque territorio → destino marcado → cantidad (− / + / Todas) → Atacar/Mover; Tab + Intro | victorias y derrotas por dificultad, escenarios, tutorial, mejor número de turnos |
-| **Saltos de Lumi** (plataformas originales) | Lumi, una chispa de luz, recorre 8 niveles originales (pradera, bosque, cueva, nubes, noche) hasta encender la vela final. Paso fijo de 1/60 s, salto variable, margen tras el borde (*coyote time*), pulsación anticipada, plataformas finas y móviles (que te llevan), muelles, sombras que se pisan, polillas, zarzas, faroles de control y 3 vidas por nivel. | ← → / A D, Espacio/↑/W (mantener = más alto); táctil: almohadilla ‹ › en la que se desliza el pulgar + botón de salto, **con dos dedos a la vez** | niveles superados, mejor tiempo y chispas por nivel |
-| **Reino de Ladrillos** (homenaje original al plataformas de los 8 bits) | Desplazamiento lateral con cámara que solo avanza, 4 niveles (pradera, subterráneo, copas de árboles, castillo de lava). Paso fijo de 1/60 s, salto variable, *coyote time*, bloques con estrella (moneda o corazón), ladrillos que se rompen siendo grande, crecer/encoger con invulnerabilidad, gorgojos que se pisan, caracoles cuyo caparazón se patea y arrasa, columnas, lava, banderas de control, mástil con bonificación por altura y por tiempo, reloj, 100 monedas = 1 vida, vidas/monedas/puntos que pasan de nivel. Gráficos, personajes y sonidos propios. | ← → / A D, Espacio/↑/W; táctil: almohadilla ‹ › + botón de salto con dos dedos | niveles superados, mejor tiempo por nivel, récord de puntos por partida |
-| **Bloques que caen** (clásico de encajar piezas) | Tablero 10 × 20 (+2 ocultas), 7 piezas en bolsas de 7, rotación SRS con patadas de pared, sombra, reserva, 3 siguientes, retardo de fijación 0,5 s (15 renovaciones), caída suave/instantánea, puntuación 100/300/500/800 × nivel, ×1,5 por cuatro seguidas, combos, gravedad por nivel. Maratón de 150 líneas (nivel inicial 1/5/10) y contrarreloj de 40. | ← → (repetición), ↑/X y Z girar, ↓, Espacio, C/Mayús, R; táctil: tocar = girar, arrastrar = mover casilla a casilla, deslizar rápido abajo = soltar, y botonera | récord de puntos, líneas y nivel; mejor tiempo de contrarreloj; 5 hitos |
-| **Lava y Agua** (inspirado en Lava and Aqua) | Por turnos: tras cada paso (o espera) la lava y el agua avanzan una casilla; lava + agua = piedra pisable; palancas que abren compuertas; lava espesa (1 de cada 2 turnos); la lava que cubre la salida también hace perder. Deshacer ilimitado (también tras perder). 12 niveles en 4 grupos, cada uno demostrado con un solucionador BFS. | Flechas/WASD, Espacio esperar, Z deshacer, R; táctil: deslizar, tocar una casilla vecina, cruceta y reloj | niveles, estrellas (3 = mínimo de turnos) y mejores turnos por nivel |
-| **Stellarium** (observatorio, inspirado en el planetario libre) | Esfera celeste en proyección estereográfica con 130 estrellas reales (J2000, magnitud, distancia, color espectral), 21 constelaciones, Vía Láctea en su plano galáctico real, cuadrícula ecuatorial y eclíptica, 3 objetos de cielo profundo, ocular por debajo de 24°. Una constelación se registra al centrarla entera en la retícula; bitácora con pistas. «El cielo de nuestro día»: posición del Sol (y su constelación del zodiaco) y fase de la Luna calculadas para la fecha de inicio configurada. El asterismo «Nosotros» reutiliza la figura de la presentación y se presenta como personal, fuera de catálogo. | Arrastrar/flechas, rueda/pellizcar/+ −, clic o toque para la ficha | descubrimientos (25), estrellas observadas, última vista e interruptores |
-| **Heladería / Pizzería / Pastelería** (inspirados en los minijuegos de cocina de Purble Place) | Motor común: pedidos generados por nivel a partir de recetas declarativas (opción única, secuencia ordenada, conjunto, ingredientes por mitades y horno en tiempo real), comanda escrita y dibujada, preparación por pasos con vista previa, evaluación elemento a elemento (correcto / casi / incorrecto / falta / sobra, con icono y texto), precisión, puntos + bono de rapidez. 3 niveles: Aprendiz (4 pedidos, sin reloj), Cocinero (5, 90 s) y Chef (6, 60 s), que se desbloquean en orden. | Teclas 1-9 y ← →, Tab/Intro; táctil: pestañas y botones grandes | estrellas por nivel, récord de puntos y precisión, pedidos y perfectos |
-
-**Niveles con solución demostrada:** los niveles de la Fase 2 no se dan por buenos a ojo. `scripts/generate-sudokus.mjs`
-genera el banco de Sudokus (solución única y dificultad medida); `scripts/plan-parking.mjs` busca con el motor real
-(A* sobre maniobras a 60 fps) una forma de aparcar cada nivel sin tocar nada y guarda la secuencia, que las pruebas
-reproducen; `scripts/generate-parking-jam.mjs` genera y resuelve los niveles de Despejar. Pollo: un piloto automático
-supera las 10 rondas con 8 semillas. Casos: un validador exige coartada para cada inocente, una prueba que desmienta
-al culpable y una única conclusión correcta.
-Fase 3: un piloto automático voraz supera cada uno de los 8 desafíos de HexaStack en al menos 5 de 8 semillas; Traffic Rider tiene un
-piloto que recorre 6 km en 5 semillas y cumple cada misión; en Frente Abierto se juegan partidas completas IA contra IA
-(Normal y Difícil ganan a Fácil ≥ 8 de 10, y la IA vence a una persona pasiva). En **Saltos de Lumi**,
-`scripts/plan-lumi.mjs` busca con el **motor real** (búsqueda en haz sobre «macros» de entradas de 6 fotogramas,
-con diversidad por casilla) una forma de llegar a la vela **sin perder ninguna vida** y guarda la secuencia en
-`levels/solutions.js`; las pruebas la reproducen fotograma a fotograma en los 8 niveles.
-
-Fase 4: `scripts/plan-ladrillos.mjs` demuestra los 4 niveles de Reino de Ladrillos con el motor real (búsqueda en haz, sin perder vidas; las pruebas reproducen las soluciones). Lava y Agua: los niveles salieron de un generador filtrado por el solucionador (solución con exactamente su `par`, el camino «a ciegas» pierde y cada mecánica es imprescindible en su grupo). Stellarium: cálculos del Sol y la Luna validados con el equinoccio, el solsticio y las lunas nueva y llena de 2025.
-
-**Añadir un juego:** crear `games/<id>/` con `manifest.js` (campos en la cabecera de
-`registry/gameRegistry.js`), el componente por defecto (usando `useGameSession` y los componentes compartidos), su `Art`
-SVG original, su motor y sus pruebas; añadir el manifiesto a `MANIFESTS` y quitarlo de `registry/roadmap.js`. No hace
-falta tocar rutas, biblioteca, estadísticas ni almacenamiento. Regla para todos: implementaciones originales, sin
-personajes, nombres comerciales, sprites, música ni niveles de franquicias.
-
-**Modo offline / online:** los juegos con una versión original online verificada muestran dos opciones en su pantalla
-previa: **Offline** (el juego de la app, sin conexión, con estadísticas) y **Online · versión original** (contenido
-externo del proveedor, que necesita Internet y no suma a las estadísticas: la app no puede conocer sus resultados).
-Sin conexión, la opción online lo indica y no ofrece el enlace. Los juegos sin fuente verificada no muestran ninguna
-opción online. Piezas:
-
-- `online/onlineSources.js` — configuración pura: proveedores con sus **orígenes permitidos** (para enlazar y para
-  insertar) y una fuente por juego con su URL exacta comprobada. `isTrustedSource` rechaza todo lo que no sea HTTPS
-  en la lista del proveedor y del método; ninguna entrada de la persona llega nunca a un `href` o un `src`.
-- Dos métodos: `external` (abre la página oficial en otra pestaña, `noopener noreferrer`) y `embed` (iframe dentro de
-  la app con `components/OnlineGameFrame.jsx`: estado de carga, aviso prudente si tarda —el evento `load` no prueba que
-  el juego esté listo—, reintentar, pantalla completa a petición, salida propia fuera del iframe, aviso sin conexión y
-  permisos limitados a `fullscreen`, `autoplay` y `gamepad`).
-- La CSP genera `frame-src` **solo** con los orígenes de las fuentes `embed` verificadas. Hoy no hay ninguna, así que la
-  CSP es idéntica a la anterior. El Service Worker ignora las peticiones de otros orígenes (no almacena contenido externo).
-
-**Fuentes online configuradas (verificadas el 3 de octubre de 2026; todas con el método `external`):**
-
-| Juego de la app | Versión original | Por qué no se inserta |
-| --- | --- | --- |
-| Aquapark | [Aquapark.io](https://www.crazygames.com/game/aquapark-io-yky) (Voodoo, CrazyGames) | Términos de CrazyGames y `X-Frame-Options: SAMEORIGIN` |
-| Pollo pasando la calle sangriento | [Go Chicken Go!](https://www.crazygames.com/game/go-chicken-go) (RAVALMATIC, CrazyGames; según la página, para escritorio) | Igual; CrazyGames lo sirve como iframe propio, pero eso no autoriza a terceros |
-| Sudokus | [Sudoku.com](https://sudoku.com/) (Easybrain) | `X-Frame-Options: SAMEORIGIN`, sin inserción ofrecida |
-| Aparcar el carro | [Extreme Car Parking](https://poki.com/es/g/extreme-car-parking) (QKY Games, Poki) | [Normas de Poki](https://poki.com/en/privacy/our-website-rules) y `frame-ancestors https://*.poki.io` |
-| Despejar el estacionamiento | [Car Parking Jam](https://poki.com/es/g/car-parking-jam) (Refold, Poki) | Igual |
-| Resolver casos | — | Case Hunter (EYEWIND) es una app móvil sin versión para navegador: la pantalla lo explica |
-| HexaStack | [Hexa Stack](https://www.crazygames.com/game/hexa-stack) (SOFTGAMES, CrazyGames) | Términos de CrazyGames y `X-Frame-Options: SAMEORIGIN` |
-| Traffic Rider | [Traffic Rider](https://www.crazygames.com/game/traffic-rider-vvq) (skgames, CrazyGames) | Igual |
-| Frente Abierto | [OpenFront.io](https://openfront.io/) (código abierto; multijugador en tiempo real) | Su CSP `frame-ancestors` solo admite su web y algunos portales concretos |
-| Saltos de Lumi | — | Juego original de la app, solo inspirado en el género: no existe versión online oficial; la pantalla lo explica |
-
-**CrazyGames:** Aquapark enlaza a la versión original,
-[Aquapark.io de Voodoo](https://www.crazygames.com/game/aquapark-io-yky), con el método `external`, porque CrazyGames
-**no autoriza insertar sus juegos en otras aplicaciones**: sus [Términos](https://www.crazygames.com/terms-and-conditions)
-(abril de 2026, art. 6.3 C: no «provide access to the Services to any third party»; 6.3 I: no «use or copy the
-Platform or the Games, except as expressly permitted») no contienen ningún permiso de inserción, sus páginas responden
-`X-Frame-Options: SAMEORIGIN` (el navegador bloquea el iframe) y la ruta `/embed/` responde `401 Unauthorized`. Las
-herramientas que «extraen» URLs de inserción de CrazyGames no son oficiales y no se usan.
-
-**Añadir un juego online:**
-1. Comprobar en la documentación y las condiciones del proveedor que permite el método elegido, y la URL exacta del
-   juego (sin construirla a partir del nombre). Para `embed`, comprobar además sus cabeceras (`X-Frame-Options`,
-   `frame-ancestors`) y los permisos que necesita.
-2. Si el proveedor no está en `PROVIDERS`, añadirlo con sus `linkOrigins` y, solo si autoriza la inserción,
-   `embedOrigins`.
-3. Añadir la fuente en `ONLINE_SOURCES` (`gameId`, `provider`, `method`, `title`, `developer`, `url`, `verifiedOn`,
-   `reason`; con `embed`, también `permissions`, `orientation` y `officialUrl`).
-4. `npm run check`: la CSP incluirá el nuevo origen de inserción automáticamente y las pruebas validan la fuente.
-
-**Sonido:** efectos sintetizados con Web Audio (sin archivos ni música de terceros), con interruptor y volumen en la
-biblioteca y silencio rápido en la barra de cada juego. El `AudioContext` solo se crea tras una interacción.
-
-**Dependencias nuevas:** ninguna. El motor de ajedrez, la IA y los demás motores son código propio.
-
-### Rediseño visual (v1.1.0)
-
-Una pasada de arte y rendimiento sobre los 21 juegos que solo toca **lo que se ve durante la partida**. Las reglas,
-los controles, las colisiones, la puntuación y el guardado siguen igual (las pruebas de motor no cambiaron). Inicio,
-biblioteca de juegos, navegación, configuración y almacenamiento quedan fuera.
-
-**Motor por juego.** No se añadió ningún motor ni dependencia (ni PixiJS): cada juego conserva la técnica que mejor le
-encaja.
-
-| Técnica | Juegos | Por qué |
-| --- | --- | --- |
-| Canvas 2D | Aquapark, Arena .io, Tunnel Runner, Pollo, Traffic Rider, Aparcar, Saltos de Lumi, Reino de Ladrillos, Bloques, Stellarium | Escenas que se redibujan a 60 fps con muchos objetos: un lienzo con sprites cacheados es lo más barato |
-| DOM + SVG + CSS | Ajedrez, Sudokus, Cubrir el espacio, Lava y Agua, Frente Abierto, Resolver casos, Despejar, HexaStack, Heladería, Pizzería, Pastelería | Tableros por turnos: se redibujan solo al cambiar el estado, y conservan la accesibilidad (foco, lectores de pantalla) |
-
-**Utilidades compartidas (`game-center/render/`):**
-
-- `sprites.js`: `createSpriteCache(limit)` pinta cada sprite (coche, estrella, nebulosa, bloque…) **una sola vez** en un
-  lienzo fuera de pantalla a la resolución real, y después solo lo copia (`blit`, `blitRotated`). Tiene un límite de
-  entradas y se vacía al salir del juego.
-- `particles.js`: una reserva de partículas de tamaño fijo que se reciclan, sin crear objetos durante la partida.
-- `quality.js`: `initialQuality()` detecta la gama (núcleos y memoria del navegador), `maxDprFor()` limita la
-  densidad de píxeles del lienzo (1,5 en gama baja, 2 en el resto) y `createQualityMonitor()` baja los efectos
-  opcionales si los fotogramas se alargan. `hooks/useCanvas.js` aplica el límite a todos los lienzos.
-- `paint.js`: rectángulos redondeados, color HSL y un generador con semilla (mulberry32), para que los detalles
-  «aleatorios» (grietas, vetas, estrellas) salgan siempre iguales y no parpadeen.
-
-**Qué cambió en cada juego (resumen):**
-
-- **Lienzo:** iluminación con degradados cacheados por tamaño de pantalla, sombras de contacto, sprites con volumen y
-  efectos de partículas reciclados. Reino de Ladrillos se redibujó en pixel art propio (`engine/pixelArt.js`) y Arena
-  .io comparte sus dibujos en `modes/ioArt.js`. Stellarium pinta las estrellas con halos del color de su tipo
-  espectral (destellos en cruz en las más brillantes), la Vía Láctea como bruma y las galaxias y nebulosas con
-  sprites; antes creaba varios degradados en cada fotograma.
-- **Ajedrez:** tablero de arce y nogal, piezas de estilo Staunton en marfil y ébano, jugada que se desliza desde su
-  casilla de origen y anillo en las capturas.
-- **Sudokus:** papel de pasatiempos; enunciado impreso y respuestas en tinta azul; destello dorado al completar una fila,
-  columna o bloque.
-- **Cubrir el espacio:** cada movimiento queda pintado como una pincelada continua; muros con relieve; destinos con
-  flecha de dirección.
-- **Lava y Agua:** cueva de basalto, lava con costra y núcleo que late, agua con ondas, piedra nueva con grietas
-  incandescentes y vapor, personaje que se desliza y aviso del turno en que avanza la lava espesa.
-- **Frente Abierto:** isla con mar y costa, casillas con canto, fichas de tropas legibles sobre cualquier color, iconos de
-  ciudad, fortaleza y capital, y borde animado en los objetivos de ataque.
-- **Resolver casos:** los 6 escenarios redibujados en perspectiva, con luz, sombras y mobiliario bajo cada punto de
-  interés (los datos de los casos no cambiaron).
-- **Despejar, HexaStack y cocina:** coches nuevos (`components/CarArt.jsx`), fichas hexagonales con volumen y comida
-  dibujada con más detalle.
-
-### Escenarios diurnos (v1.2.1)
-
-Segunda pasada sobre los juegos cuyo escenario era casi negro (losas al 7 % de blanco, asfalto gris, mostradores azul
-marino). Mecánicas, controles, puntuación y niveles no cambian.
-
-- **Lava y Agua → «isla volcánica a mediodía»:** senderos de arena, rocas de basalto con musgo, lava viva, agua
-  turquesa, cielo cálido y el volcán humeando detrás del tablero; cruceta de terracota y botón de esperar en azul.
-- **Cubrir el espacio → «taller de azulejos»:** bandeja de cerámica crema sobre papel con rejilla y muros de azulejo
-  vidriado azul petróleo; Deslizar pinta en violeta-rosa y Trazo en turquesa-lima (también en el menú).
-- **Despejar → aparcamiento de barrio:** acera de baldosas, seto alrededor, asfalto azulado con líneas amarillas y
-  jardineras como obstáculos.
-- **Aparcar el carro:** acera clara y árboles de calle (fuera del aparcamiento y de los botones táctiles), pintados una
-  vez en un fondo cacheado aparte (un solo elemento: no llena la caché de sprites con imágenes de pantalla completa).
-- **Heladería, Pizzería y Pastelería:** cada tienda con su mostrador (damero menta y mármol blanco; azulejo de
-  trattoria y madera; papel rayado rosa y mármol rosado con canto dorado), toldo a rayas y suelo propio.
-
-En estos seis juegos el manifiesto declara `scene: 'day'`: `GamePage` añade `.game-daylight` al cuerpo durante el juego
-(menú de niveles incluido), que redefine los tokens de texto y superficie (`styles/game-screen.css`). Así HUD, botones,
-pausa y resultados se leen sobre fondo claro aunque la app esté en tema oscuro, sin reescribir cada componente. La
-barra superior y la presentación siguen el tema de la app.
-
-**Principios:** las animaciones se disparan solo con cambios reales del estado (claves de React o comparación con el
-estado anterior), nunca en bucle sin motivo. El movimiento reducido (preferencia del sistema o de la app) las desactiva
-con la regla global de `styles/base.css`. Cada juego conserva un solo bucle `requestAnimationFrame`, que se cancela al
-desmontarlo.
-
-**Cómo se validó:** `npm run check` (748 pruebas unitarias y de interfaz, build y 94 comprobaciones E2E offline) y
-capturas de los 21 juegos en un móvil emulado de 390×844 con DPR 2 en Edge, sin errores de consola. **No se ha probado
-en teléfonos físicos, ni se han medido los fps antes y después**: la mejora de rendimiento se deduce de que se
-dibuja menos en cada fotograma, no de una medición.
-
-## Biblioteca
-
-Ruta `#/documentos` (catálogo), `#/documentos/:id` (lector) y `#/documentos/glosario`. Es una biblioteca de
-**conocimiento contado como literatura**: cada capítulo empieza con una escena o un caso real, explica el tema con
-personajes históricos, analogías y datos, distingue lo establecido de lo dudoso y termina con un cierre narrativo,
-**conceptos importantes** y **fuentes y lecturas**.
-
-| Estante | Recorridos | Capítulos |
-| --- | --- | --- |
-| Astronomía, cosmología y física | primeros observadores · revolución astronómica · universo observable · origen y evolución · leyes de la naturaleza · grandes preguntas | 25 |
-| Criminalística e investigación forense | orígenes del método · escena y evidencias · laboratorio · razonar con pruebas | 11 |
-| Idiomas: español, inglés y alemán | raíces y sonidos · primeros pasos · gramática · matices y lecturas (A1–C1) | 10 |
-| Religiones, mitologías y tradiciones espirituales | mitologías antiguas · tradiciones abrahámicas · Asia · preguntas de fondo | 14 |
-
-Total: **60 capítulos, ≈173 000 palabras** (entre 2 500 y 3 500 palabras cada uno, unos 13–18 minutos de lectura).
-Cada estante muestra al final su lista de temas **«En preparación»** (`planned` en `registry/shelves.js`), sin enlace.
-
-**Cómo funciona**
-
-- **Contenido = archivos.** Cada capítulo es `src/features/library/content/<estante>/NN-nombre.md` con una cabecera
-  (`id`, `title`, `category`, `path`, `order`, `difficulty`, `description`, `keywords`, `related`). Añadir un capítulo
-  es añadir su archivo: no hay que tocar ningún registro.
-- **Índice en el build.** `scripts/vite-plugin-library.js` lee los `.md` y expone `virtual:library-index` (metadatos,
-  palabras, minutos, secciones y glosario, sin el texto). El catálogo, la búsqueda (sin tildes, por título, descripción,
-  secciones, palabras clave y conceptos) y el glosario funcionan sin cargar ningún documento.
-- **Un recurso por capítulo.** Cada `.md` se importa con `import.meta.glob(..., '?raw')`: es un chunk aparte que se
-  descarga al abrirlo y que el Service Worker precachea (offline completo, sin API remota).
-- **Formato** (`engine/markdown.js`): Markdown con extensiones: recuadros `:::recreacion` (marca la ficción literaria
-  frente a los hechos), `:::dato`, `:::analogia`, `:::incierto`, `:::gramatica`, `:::nota`, `:::ejercicio` (respuesta
-  oculta tras `???`), tablas, citas, pausas de escena y frases para escuchar `[[de|Guten Morgen]]` (es, en, de). Se
-  convierte en un árbol de bloques que React pinta: **nunca HTML como texto**, y los enlaces solo pueden ser `http(s)`.
-- **Lector:** índice (desplegable en móvil, lateral fijo desde 1240 px con la sección actual resaltada), barra y
-  guardado de progreso (al pausar el desplazamiento y al salir; «leído» al llegar al final), «Seguir donde lo dejé»,
-  marcador por sección, favoritos, tamaño de texto (5 pasos), anterior/siguiente en el estante y lecturas relacionadas.
-  En el estilo Maximalismo, las formas del fondo se atenúan mientras se lee (`data-reading`).
-- **Escuchar:** las frases en otro idioma usan las voces instaladas en el dispositivo (Web Speech API, se prefieren las
-  locales); si el dispositivo no tiene voz para ese idioma, el botón no aparece.
-
-**Rigor.** Las recreaciones literarias van siempre en su recuadro; las cuestiones abiertas, en «Lo que todavía no
-sabemos»; en religión se separa lo que cree cada tradición, lo que narran sus textos y lo que establece la historia.
-Las fuentes citadas son libros, artículos e instituciones reales; cuando no había certeza sobre una edición en español
-se cita la original. `tests/content.test.js` exige a cada capítulo al menos 2 500 palabras, introducción, 6 secciones,
-4 conceptos, 3 fuentes y relacionados existentes.
-
----
-
-## Organización personal
-
-Seis espacios agrupados en la navegación bajo «Organización». Todo se calcula a partir de los registros reales:
-no hay cifras guardadas aparte ni datos de ejemplo.
-
-| Ruta | Qué hace |
-| --- | --- |
-| `#/organizar` | Panel del día configurable (qué bloques y en qué orden): hoy, clases y entregas, tareas, finanzas, pagos próximos, metas, escritura rápida y actividad reciente. |
-| `#/finanzas` | Resumen por día/semana/mes/año con comparación; movimientos (CRUD, gasto rápido, filtros, orden, búsqueda, duplicar, cancelar, historial de cambios, comprobantes); cuentas (efectivo, banco, billetera, tarjeta de crédito con cupo, corte y pago, ahorro; archivar; conciliar saldo); presupuestos con avisos; metas de ahorro; pagos programados (suscripciones, matrícula, servicios, cuotas, ingresos fijos); informes con CSV e impresión a PDF; categorías y subcategorías; importación CSV con vista previa, validación y duplicados. |
-| `#/calendario` | Mes, semana, día, agenda y pasados; búsqueda y filtros por tipo, categoría y prioridad; eventos con repetición, recordatorios, conflictos avisados (no bloqueados) y edición «solo esta / esta y las siguientes / toda la serie»; tareas con subtareas; universidad (materias con horario, docente y salón; trabajos, exámenes, parciales, exposiciones, entregas y lecturas); categorías y ajustes. |
-| `#/notas` | Notas en Markdown con guardado automático, recuperación de borradores, modo lectura con casillas marcables, carpetas (3 niveles), colecciones, categorías, etiquetas, fijadas, favoritas, archivo y papelera. |
-| `#/diario` | Entradas (varias por día) con fecha del acontecimiento, borrador/publicada, fotos, vínculos con eventos/notas/tareas, preguntas y plantillas opcionales, «En un día como hoy», calendario de entradas y resumen mensual/anual. |
-| `#/emociones` | Registro (emoción principal y secundarias, intensidad 1–5 o 1–10, ánimo, contexto, factores, necesidades, estrategias, reflexión guiada opcional, notas privadas), historial con calendario emocional y filtros, gráficos explicados (sin inferir causas), ejercicios de respiración y anclaje sin conexión, emociones personalizables, exportar y borrar todo. |
-
-**Reglas contables** (`finance/ledger.js`): saldo = saldo inicial + ingresos − gastos ± transferencias, solo
-movimientos completados; una transferencia nunca es ingreso ni gasto; la compra con tarjeta es el gasto y su pago es
-una transferencia (no se cuenta dos veces); un aporte a una meta es una transferencia marcada (el dinero no se
-duplica); cada ocurrencia de un pago programado genera como mucho un movimiento; los totales usan la moneda principal
-(no hay conversión de divisas). Importes en enteros (centavos).
-
-**Modelo de datos** (`organizer/data/entities.js`): cada tipo declara sus campos validados y sus relaciones con la
-política al borrar el destino: `restrict` (se ofrece archivar o reasignar), `unlink` (se conserva sin vínculo),
-`cascade` (se enumera en la confirmación) o `reparent` (carpetas). El diálogo de borrado muestra el plan antes de
-ejecutarlo; nada dependiente se borra en silencio. Cada escritura es una transacción atómica de IndexedDB; varias
-pestañas se sincronizan con BroadcastChannel.
-
-**Recordatorios:** avisos dentro de la app y, con permiso, notificaciones del sistema. Solo funcionan con la app
-abierta (no hay servidor push); al abrirla se muestran los de las últimas 12 horas. Opción para ocultar los detalles.
-El diario emocional nunca genera notificaciones.
-
-**Privacidad:** PIN opcional (Configuración → Privacidad) para el diario y el diario emocional, con bloqueo por
-inactividad. Se guarda solo un hash PBKDF2-SHA-256 con sal. **No es cifrado**: es una barrera frente a miradas
-casuales y así se explica en la interfaz. El Markdown nunca se interpreta como HTML y los enlaces solo pueden ser
-`http(s)`/`mailto`.
-
-## Persistencia local
-
-| Dónde | Qué | Clave |
-| --- | --- | --- |
-| localStorage | Preferencias completas (JSON validado, con `schemaVersion`, hoy **v2**) | `uamc:preferences` |
-| IndexedDB `un-ano-mas-contigo` | `backups/preferences` (copia) y `meta/firstOpenedAt` (primera apertura de la app; **no** es la fecha de la relación) | — |
-| IndexedDB, store `games` (migración **v2**) | Un registro por juego (`version`, partidas, terminadas, tiempo, último acceso, mejores marcas, progreso, ajustes) y `__center__` (sonido y volumen) | id del juego |
-| IndexedDB, store `library` (migración **v3**) | Favoritos, progreso por capítulo (porcentaje, sección, fechas, leído), marcadores por sección y tamaño de texto; validado al leerse e incluido en la copia de seguridad completa (sección `library`) | `state` |
-| IndexedDB, store `organizer` (migración **v4**) | Todos los registros de la organización: `{ id, kind, createdAt, updatedAt, rev, …campos }` (más `history` en los movimientos). Los ajustes son registros únicos (`financeSettings`, `privacySettings`…) | id |
-| IndexedDB, store `attachments` (migración **v4**) | Adjuntos (imágenes y PDF ≤ 3 MB) como ArrayBuffer; los huérfanos de más de un día se limpian al abrir | id |
-| IndexedDB, `backups/pre-restore` | Instantánea completa guardada justo antes de restaurar una copia («Deshacer la última restauración») | — |
-| localStorage `uamc:draft:<id>`, `uamc:reminders:*` | Borradores de notas y diario aún sin guardar; avisos ya mostrados | — |
-
-- **Game Center:** cada registro se valida al leerse (`normalizeRecord`); las escrituras de un mismo juego se encolan
-  para no pisarse; un récord solo se anuncia si supera la marca ya guardada. Sin IndexedDB funciona en memoria. No toca
-  las preferencias generales. *Borrar todo* también elimina estas estadísticas; la copia JSON descargable sigue
-  incluyendo solo las preferencias.
-
-- **Carga:** se lee localStorage → se migra → se sanea campo a campo. Un valor inválido toma el predeterminado y se
-  avisa («algunas preferencias se restablecieron»). JSON dañado o almacenamiento bloqueado nunca rompen la app.
-- **Recuperación:** si localStorage está vacío pero existe la copia en IndexedDB, se restaura automáticamente.
-- **Sin almacenamiento** (p. ej. modo privado estricto): la app funciona en memoria y avisa de que los cambios no se
-  conservarán.
-- **Migración v1 → v2 (viaje astral):** los textos de la vela pasan a los textos de los capítulos. Se conservan la
-  firma, el título «Otro año juntos» y, si se había personalizado, el mensaje de celebración (pasa a ser el mensaje
-  final). Se añade `presentation.candleLetter` («A»). El estado «presentación vista» y el resto de preferencias no
-  cambian. Si se recuperan preferencias desde IndexedDB, la app espera a esa recuperación (máx. 1,5 s) antes de decidir
-  si mostrar la presentación.
-- **Migraciones:** preferencias en `services/preferences/migrations.js`; base de datos en
-  `services/storage/database.js` (`DB_MIGRATIONS`, una función por versión, nunca se edita una ya publicada).
-- **Copias (formato v3):** se puede elegir qué secciones exportar; al restaurar hay vista previa (nuevos / ya
-  existentes / más recientes en la copia), elección de secciones y modo **Combinar** (añade y conserva la versión más
-  reciente; no borra) o **Reemplazar** (el módulo queda como en la copia). Antes de aplicar se guarda una instantánea
-  para deshacer. Los adjuntos viajan en base64. Las copias v1 y v2 se siguen aceptando.
-- **Copias:** *Configuración → Datos* permite descargar y restaurar un archivo JSON, pedir almacenamiento persistente,
-  restablecer la configuración (conserva el estado de la presentación, con «Deshacer») y **borrar todo** (confirmación
-  escribiendo `BORRAR`).
-
-> ⚠️ El almacenamiento del navegador **no es eterno**: se pierde si se borran los datos de navegación, se desinstala
-> la app o el sistema libera espacio (en iOS, Safari puede borrar datos de sitios no usados durante semanas si no está
-> instalada). Instalar la app, pulsar *Proteger mis datos* y descargar copias periódicas reduce el riesgo.
-
----
-
-## Personalización visual
-
-- **Tokens** (`styles/tokens.css`): tipografía, espaciado, radios, duraciones, curvas, z-index, puntos de ruptura.
-- **Temas y estilos** (`styles/themes.css`): dos ejes independientes. `data-theme` define colores semánticos
-  (`--text`, `--border`, `--danger`…); `data-style` define el lenguaje visual (`--surface`, `--surface-shadow`,
-  `--heading-font`, `--control-radius`…). Los componentes solo usan tokens semánticos.
-- **Paleta personal**: `--c-primary`, `--c-secondary`, `--c-accent`, `--c-ambient` se escriben desde la configuración;
-  los colores de texto sobre ellos (`--c-on-*`) se calculan por contraste WCAG. Las paletas predefinidas están en
-  `services/preferences/defaults.js`.
-- Sin `backdrop-filter`, el cristal pasa a superficies casi opacas (legibilidad garantizada).
-- Movimiento reducido: se respeta `prefers-reduced-motion` y además existe la opción *Animaciones: Reducidas*.
-
----
-
-## Pruebas
-
-- **Game Center** (incluido en `npm test`): ciclo de vida; almacenamiento (migración v2, validación, récords, cola de
-  escrituras, aislamiento); registro y búsqueda; **Aquapark** (los 3 circuitos completados por un piloto automático sin
-  caídas ni choques, hueco en cada fila de flotadores, colisiones, caída y reaparición, rampas, meta, rivales);
-  **Arena .io** (movimiento, recolección, absorción, captura de territorio, eliminaciones, victoria y fin, IA de los
-  bots); **lógica** (reglas, límites, conteo, victoria, derrota demostrada, deshacer y **los 20 niveles resueltos con
-  exactamente su límite y sin solución con uno menos**); **ajedrez** (perft de 5 posiciones de referencia, hasta
-  97 862 nodos, y cada regla especial; IA que da mate y respeta el tiempo); **Tunnel Runner** (piloto automático que
-  sobrevive 3 km en 20 semillas, hueco mínimo, dificultad); y pruebas funcionales de la interfaz (entrar, buscar,
-  filtrar, presentación previa, ajedrez con abandono confirmado, nivel de lógica resuelto con teclado y pausa, Tunnel
-  Runner con pausa y salida sin bucles activos).
-  Controles táctiles: arrastre proporcional con zona muerta, un toque sobre un botón no inicia arrastre, los
-  deslizamientos no se duplican como toques y la pista de controles muestra gestos o teclas según el último puntero
-  usado (toque o ratón), no según la media query del dispositivo.
-- **Fase 2** (incluido en `npm test`): motores de los cinco juegos (movimiento, colisiones, rondas y piloto automático
-  del Pollo; coherencia, unicidad de la conclusión y validador de los casos; reglas, notas, pistas, comprobación,
-  banco y variaciones del Sudoku, y guardado/reanudación con datos dañados; aceleración, frenada, marcha atrás,
-  dirección, golpes, aparcado y las 8 soluciones del aparcamiento; ejes, salidas, bloqueos y los 15 niveles de
-  Despejar) y pruebas de interfaz: cada juego se abre en su versión local sin iframe y con su opción online correcta,
-  un caso se resuelve desde la interfaz, el Sudoku guarda la partida, y los paneles ignoran los «clics fantasma».
-- **Fase 3** (incluido en `npm test`): HexaStack (transferencias, cascadas, despeje, puntos, racha, fin, desafíos
-  superados por un piloto), Traffic Rider (física, carriles, tráfico que no bloquea ni embiste por detrás,
-  adelantamientos, escenarios, misiones y piloto de 6 km), Frente Abierto (mapa conexo y justo —todos empiezan
-  igual—, ingresos, combate y fortalezas, legalidad, victoria/derrota, IA solo con jugadas legales, niveles que
-  cambian de verdad el resultado) y Saltos de Lumi (aceleración, salto variable, sin autorrepetición, paredes,
-  *coyote time*, pulsación anticipada, plataformas finas y móviles, muelles, pisotón, daño lateral y reaparición en
-  el farol, bordes, pinchos, caídas, chispas, determinismo y **las 8 soluciones reproducidas**). Interfaz: cada juego
-  se abre en local sin iframe con su opción online correcta (o el aviso), tutorial de Frente Abierto jugado desde la
-  interfaz (refuerzos, previsión antes de confirmar, turno de la IA) y niveles bloqueados de Lumi; controles de
-  plataformas con dos punteros a la vez.
-- **Biblioteca** (incluido en `npm test`): formato (cabecera, ids únicos sin tildes, texto en línea anidado, frases para
-  escuchar, enlaces solo `http(s)`, recuadros, ejercicios, tablas, glosario y recuento de palabras sin la bibliografía);
-  **calidad de cada uno de los 60 capítulos** (extensión, estructura, conceptos, fuentes, relacionados); persistencia
-  (favoritos, marcadores, tamaño, «leído» que no se pierde, escrituras simultáneas, datos dañados, copia de seguridad);
-  e interfaz (entrar desde el inicio, ex libris, búsqueda sin tildes, filtros por estante y dificultad, «Seguir leyendo»,
-  lector con índice, favorito, marcador y tamaño, recreaciones marcadas, documento inexistente, glosario con enlaces).
-- **Fase 4** (incluido en `npm test`): Bloques (bolsas de 7, movimiento, colisiones, patadas de pared, fijación con
-  retardo y límite, 1-4 líneas y puntuación, nivel y gravedad, reserva, fin por bloqueo y por fijación arriba,
-  contrarreloj), Lava y Agua (flujo, piedra, lava espesa, compuertas, derrota por lava y por salida cubierta, deshacer,
-  y los 12 niveles con su `par` exacto, camino «a ciegas» perdedor y mecánica imprescindible), cocina (pedidos válidos
-  por nivel, determinismo, dificultad creciente, construcción, evaluación de cada tipo de paso, horno, puntos, turno
-  superado/no superado, desbloqueo), Reino de Ladrillos (aceleración, gravedad, salto variable, paredes, cámara,
-  bloques, corazón, pisotón, daño, caparazón, vacío/lava/checkpoint, sin vidas, reloj, 1 vida por 100 monedas, mástil,
-  determinismo y las 4 soluciones reproducidas) y Stellarium (catálogo, proyección, arrastre, aumento, selección,
-  identificación de las 21 figuras, Sol/Luna con efemérides de 2025, plano galáctico). Interfaz: los 7 juegos se abren
-  en local, nivel de Lava y Agua ganado con teclado, pedido perfecto en la Heladería, bitácora y «cielo de nuestro día».
-- `npm run test:e2e` incluye además: Game Center y los **veintiún** juegos **sin conexión**, la IA de ajedrez respondiendo
-  sin red desde su Worker precacheado, veintiún juegos disponibles, enlaces online oficiales de las Fases 2 y 3, sin hoja de ruta pendiente, sin desplazamiento
-  horizontal y **casillas de ajedrez de al menos 28 px** en los 7 tamaños (incluido el móvil en horizontal).
-- `npm test` — pruebas de la Fase 1 (Vitest + Testing Library + fake-indexeddb): fechas, contraste, validación, migraciones
-  (incluida v1 → v2), letra de la vela, persistencia, datos corruptos, almacenamiento bloqueado, copia en IndexedDB,
-  exportar/importar, borrado; línea de tiempo del viaje (progreso, escena activa, movimiento reducido, ventanas de
-  texto sin solapes en todo el recorrido, constelación, distancia, iris, enfoque, eco de la «A», vela sobre el
-  mensaje final); recorrido completo del viaje con escenario sticky simulado (avanzar, retroceder, saltos bruscos,
-  revelación, final operable solo cuando se ve), sin permisos de micrófono/cámara, saltar, repetir sin cambiar preferencias,
-  configuración y rutas.
-- **Organización** (incluido en `npm test`, `src/features/organizer/tests/`): validación y relaciones de cada
-  entidad, transacciones atómicas, escrituras concurrentes, integridad al borrar (restringir, desvincular, cascada,
-  carpetas), historial; importes y libro contable (transferencias, tarjetas, metas, presupuestos, períodos);
-  repeticiones (31 de cada mes, días de la semana, número de veces) y series («solo esta / siguientes / toda»);
-  pagos sin duplicados; CSV (exportar, vista previa, errores, duplicados, importar); agenda y conflictos;
-  recordatorios; Markdown sin XSS; etiquetas; papelera; guardado automático, borrador recuperado y cambios externos;
-  PIN; estadísticas del diario y del diario emocional; copias (ida y vuelta, combinar, selectiva, deshacer, adjuntos);
-  e interfaz de los seis espacios con recarga real.
-- `npm run test:e2e` — **94 comprobaciones** (además: los seis espacios de organización sin conexión y sin
-  desplazamiento horizontal en móvil, nota/tarea/registro emocional creados sin conexión que siguen tras recargar, y
-  los seis espacios en los cuatro estilos de escritorio). Antes eran **90 comprobaciones** (las nuevas: biblioteca sin conexión con sus 60 capítulos, un capítulo
-  completo de cada estante, favoritos tras recargar, glosario, y catálogo y lector en los 4 estilos sin desplazamiento
-  horizontal) en Edge/Chrome real. El viaje completo con scroll real se recorre en
-  8 tamaños (375×812, 360×640, 812×375 apaisado, 768×1024, 1280×720, 1366×600, 1440×900 y 1920×1080) comprobando en
-  cada capítulo: escenario pegado a la pantalla, un único texto visible, dentro de la pantalla y fuera de la zona de
-  la ilustración, constelación completa, telescopio revelado, iris y ocular, vela con «A», «Otro año juntos», tarjeta
-  final sin tapar la vela y con su botón dentro de la pantalla, regreso a un capítulo anterior y saltos bruscos
-  inicio ↔ final. Además: índice de capítulos, persistencia, Service Worker,
-  **funcionamiento sin conexión**, sin peticiones externas, sin errores de consola (incluida la CSP) y sin desplazamiento
-  horizontal en cada capítulo y en los 4 estilos/temas.
-- **Rendimiento medido** (Edge, móvil emulado 375×812 a 3x): 60 fps estables durante todo el recorrido (p95 17 ms). Con
-  la CPU ralentizada ×4, mediana de 17 ms y picos p95 de 50 ms. El lienzo reduce su calidad automáticamente si el dibujo
-  resulta lento en el dispositivo.
-
----
+Guía completa: [docs/developer/BUILD.md](docs/developer/BUILD.md) · Publicar una versión:
+[docs/developer/RELEASE.md](docs/developer/RELEASE.md).
+
+## Seguridad y privacidad
+
+Todo se guarda en el almacenamiento privado del dispositivo; no hay copias en la nube (`allowBackup="false"`), ni
+cuentas, ni claves en el código. Permisos: Internet (solo para abrir las versiones online opcionales de algunos
+juegos), notificaciones (solo si activas los consejos) y reprogramar consejos tras reiniciar. Revisión con OWASP
+MASVS: [docs/developer/SECURITY.md](docs/developer/SECURITY.md).
 
 ## Limitaciones conocidas
 
-- **Biblioteca:** los textos se escribieron con fuentes conocidas, pero no han pasado por la revisión de especialistas
-  de cada área, y las fuentes no se consultaron en línea durante la redacción. Las voces para escuchar dependen del
-  sistema: en Windows/Edge suelen existir para español e inglés, y para alemán solo si está instalado el paquete de
-  idioma. Las tablas muy anchas se desplazan dentro de su marco en móviles estrechos.
-- **Organización:** los recordatorios no llegan con la app cerrada (no hay servidor de notificaciones) y en iPhone
-  las notificaciones requieren la app instalada; el PIN no cifra los datos; no hay conversión entre monedas (las
-  transferencias deben ser entre cuentas de la misma moneda); los adjuntos se limitan a 3 MB por archivo; la
-  importación CSV lee hasta 5.000 filas; los informes en PDF usan la impresión del navegador.
-- La instalación y el Service Worker requieren `localhost` o HTTPS; `file://` no está soportado por los navegadores.
-- En iPhone la instalación es manual (Safari → Añadir a pantalla de inicio). **No se ha probado en un iPhone físico**:
-  solo con emulación de iPhone XS en Chromium. Conviene validar en el dispositivo real el desplazamiento con la barra
-  de Safari (alto de pantalla dinámico), el rendimiento de los desenfoques y la fluidez del viaje.
-- Los datos viven en un solo navegador de un solo dispositivo: no hay sincronización entre teléfono y computador.
-- **Modo online:** ningún juego de CrazyGames puede jugarse dentro de la app (el proveedor no lo autoriza; ver «Modo
-  offline / online»): Aquapark abre la página oficial. `OnlineGameFrame` está listo y probado (unitariamente, en jsdom)
-  para un proveedor que sí autorice la inserción, pero no se ha probado con un juego real en el navegador porque hoy no
-  hay ninguno verificado. Las sesiones online no se registran: la app no puede medir su duración ni conocer resultados.
-- **Game Center:** sin multijugador remoto por diseño (los rivales son bots locales). El ajedrez a dos jugadores es por
-  turnos en el mismo dispositivo. Las estadísticas de juegos no van en la copia JSON descargable. Los controles
-  táctiles se han validado con emulación móvil en Edge y en el emulador de Android (API 34, GPU por software), **no
-  en un Android ni en un iPhone físicos** (pendiente: latencia táctil, rendimiento del lienzo en gama baja, Safari iOS).
-- **APK:** probado en emulador (instalación, apertura, navegación, partida con toques, Atrás, minimizar y reanudar con
-  pausa automática, rotación, persistencia tras forzar el cierre). Los widgets con R8 solo se comprobaron forzando su
-  actualización sin errores, no colocándolos en el escritorio. Las 6 alertas «high» de `npm audit` son de herramientas
-  de desarrollo (Vite, Vitest, undici de jsdom) y no van en el APK; actualizarlas queda pendiente de una pasada propia
-  (`npm audit fix` sube Vite; el arreglo de Vitest es un cambio de versión mayor).
-- **Fase 3:** Frente Abierto es por turnos contra una IA local; no reproduce el multijugador en tiempo real de
-  OpenFront.io (para eso está el enlace a la original). En mapas grandes en un teléfono vertical el mapa se desplaza
-  en horizontal dentro de su marco para que cada casilla mida al menos ~36 px. En Saltos de Lumi, en un teléfono en
-  horizontal los controles quedan en las esquinas sobre el nivel (semitransparentes); en vertical se ve menos nivel a
-  lo ancho (la pantalla sugiere girar). La multitáctil se ha comprobado con eventos táctiles reales de Chromium (CDP)
-  y en jsdom, **no en un teléfono físico**.
-- **Rediseño visual (v1.1.0):** validado con emulación móvil en Edge, sin fps medidos y sin teléfonos físicos. Quedan
-  solapes menores: en Lava y Agua, la ayuda de controles tapa la pista del nivel en el turno 0; en Cubrir el espacio,
-  el aviso de movimiento no válido se superpone a la línea de la regla; en el caso del faro, «Perchero» y «Bolsillo»
-  se tocan (sus posiciones vienen de los datos del caso); en Stellarium, Betelgeuse se superpone al rótulo ORIÓN.
-- **Viaje astral en móviles muy bajos** (≈360×640): en el capítulo VII la vela se reduce bastante para caber sobre
-  la tarjeta final. La transición del alto dinámico de la barra de Safari solo se ha emulado, no probado en iOS real.
+- No hay sincronización entre dispositivos: los datos viven en una sola app/navegador (usa la copia JSON para moverlos).
+- El APK no está en Google Play; se instala desde GitHub Releases.
+- Probado en emulador Android 14 (API 34); **no** en teléfonos físicos ni en Android 8–13 (ver matriz).
+- En Android 8–9, las exportaciones se guardan en la carpeta de la app, no en Descargas.
+- Lix AI Studio con un servidor propio de IA solo funciona en el navegador del computador, no en el APK (el WebView
+  bloquea las conexiones HTTP desde una página HTTPS).
+- iPhone: solo como PWA desde Safari, sin widgets; no probado en un iPhone físico.
+- Los recordatorios de la organización no llegan con la app cerrada (los consejos diarios sí, en Android).
+- Las versiones online de los juegos se abren en el navegador y no suman a las estadísticas.
 
----
+## Documentación para desarrolladores
 
-## Próximas fases
+[Arquitectura](docs/developer/ARCHITECTURE.md) · [Construcción](docs/developer/BUILD.md) ·
+[Publicación](docs/developer/RELEASE.md) · [Seguridad](docs/developer/SECURITY.md) ·
+[Dependencias](docs/developer/DEPENDENCIES.md) · [Compatibilidad](docs/developer/COMPATIBILITY.md) ·
+[Pruebas](docs/developer/TESTING.md) · [Game Center](docs/developer/GAME-CENTER.md) ·
+[Android, iPhone y Windows](docs/developer/MULTIPLATAFORMA.md) · [Problemas frecuentes](docs/developer/TROUBLESHOOTING.md)
 
-> Todos los espacios previstos están implementados. Estos son los puntos de extensión para ampliarlos.
+## Licencia
 
-- **Game Center:** las fases 1 a 4 están implementadas (21 juegos) y `registry/roadmap.js` está vacía, así que la
-  biblioteca no muestra «Próximas incorporaciones». Ver «Añadir un juego» en [Game Center](#game-center).
-- **Biblioteca:** implementada (60 capítulos). Para ampliarla, añadir `.md` en `content/<estante>/` (y, si hace
-  falta, un recorrido en `registry/shelves.js`); los temas pendientes de cada estante están en su lista `planned`.
-- **Organización personal:** implementada. Para un tipo de registro nuevo: declararlo en
-  `organizer/data/entities.js` (campos, relaciones y módulo); las copias, el borrado con integridad y la validación lo
-  incluyen solos.
-
-Para activar cualquiera: crear su carpeta en `src/features/`, cambiar su `status` a `'available'` en
-`src/app/modules.js`, añadir su ruta en `App.jsx` y, si guarda datos, una migración en `DB_MIGRATIONS`.
+Proyecto privado: el código y los contenidos propios no se publican bajo ninguna licencia de código abierto (todos
+los derechos reservados). Componentes de terceros incluidos y sus licencias: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

@@ -8,7 +8,7 @@
  *  - La configuración se aplica y persiste tras recargar.
  *  - El Service Worker precachea y la app funciona SIN conexión (incluida la ruta diferida de Configuración).
  *  - Ninguna petición sale del origen local y no hay errores en consola (incluidas violaciones de CSP).
- *  - El Game Center y sus veintiún juegos (fases 1 a 4) funcionan sin conexión (incluida la IA de ajedrez en su Worker).
+ *  - El Game Center y sus veinticuatro juegos funcionan sin conexión (incluida la IA de ajedrez en su Worker).
  *  - La biblioteca (catálogo, lector, glosario y favoritos) funciona sin conexión y se lee bien en los cuatro estilos.
  *  - La organización personal (panel, finanzas, calendario, notas, diario y diario emocional) se abre sin
  *    conexión, guarda en IndexedDB y conserva los datos tras recargar; sin desplazamiento horizontal.
@@ -545,7 +545,8 @@ try {
   await deskPage.getByRole('heading', { level: 1, name: /Game Center/ }).waitFor();
   await deskPage.waitForTimeout(800);
   await deskPage.screenshot({ path: `${SHOTS}/d-game-center.png`, fullPage: true });
-  check('Game Center: veintiún juegos disponibles (fases 1 a 4)', (await deskPage.getByRole('link', { name: /^Jugar a / }).count()) === 21);
+  const playLinks = await deskPage.getByRole('link', { name: /^Jugar a / }).count();
+  check('Game Center: veinticuatro juegos disponibles', playLinks === 24, String(playLinks));
   check('Game Center: sin hoja de ruta pendiente ni enlaces a juegos inexistentes', (await deskPage.locator('.gc-roadmap').count()) === 0);
   check('Game Center escritorio sin desplazamiento horizontal', await noHorizontalScroll(deskPage));
 

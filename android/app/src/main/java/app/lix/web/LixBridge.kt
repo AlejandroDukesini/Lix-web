@@ -99,10 +99,12 @@ class LixBridge(private val activity: MainActivity) {
                 val uri = context.contentResolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values) ?: return false
                 context.contentResolver.openOutputStream(uri)?.use { it.write(bytes) } ?: return false
             } else {
+                // Android 8–9: sin pedir permisos de almacenamiento, el archivo queda en la carpeta de la app.
                 val dir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "Lix").apply { mkdirs() }
                 File(dir, safeName).writeBytes(bytes)
             }
-            activity.runOnUiThread { Toast.makeText(activity, activity.getString(R.string.saved_download, safeName), Toast.LENGTH_SHORT).show() }
+            val message = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) R.string.saved_download else R.string.saved_download_legacy
+            activity.runOnUiThread { Toast.makeText(activity, activity.getString(message, safeName), Toast.LENGTH_LONG).show() }
             true
         } catch (_: Exception) {
             false

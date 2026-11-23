@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sin tráfico en claro (HTTP) desde el código nativo en ninguna versión de Android. Desde Android 9
+  ya es el comportamiento por defecto; esto lo fija también en Android 8 (minSdk 26).
+  La app no hace peticiones de red nativas: la web se sirve desde el propio APK
+  (https://appassets.androidplatform.net) y los enlaces externos se abren en el navegador.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

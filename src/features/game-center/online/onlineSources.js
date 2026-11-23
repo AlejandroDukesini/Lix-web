@@ -12,7 +12,7 @@
  *               otra pestaña. Nunca se intenta enmarcar ni sortear sus restricciones.
  *
  * Cada fuente corresponde a UN juego concreto, con su URL exacta comprobada
- * (no se construyen URLs a partir del nombre). Para añadir otra, ver README →
+ * (no se construyen URLs a partir del nombre). Para añadir otra, ver docs/developer/GAME-CENTER.md →
  * «Añadir un juego online».
  */
 

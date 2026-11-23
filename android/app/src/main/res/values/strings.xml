@@ -13,4 +13,5 @@
     <string name="channel_tips_description">Un consejo breve en cada franja que elegiste en la app.</string>
     <string name="tip_notification_title">Consejo · %1$s</string>
     <string name="saved_download">Guardado en Descargas/Lix: %1$s</string>
+    <string name="saved_download_legacy">Guardado en Android/data/app.lix.web/files/Download/Lix: %1$s</string>
 </resources>

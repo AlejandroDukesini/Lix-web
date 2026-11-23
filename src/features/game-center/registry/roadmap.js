@@ -5,7 +5,7 @@
  * muestra la sección «Próximas incorporaciones». Para planificar un juego nuevo:
  *   { phase, title, games: [{ id, title, note, categories }] }
  * Son solo planificación: sin componente ni ruta. Cuando llegue su fase, cada uno
- * se convierte en una carpeta en games/ con su manifest.js (ver README).
+ * se convierte en una carpeta en games/ con su manifest.js (ver docs/developer/GAME-CENTER.md).
  *
  * Todos serán implementaciones originales: sin personajes, nombres comerciales,
  * música, niveles ni recursos de franquicias existentes.

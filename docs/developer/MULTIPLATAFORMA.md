@@ -113,3 +113,26 @@ SDK) exigiría empaquetar una app de escritorio MSIX y mantener una segunda base
 unos datos que solo existen en el IndexedDB del navegador. La vía PWA reutiliza la app y la
 instantánea tal cual. Una ventana flotante propia de la app **no** sería un widget del Tablero y
 no se ha presentado como tal.
+
+## Instalar y probar los widgets
+
+```text
+Android:
+  1. Activa la depuración USB en el teléfono (o abre un emulador) e instala:
+       adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+     (o copia el APK al teléfono y ábrelo, permitiendo instalar apps de esa fuente).
+  2. Abre Lix una vez: así publica la primera instantánea de datos.
+  3. Añade los widgets: Configuración → App de Android → «Añadir …» (el lanzador pide
+     confirmación), o mantén pulsada la pantalla de inicio → Widgets → Lix.
+  4. Prueba: crea una asignatura con horario y una actividad en Control académico; el widget se
+     actualiza en unos segundos. Redimensiona el widget manteniéndolo pulsado.
+  5. Consejos con la app cerrada: Consejos diarios → Ajustes → activa «Notificaciones del sistema»
+     y acepta el permiso. Cierra la app; llegará uno en la siguiente franja (puede retrasarse
+     unos minutos por el ahorro de batería).
+  6. Si un widget dice «Abre Lix una vez…», abre la app para que publique los datos.
+Windows 11 (no verificado en el Tablero real, ver sección 12):
+  1. Publica dist/ en un origen HTTPS e instala la PWA con Edge.
+  2. Instala WinAppSDK 1.2 y activa el modo de desarrollador de Windows.
+  3. Abre el Tablero de Widgets (Win + W) → Añadir widgets → «Lix · Consejo y próximos».
+iPhone: no hay widgets (ver sección 11).
+```

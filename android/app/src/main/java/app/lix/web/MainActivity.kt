@@ -22,6 +22,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.webkit.WebViewAssetLoader
+import androidx.webkit.WebViewCompat
 
 /**
  * Lix Web en Android: un WebView que sirve la app web (dist/, copiada a los assets del APK)
@@ -42,6 +43,17 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_ROUTE = "route"
         private const val ORIGIN = "https://appassets.androidplatform.net"
         const val START_URL = "$ORIGIN/assets/web/index.html"
+
+        /**
+         * Versión mínima del motor del WebView (Android System WebView / Chrome). La web usa CSS y
+         * JavaScript modernos (color-mix, :has, consultas de contenedor, ES2020): con un WebView
+         * anterior la app se vería rota, así que se explica cómo actualizarlo en lugar de cargarla.
+         * En Android 8–9 el WebView se actualiza desde Google Play hasta la versión 138.
+         */
+        const val MIN_WEBVIEW_MAJOR = 111
+
+        /** Rutas que otra app (widgets, notificaciones) puede pedir abrir: solo caracteres de ruta simples. */
+        private val ROUTE = Regex("^/[a-z0-9/_-]{0,80}$")
         private val MIME = mapOf(
             "html" to "text/html", "js" to "text/javascript", "mjs" to "text/javascript", "css" to "text/css",
             "json" to "application/json", "webmanifest" to "application/manifest+json", "wasm" to "application/wasm",
@@ -149,18 +161,40 @@ class MainActivity : ComponentActivity() {
             }
         })
 
-        if (savedInstanceState != null) webView.restoreState(savedInstanceState)
+        val engine = webViewMajorVersion()
+        if (engine != null && engine < MIN_WEBVIEW_MAJOR) showOutdatedWebView(engine)
+        else if (savedInstanceState != null) webView.restoreState(savedInstanceState)
         else webView.loadUrl(startUrl(intent))
     }
 
+    private fun webViewMajorVersion(): Int? =
+        runCatching { WebViewCompat.getCurrentWebViewPackage(this)?.versionName?.substringBefore('.')?.toIntOrNull() }.getOrNull()
+
+    /** Pantalla nativa (sin la web) cuando el WebView del sistema es demasiado antiguo. */
+    private fun showOutdatedWebView(major: Int) {
+        val html = """
+            <!doctype html><html lang="es"><head><meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+            background:#1d1424;color:#f6eefc;font-family:sans-serif;text-align:center;padding:24px;box-sizing:border-box}
+            h1{font-size:22px}p{line-height:1.5;opacity:.9}</style></head><body><div>
+            <h1>Hay que actualizar el WebView</h1>
+            <p>Lix necesita «Android System WebView» (o Chrome) versión $MIN_WEBVIEW_MAJOR o posterior.
+            Este teléfono tiene la $major.</p>
+            <p>Actualízalo desde Google Play (busca «Android System WebView») y vuelve a abrir Lix.
+            Tus datos no se pierden.</p></div></body></html>
+        """.trimIndent()
+        webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null)
+    }
+
     private fun startUrl(intent: Intent?): String {
-        val route = intent?.getStringExtra(EXTRA_ROUTE)?.takeIf { it.startsWith("/") }
+        val route = intent?.getStringExtra(EXTRA_ROUTE)?.takeIf { it.matches(ROUTE) }
         return if (route != null) "$START_URL#$route" else START_URL
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        val route = intent.getStringExtra(EXTRA_ROUTE)?.takeIf { it.matches(Regex("^/[a-z0-9/_-]*$")) } ?: return
+        val route = intent.getStringExtra(EXTRA_ROUTE)?.takeIf { it.matches(ROUTE) } ?: return
         webView.evaluateJavascript("window.location.hash = '#$route';", null)
     }
 

@@ -46,7 +46,11 @@ describe('Diario: interfaz', () => {
     await createRecord('journalEntry', { body: 'secreto', writtenAt: new Date().toISOString(), eventDate: todayISO() });
     await setPin('2468');
     const settings = listKind('privacySettings')[0];
-    expect(JSON.stringify(settings)).not.toContain('2468');
+    // El hash y la sal son hexadecimales aleatorios: pueden contener «2468» por casualidad.
+    const { pinHash, pinSalt, ...rest } = settings;
+    expect(JSON.stringify(rest)).not.toContain('2468');
+    expect(pinHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(pinSalt).toBeTruthy();
     lockNow();
     expect(isLocked('journal')).toBe(true);
     const { user } = await openApp('#/diario');

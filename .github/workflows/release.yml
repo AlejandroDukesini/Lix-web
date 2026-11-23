@@ -1,0 +1,72 @@
+# Release: al subir una etiqueta vX.Y.Z se repiten las pruebas y, solo si pasan, se compila el APK
+# firmado, se calcula su SHA-256 y se crea la release como BORRADOR para revisarla antes de publicarla.
+# Secrets necesarios: LIX_KEYSTORE_BASE64, LIX_KEYSTORE_PASSWORD, LIX_KEY_ALIAS, LIX_KEY_PASSWORD.
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # Sin la clave en los secrets solo se valida (pruebas + build); la firma y la release se omiten.
+      HAS_KEY: ${{ secrets.LIX_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --registry=https://registry.npmjs.org
+      - name: La etiqueta coincide con package.json
+        run: test "v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+      - run: npm test
+      - run: npm run build
+      - name: Sin clave de firma en los secrets
+        if: env.HAS_KEY != 'true'
+        run: echo "::notice::Pruebas y build en verde. No hay LIX_KEYSTORE_BASE64: no se firma ni se crea la release (se publica a mano, ver docs/developer/RELEASE.md)."
+      - uses: actions/setup-java@v4
+        if: env.HAS_KEY == 'true'
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+        if: env.HAS_KEY == 'true'
+      - name: Clave de firma (solo en el runner, nunca en el repositorio)
+        if: env.HAS_KEY == 'true'
+        env:
+          LIX_KEYSTORE_BASE64: ${{ secrets.LIX_KEYSTORE_BASE64 }}
+        run: |
+          echo "$LIX_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/lix-release.jks"
+      - name: APK release firmado
+        if: env.HAS_KEY == 'true'
+        working-directory: android
+        env:
+          LIX_KEYSTORE: ${{ runner.temp }}/lix-release.jks
+          LIX_KEYSTORE_PASSWORD: ${{ secrets.LIX_KEYSTORE_PASSWORD }}
+          LIX_KEY_ALIAS: ${{ secrets.LIX_KEY_ALIAS }}
+          LIX_KEY_PASSWORD: ${{ secrets.LIX_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --console=plain
+      - name: Verificar firma y calcular SHA-256
+        if: env.HAS_KEY == 'true'
+        run: |
+          APK=android/app/build/outputs/apk/release/app-release.apk
+          "$ANDROID_HOME"/build-tools/*/apksigner verify --print-certs "$APK" | head -5
+          cp "$APK" Lix.apk
+          sha256sum Lix.apk | tee Lix.apk.sha256
+          rm -f "$RUNNER_TEMP/lix-release.jks"
+      - name: Release en borrador (si no existe ya una publicada a mano)
+        if: env.HAS_KEY == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then echo "::notice::La release ya existe; no se modifica."; exit 0; fi
+          gh release create "$GITHUB_REF_NAME" Lix.apk Lix.apk.sha256 --draft \
+            --title "Lix ${GITHUB_REF_NAME#v}" \
+            --notes "Borrador automático. SHA-256: $(cut -d' ' -f1 Lix.apk.sha256). Revisar e instalar encima de la versión anterior antes de publicar."
