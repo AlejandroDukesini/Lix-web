@@ -57,7 +57,8 @@ describe('Lix AI Studio: interfaz', () => {
 
     await user.type(screen.getByLabelText('Describe la imagen'), 'un girasol');
     await user.click(screen.getByRole('button', { name: 'Generar' }));
-    expect(await screen.findByText('IA · Stable Diffusion (servidor propio)')).toBeInTheDocument();
+    // La etiqueta aparece en el resultado y, en cuanto se guarda, también en la galería.
+    expect((await screen.findAllByText('IA · Stable Diffusion (servidor propio)')).length).toBeGreaterThan(0);
     expect(calls[0]).toMatchObject({ url: 'http://192.168.1.20:7860/sdapi/v1/txt2img', body: { prompt: 'un girasol' } });
     await waitFor(() => expect(listKind('creation').some((c) => c.origin === 'ai')).toBe(true));
     vi.unstubAllGlobals();
