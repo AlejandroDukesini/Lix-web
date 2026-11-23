@@ -30,7 +30,8 @@ jobs:
       - run: npm run build
       - name: Sin clave de firma en los secrets
         if: env.HAS_KEY != 'true'
-        run: echo "::notice::Pruebas y build en verde. No hay LIX_KEYSTORE_BASE64: no se firma ni se crea la release (se publica a mano, ver docs/developer/RELEASE.md)."
+        run: |
+          echo "::notice::Pruebas y build en verde. No hay LIX_KEYSTORE_BASE64: no se firma ni se crea la release (se publica a mano, ver docs/developer/RELEASE.md)."
       - uses: actions/setup-java@v4
         if: env.HAS_KEY == 'true'
         with:
